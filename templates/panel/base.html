@@ -1,4 +1,4 @@
-{% load panel_tags %}{% panel_counts as counts %}{% with p=request.resolver_match.url_name %}<!DOCTYPE html>
+{% load panel_tags static %}{% panel_counts as counts %}{% with p=request.resolver_match.url_name %}<!DOCTYPE html>
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
@@ -137,7 +137,7 @@
 </head>
 <body>
 <aside class="side">
-  <a href="{% url 'panel:dashboard' %}" class="brand"><i>tr</i><span>{{ site.site_name }}<small>Boshqaruv paneli</small></span></a>
+  <a href="{% url 'panel:dashboard' %}" class="brand"><img src="{% static 'brand/logo-mark.svg' %}" alt="" width="34" height="34" style="border-radius:9px;flex-shrink:0;"><span>{{ site.site_name }}<small>Boshqaruv paneli</small></span></a>
   <nav class="nav">
     <a href="{% url 'panel:dashboard' %}" class="{% if p == 'dashboard' %}on{% endif %}"><span class="ic">◧</span>Bosh sahifa</a>
     <a href="{% url 'panel:payments' %}" class="{% if p == 'payments' %}on{% endif %}"><span class="ic">💳</span>To'lovlar{% if counts.payments %}<span class="cnt">{{ counts.payments }}</span>{% endif %}</a>

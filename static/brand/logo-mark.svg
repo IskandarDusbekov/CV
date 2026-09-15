@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="tezrezyume">
+  <rect width="512" height="512" rx="116" fill="#15161a"/>
+  <!-- rezyume varag'i -->
+  <path d="M146 96h146l90 90v212a26 26 0 0 1-26 26H146a26 26 0 0 1-26-26V122a26 26 0 0 1 26-26z" fill="#f5f3ee"/>
+  <path d="M292 96v64a26 26 0 0 0 26 26h64z" fill="#d6d1c4"/>
+  <circle cx="186" cy="176" r="30" fill="#15161a"/>
+  <rect x="230" y="160" width="46" height="14" rx="7" fill="#15161a"/>
+  <rect x="230" y="184" width="30" height="10" rx="5" fill="#a9a59a"/>
+  <rect x="156" y="240" width="150" height="14" rx="7" fill="#a9a59a"/>
+  <rect x="156" y="272" width="120" height="14" rx="7" fill="#a9a59a"/>
+  <rect x="156" y="304" width="84" height="14" rx="7" fill="#a9a59a"/>
+  <!-- "tez" — chaqmoq -->
+  <circle cx="356" cy="364" r="96" fill="#d9f36a" stroke="#15161a" stroke-width="22"/>
+  <path d="M372 294l-70 90h48l-14 66 70-94h-48z" fill="#15161a"/>
+</svg>
