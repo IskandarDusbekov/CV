@@ -118,7 +118,7 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
 
     <div class="pv-grid">
       <div class="stage">
-        {% if is_staff_view %}<div class="staff-bar">🛡 Admin ko'rinishi: bu CV {{ cv.user.get_full_name|default:cv.user.username|default:"anonim foydalanuvchi" }}ga tegishli.</div>{% endif %}
+        {% if is_staff_view %}<div class="staff-bar">🛡 Admin ko'rinishi: bu CV {% if cv.user %}{{ cv.user.get_full_name|default:cv.user.username }}{% else %}anonim foydalanuvchi{% endif %}ga tegishli.</div>{% endif %}
         {% if cv.is_tailored %}
         {% with r=cv.tailor_report %}
         <div class="report">

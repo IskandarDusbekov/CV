@@ -178,6 +178,12 @@ class AdminPanelTests(TestCase):
         self.user = User.objects.create_user(username="buyer")
         self.pack = PricingPlan.objects.get(code="kredit-3")
 
+    def test_dashboard_with_anonymous_activity_and_anonymous_cv(self):
+        ActivityLog.objects.create(user=None, action="limit_reached", ip="1.2.3.4")
+        cv = CV.objects.create(user=None, raw_input_text="x", cv_json=DEMO_CV_JSON)
+        self.assertContains(self.client.get("/admin/"), "anonim")
+        self.assertContains(self.client.get(reverse("cv_preview", args=[cv.public_id])), "anonim foydalanuvchi")
+
     def test_admin_pages_render(self):
         for url in ["/admin/", "/admin/users/paymentrequest/", "/admin/users/userprofile/", "/admin/cv/cv/", "/admin/cv/aiusage/",
                     "/admin/core/activitylog/", "/admin/core/errorlog/", "/admin/core/page/", "/admin/users/pricingplan/"]:

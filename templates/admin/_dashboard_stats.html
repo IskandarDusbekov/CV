@@ -68,7 +68,7 @@
   <h3>🕓 So'nggi faollik <a href="{% url 'admin:core_activitylog_changelist' %}" style="font-size:12px;font-weight:400;">hammasi →</a></h3>
   <ul class="mc-list">
     {% for a in recent_activity %}
-    <li><span><b>{{ a.user.get_full_name|default:a.user.username|default:"anonim" }}</b> — {{ a.get_action_display }}{% if a.meta.plan %} ({{ a.meta.plan }}){% endif %}</span><small>{{ a.ip|default:"" }} · {{ a.created_at|date:"d.m H:i" }}</small></li>
+    <li><span><b>{% if a.user %}{{ a.user.get_full_name|default:a.user.username }}{% else %}anonim{% endif %}</b> — {{ a.get_action_display }}{% if a.meta.plan %} ({{ a.meta.plan }}){% endif %}</span><small>{{ a.ip|default:"" }} · {{ a.created_at|date:"d.m H:i" }}</small></li>
     {% empty %}<li>Hozircha faollik yo'q</li>{% endfor %}
   </ul>
 </div>
