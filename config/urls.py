@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 from apps.core import views as core_views
+from apps.core.analytics import human_ping
 
 urlpatterns = [
     # Django admin manzili .env dagi ADMIN_URL dan (productionda taxmin qilinmaydigan qiling)
@@ -14,6 +15,7 @@ urlpatterns = [
 
     path("robots.txt", core_views.robots_txt, name="robots_txt"),
     path("healthz/", core_views.healthz, name="healthz"),
+    path("t/p/", human_ping, name="human_ping"),
 
     path("", include("apps.core.urls")),
     path("users/", include("apps.users.urls")),

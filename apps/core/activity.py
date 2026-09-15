@@ -43,6 +43,9 @@ def _on_login(sender, request, user, **kwargs):
     profile = getattr(user, "profile", None)
     is_new = bool(profile and (timezone.now() - profile.created_at).total_seconds() < 120)
     log_activity(request, "register" if is_new else "login", user=user)
+    from .analytics import mark_step
+
+    mark_step(request, "login", user=user)
 
 
 @receiver(user_logged_out)

@@ -18,7 +18,8 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.core.activity import log_activity
-from apps.core.models import ActivityLog, BlockedIP, ContactMessage, ErrorLog, SiteSettings
+from apps.core.analytics import SOURCE_LABELS, prune_old, visit_stats
+from apps.core.models import ActivityLog, BlockedIP, ContactMessage, ErrorLog, PageView, SiteSettings, Visitor
 from apps.core.stats import dashboard_stats
 from apps.cv.models import CV, AIUsage
 from apps.cv.services import TEMPLATE_META
@@ -66,6 +67,8 @@ def _back(request, fallback):
 @staff_required
 def dashboard(request):
     context = dashboard_stats()
+    today = timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+    context["visits_today"] = dict(Visitor.objects.filter(first_seen__gte=today).values_list("kind").annotate(n=Count("id")).values_list("kind", "n"))
     context["pending_payments"] = (
         PaymentRequest.objects.filter(status=PaymentRequest.STATUS_PENDING).select_related("user__profile", "plan")[:5]
     )
@@ -364,6 +367,68 @@ def activity(request):
     return render(request, "panel/activity.html", {
         "page": _page(request, qs, 50), "action": action, "q": q, "actions": ActivityLog.ACTION_CHOICES,
     })
+
+
+# ─── Tashriflar ───────────────────────────────────────────────────────────────
+
+@staff_required
+def visits(request):
+    prune_old()
+    try:
+        days = int(request.GET.get("days", 7))
+    except ValueError:
+        days = 7
+    days = days if days in (1, 7, 30) else 7
+    stats = visit_stats(days)
+
+    qs = Visitor.objects.filter(first_seen__gte=stats["start"]).select_related("user")
+    kind = request.GET.get("kind", "human")
+    if kind in dict(Visitor.KIND_CHOICES):
+        qs = qs.filter(kind=kind)
+    stage = request.GET.get("stage", "")
+    stage_filters = {
+        "viewed": {"did_builder": False, "did_generate": False, "did_login": False, "did_unlock": False, "did_download": False},
+        "builder": {"did_builder": True, "did_generate": False, "did_login": False, "did_unlock": False, "did_download": False},
+        "generated": {"did_generate": True, "did_login": False, "did_unlock": False, "did_download": False},
+        "login": {"did_login": True, "did_unlock": False, "did_download": False},
+        "unlock": {"did_unlock": True, "did_download": False},
+        "download": {"did_download": True},
+    }
+    if stage in stage_filters:
+        qs = qs.filter(**stage_filters[stage])
+    q = request.GET.get("q", "").strip()
+    if q:
+        qs = qs.filter(ip=q) if _is_ip(q) else qs.filter(Q(last_path__icontains=q) | Q(landing_path__icontains=q) | Q(bot_name__icontains=q) | Q(user__first_name__icontains=q))
+    return render(request, "panel/visits.html", {
+        **stats, "page": _page(request, qs.order_by("-last_seen"), 40), "kind": kind, "stage": stage, "q": q,
+        "kinds": Visitor.KIND_CHOICES, "source_labels": SOURCE_LABELS,
+    })
+
+
+@staff_required
+def visitor_detail(request, pk):
+    visitor = get_object_or_404(Visitor.objects.select_related("user"), pk=pk)
+    return render(request, "panel/visitor_detail.html", {
+        "v": visitor,
+        "views": visitor.views.all()[:200],
+        "source_label": SOURCE_LABELS.get(visitor.source, visitor.source),
+        "ip_blocked": bool(visitor.ip and BlockedIP.objects.filter(ip=visitor.ip).exists()),
+        "same_ip": Visitor.objects.filter(ip=visitor.ip).exclude(pk=visitor.pk).count() if visitor.ip else 0,
+    })
+
+
+@staff_required
+@require_POST
+def visitor_block_ip(request, pk):
+    visitor = get_object_or_404(Visitor, pk=pk)
+    if visitor.ip:
+        if request.POST.get("unblock"):
+            BlockedIP.objects.filter(ip=visitor.ip).delete()
+            messages.success(request, f"{visitor.ip} blokdan chiqarildi.")
+        else:
+            BlockedIP.objects.get_or_create(ip=visitor.ip, defaults={"reason": f"{visitor.get_kind_display()} · {visitor.bot_name}"[:255]})
+            messages.warning(request, f"{visitor.ip} bloklandi.")
+    return _back(request, reverse("panel:visits"))
 
 
 # ─── Murojaatlar ──────────────────────────────────────────────────────────────

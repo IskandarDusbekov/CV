@@ -144,6 +144,7 @@
     <a href="{% url 'panel:users' %}" class="{% if p == 'users' or p == 'user_detail' %}on{% endif %}"><span class="ic">👤</span>Foydalanuvchilar</a>
     <a href="{% url 'panel:cvs' %}" class="{% if p == 'cvs' %}on{% endif %}"><span class="ic">📄</span>CV lar</a>
     <div class="nav-group">Nazorat</div>
+    <a href="{% url 'panel:visits' %}" class="{% if p == 'visits' or p == 'visitor_detail' %}on{% endif %}"><span class="ic">📈</span>Tashriflar</a>
     <a href="{% url 'panel:ai' %}" class="{% if p == 'ai' %}on{% endif %}"><span class="ic">✨</span>AI xarajati</a>
     <a href="{% url 'panel:errors' %}" class="{% if p == 'errors' %}on{% endif %}"><span class="ic">🐞</span>Xatolar{% if counts.errors %}<span class="cnt soft">{{ counts.errors }}</span>{% endif %}</a>
     <a href="{% url 'panel:activity' %}" class="{% if p == 'activity' %}on{% endif %}"><span class="ic">🕓</span>Faollik</a>

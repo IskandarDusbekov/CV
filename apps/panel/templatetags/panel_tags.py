@@ -46,3 +46,38 @@ def qs(context, **kwargs):
         params.pop("page", None)
     encoded = params.urlencode()
     return f"?{encoded}" if encoded else "?"
+
+
+KIND_COLORS = {"human": "green", "bot": "blue", "scanner": "red", "unknown": "gray"}
+DEVICE_ICONS = {"mobile": "📱", "tablet": "📟", "desktop": "💻"}
+
+
+@register.filter
+def kind_color(kind):
+    return KIND_COLORS.get(kind, "gray")
+
+
+@register.filter
+def device_icon(device):
+    return DEVICE_ICONS.get(device, "❔")
+
+
+@register.filter
+def source_label(source):
+    from apps.core.analytics import SOURCE_LABELS
+
+    return SOURCE_LABELS.get(source, source or "—")
+
+
+@register.filter
+def duration_short(delta):
+    """timedelta → «45 s», «3 daq», «2 soat»."""
+    try:
+        seconds = int(delta.total_seconds())
+    except AttributeError:
+        return ""
+    if seconds < 60:
+        return f"{seconds} s"
+    if seconds < 3600:
+        return f"{seconds // 60} daq"
+    return f"{seconds // 3600} soat"

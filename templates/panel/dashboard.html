@@ -14,6 +14,8 @@
     <small>👤 Foydalanuvchilar</small><b>{{ users_total }}</b><span>bugun +{{ users_today }} · onlayn {{ users_online }}</span></a>
   <a href="{% url 'panel:cvs' %}" class="card kpi">
     <small>📄 CV lar</small><b>{{ cvs_total }}</b><span>bugun +{{ cvs_today }} · ochilgan {{ cvs_unlocked }}</span></a>
+  <a href="{% url 'panel:visits' %}?days=1" class="card kpi">
+    <small>📈 Bugungi tashriflar</small><b>{{ visits_today.human|default:0 }}</b><span>real odam · bot {{ visits_today.bot|default:0 }} · skaner {{ visits_today.scanner|default:0 }}</span></a>
   <a href="{% url 'panel:ai' %}" class="card kpi">
     <small>✨ AI xarajati · shu oy</small><b>${{ ai_cost_month|floatformat:3 }}</b><span>≈ {{ ai_cost_month_uzs|money }} so'm</span></a>
   <a href="{% url 'panel:ai' %}" class="card kpi {% if ai_failed_today %}hot{% endif %}">

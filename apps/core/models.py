@@ -1,8 +1,10 @@
+import uuid
 from decimal import Decimal
 
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
+from django.utils import timezone
 
 
 class SiteSettings(models.Model):
@@ -213,3 +215,87 @@ class BlockedIP(models.Model):
 
     def __str__(self):
         return self.ip
+
+
+class Visitor(models.Model):
+    """Saytga kelgan bitta tashrifchi (brauzer cookie'si yoki IP+brauzer bo'yicha)."""
+
+    KIND_HUMAN = "human"
+    KIND_BOT = "bot"
+    KIND_SCANNER = "scanner"
+    KIND_UNKNOWN = "unknown"
+    KIND_CHOICES = [
+        (KIND_HUMAN, "Real odam"),
+        (KIND_BOT, "Bot"),
+        (KIND_SCANNER, "Skaner"),
+        (KIND_UNKNOWN, "Aniqlanmagan"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    kind = models.CharField("Turi", max_length=10, choices=KIND_CHOICES, default=KIND_UNKNOWN, db_index=True)
+    bot_name = models.CharField("Bot nomi", max_length=60, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="visits")
+    ip = models.GenericIPAddressField(null=True, blank=True, db_index=True)
+    ua_hash = models.CharField(max_length=16, blank=True, db_index=True)
+    user_agent = models.CharField(max_length=300, blank=True)
+    device = models.CharField("Qurilma", max_length=10, blank=True)
+    browser = models.CharField(max_length=30, blank=True)
+    os = models.CharField(max_length=30, blank=True)
+    source = models.CharField("Manba", max_length=40, blank=True, db_index=True)
+    referrer = models.CharField(max_length=300, blank=True)
+    utm_campaign = models.CharField(max_length=100, blank=True)
+    landing_path = models.CharField("Kirgan sahifa", max_length=300, blank=True)
+    last_path = models.CharField("Oxirgi sahifa", max_length=300, blank=True)
+    pageviews = models.PositiveIntegerField(default=0)
+    in_telegram = models.BooleanField("Telegram Mini App", default=False)
+
+    # Voronka: nimalar qildi
+    did_builder = models.BooleanField("Yaratishni ochdi", default=False)
+    did_generate = models.BooleanField("Rezyume yaratdi", default=False)
+    did_login = models.BooleanField("Kirdi", default=False)
+    did_unlock = models.BooleanField("Ochdi (to'lov)", default=False)
+    did_download = models.BooleanField("Yukladi", default=False)
+
+    first_seen = models.DateTimeField(default=timezone.now, db_index=True)
+    last_seen = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ("-last_seen",)
+        verbose_name = "Tashrifchi"
+        verbose_name_plural = "Tashrifchilar"
+        indexes = [models.Index(fields=["first_seen", "kind"])]
+
+    def __str__(self):
+        return f"{self.get_kind_display()} · {self.ip or ''}"
+
+    STAGES = [
+        ("did_download", "PDF/Word yukladi"),
+        ("did_unlock", "Ochdi, yuklamadi"),
+        ("did_login", "Kirdi, to'lamadi"),
+        ("did_generate", "Rezyume yaratdi, kirmadi"),
+        ("did_builder", "Yaratish sahifasida to'xtadi"),
+    ]
+
+    @property
+    def stage(self):
+        for field, label in self.STAGES:
+            if getattr(self, field):
+                return label
+        return "Faqat ko'rib ketdi"
+
+    @property
+    def duration(self):
+        return self.last_seen - self.first_seen
+
+
+class PageView(models.Model):
+    visitor = models.ForeignKey(Visitor, on_delete=models.CASCADE, related_name="views")
+    path = models.CharField(max_length=300)
+    method = models.CharField(max_length=8, default="GET")
+    status = models.PositiveSmallIntegerField(default=200)
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        verbose_name = "Sahifa ko'rish"
+        verbose_name_plural = "Sahifa ko'rishlar"

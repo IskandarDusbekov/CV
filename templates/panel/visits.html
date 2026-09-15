@@ -1,0 +1,174 @@
+{% extends "panel/base.html" %}
+{% load panel_tags %}
+{% block title %}Tashriflar{% endblock %}
+{% block heading %}📈 Tashriflar{% endblock %}
+{% block subheading %}<p>Kim keldi — real odam, bot yoki skaner; qayerdan keldi, nima qildi va qayerda to'xtadi</p>{% endblock %}
+{% block actions %}
+<div class="tabs">
+  <a href="{% qs days=1 %}" class="{% if days == 1 %}on{% endif %}">Bugun</a>
+  <a href="{% qs days=7 %}" class="{% if days == 7 %}on{% endif %}">7 kun</a>
+  <a href="{% qs days=30 %}" class="{% if days == 30 %}on{% endif %}">30 kun</a>
+</div>
+{% endblock %}
+
+{% block style %}
+.bars3 { display: flex; align-items: flex-end; gap: 4px; height: 160px; padding-top: 8px; }
+.bar3 { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.stack3 { width: 70%; max-width: 26px; display: flex; flex-direction: column-reverse; height: 100%; justify-content: flex-start; }
+.stack3 i { display: block; width: 100%; }
+.stack3 i.h { background: #16a34a; border-radius: 0 0 3px 3px; } .stack3 i.b { background: #93c5fd; } .stack3 i.s { background: #f87171; border-radius: 3px 3px 0 0; }
+.bar3 em { font-style: normal; font-size: 9.5px; color: var(--muted-2); }
+.legend3 { display: flex; gap: 12px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+.legend3 span::before { content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 5px; border-radius: 2px; vertical-align: -1px; }
+.legend3 .h::before { background: #16a34a; } .legend3 .b::before { background: #93c5fd; } .legend3 .s::before { background: #f87171; }
+
+.funnel { display: grid; gap: 8px; padding: 16px; }
+.fn { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr) 90px; gap: 12px; align-items: center; font-size: 13.5px; }
+.fn-track { height: 26px; border-radius: 8px; background: #f1f1ee; overflow: hidden; }
+.fn-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, #15161a, #3f4250); min-width: 2px; }
+.fn b { font-variant-numeric: tabular-nums; }
+.fn .drop { display: block; font-size: 11px; color: var(--red); }
+.stages { display: grid; gap: 0; }
+.stages a { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 9px 16px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.stages a:last-child { border-bottom: 0; }
+.stages a:hover { background: #fafaf8; }
+.stages .pct { display: inline-block; min-width: 44px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mini-bar { display: inline-block; height: 6px; border-radius: 4px; background: var(--ink); vertical-align: middle; margin-right: 8px; }
+.path { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; word-break: break-all; }
+.explain { padding: 12px 16px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); line-height: 1.55; }
+@media (max-width: 700px) { .fn { grid-template-columns: minmax(0, 1fr) 70px; } .fn-track { grid-column: 1 / -1; order: 3; } }
+{% endblock %}
+
+{% block content %}
+<div class="grid g-4" style="margin-bottom:14px;">
+  <a href="{% qs kind='human' stage='' %}" class="card kpi"><small>🧑 Real odamlar</small><b>{{ humans }}</b><span>hozir saytda: {{ online }} · 📱 {{ mobile_share }}% telefonda</span></a>
+  <a href="{% qs kind='human' stage='' q='' %}" class="card kpi"><small>🏠 Landingga kelgan odamlar</small><b>{{ landing_humans }}</b><span>sahifa ko'rishlar: {{ human_pageviews }}</span></a>
+  <a href="{% qs kind='bot' stage='' %}" class="card kpi"><small>🤖 Botlar</small><b>{{ bots }}</b><span>aniqlanmagan: {{ unknown }}</span></a>
+  <a href="{% qs kind='scanner' stage='' %}" class="card kpi {% if scanners %}hot{% endif %}"><small>🛡 Skanerlar</small><b>{{ scanners }}</b><span>zaiflik qidirganlar</span></a>
+</div>
+
+<div class="grid g-main" style="margin-bottom:14px;">
+  <div class="card">
+    <div class="card-h"><h2>Kunlar bo'yicha</h2><div class="legend3"><span class="h">odam</span><span class="b">bot/aniqlanmagan</span><span class="s">skaner</span></div></div>
+    <div class="card-b">
+      <div class="bars3">
+        {% for d in chart %}
+        <div class="bar3" title="{{ d.label }}: {{ d.human }} odam, {{ d.bot }} bot, {{ d.scanner }} skaner">
+          <div class="stack3"><i class="h" style="height:{{ d.h_h }}%"></i><i class="b" style="height:{{ d.h_b }}%"></i><i class="s" style="height:{{ d.h_s }}%"></i></div>
+          <em>{% if days <= 14 or forloop.counter0|divisibleby:3 %}{{ d.label }}{% else %}&nbsp;{% endif %}</em>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><h2>🚦 Qayerda to'xtadi</h2><span class="muted small">real odamlar</span></div>
+    <div class="stages">
+      {% for s in stages %}
+      <a href="{% qs kind='human' stage=s.key %}">
+        <span>{{ s.label }}</span>
+        <span><span class="mini-bar" style="width:{{ s.pct }}px;"></span><b>{{ s.n }}</b><span class="pct">{{ s.pct }}%</span></span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:14px;">
+  <div class="card-h"><h2>🔻 Voronka — nima qildi</h2><span class="muted small">real odamlar, {{ days }} kun</span></div>
+  <div class="funnel">
+    {% for f in funnel %}
+    <div class="fn">
+      <span>{{ forloop.counter }}. {{ f.label }}</span>
+      <div class="fn-track"><div class="fn-fill" style="width:{{ f.pct }}%;"></div></div>
+      <span style="text-align:right;"><b>{{ f.n }}</b> <span class="muted">· {{ f.pct }}%</span>{% if not forloop.first and f.drop %}<span class="drop">−{{ f.drop }}% ketdi</span>{% endif %}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="grid g-3" style="margin-bottom:14px;">
+  <div class="card">
+    <div class="card-h"><h2>🚪 Chiqib ketgan sahifa</h2></div>
+    <ul class="list">
+      {% for e in exits %}<li><span class="path">{{ e.last_path }}</span><b>{{ e.n }}</b></li>{% empty %}<li class="muted">Ma'lumot yo'q</li>{% endfor %}
+    </ul>
+    <div class="explain">Rezyume yaratmasdan ketgan odamlar oxirgi marta shu sahifada bo'lgan.</div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>🔗 Qayerdan keldi</h2></div>
+    <ul class="list">
+      {% for s in sources %}<li><span>{{ s.name }}</span><b>{{ s.n }}</b></li>{% empty %}<li class="muted">Ma'lumot yo'q</li>{% endfor %}
+    </ul>
+    <div class="explain">Reklama havolasiga <code>?utm_source=instagram</code> qo'shsangiz, shu yerda alohida ko'rinadi. Mini App orqali: {{ telegram_app }}.</div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>🛬 Birinchi ochgan sahifa</h2></div>
+    <ul class="list">
+      {% for l in landings %}<li><span class="path">{{ l.landing_path }}</span><b>{{ l.n }}</b></li>{% empty %}<li class="muted">Ma'lumot yo'q</li>{% endfor %}
+      {% for d in devices %}<li><span class="muted">{{ d.device|device_icon }} {{ d.device|default:"—" }}</span><b>{{ d.n }}</b></li>{% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div class="grid g-3" style="margin-bottom:14px;">
+  <div class="card">
+    <div class="card-h"><h2>🤖 Botlar</h2></div>
+    <ul class="list">
+      {% for b in bot_list %}<li><span>{{ b.bot_name|default:"Noma'lum" }}</span><b>{{ b.n }}</b></li>{% empty %}<li class="muted">Bot yo'q</li>{% endfor %}
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>🛡 Skaner IP lari</h2></div>
+    <ul class="list">
+      {% for s in scanner_ips %}<li><a class="link path" href="{% qs kind='scanner' q=s.ip stage='' %}">{{ s.ip }}</a><span class="muted small">{{ s.hits }} so'rov</span></li>{% empty %}<li class="muted">Skaner yo'q 🎉</li>{% endfor %}
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>🎯 Skanerlar qidirgan manzillar</h2></div>
+    <ul class="list">
+      {% for s in scanner_paths %}<li><span class="path">{{ s.path|truncatechars:48 }}</span><b>{{ s.n }}</b></li>{% empty %}<li class="muted">—</li>{% endfor %}
+    </ul>
+    <div class="explain">Bu so'rovlar saytingizda yo'q fayllarni (/.env, /wp-admin …) qidiradi — odatda xavfsiz, 404 qaytadi.</div>
+  </div>
+</div>
+
+<form method="get" class="filters">
+  <input type="hidden" name="days" value="{{ days }}">
+  <select class="input" name="kind" onchange="this.form.submit()">
+    <option value="all" {% if kind == 'all' %}selected{% endif %}>Barcha turlar</option>
+    {% for code, label in kinds %}<option value="{{ code }}" {% if kind == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <select class="input" name="stage" onchange="this.form.submit()">
+    <option value="">Barcha bosqichlar</option>
+    {% for s in stages %}<option value="{{ s.key }}" {% if stage == s.key %}selected{% endif %}>{{ s.label }}</option>{% endfor %}
+  </select>
+  <input class="input search" name="q" value="{{ q }}" placeholder="IP, sahifa, bot nomi yoki ism">
+  <button class="btn btn-light">Qidirish</button>
+  {% if q or stage or kind != 'human' %}<a href="?days={{ days }}" class="btn btn-light">Tozalash</a>{% endif %}
+</form>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="t">
+      <tr><th>Oxirgi faollik</th><th>Turi</th><th>Qurilma</th><th>Manba</th><th>Kirgan sahifa</th><th class="num">Sahifa</th><th>Qayerda to'xtadi</th><th>Oxirgi sahifa</th><th>IP</th></tr>
+      {% for v in page %}
+      <tr>
+        <td class="nowrap small"><a class="link" href="{% url 'panel:visitor_detail' v.pk %}">{{ v.last_seen|date:"d.m H:i" }}</a><br><span class="muted">{{ v.duration|duration_short }}</span></td>
+        <td><span class="badge b-{{ v.kind|kind_color }}">{{ v.get_kind_display }}</span>{% if v.bot_name %}<br><span class="muted small">{{ v.bot_name }}</span>{% endif %}{% if v.user %}<br><a class="link small" href="{% url 'panel:user_detail' v.user_id %}">{{ v.user.get_full_name|default:v.user.username }}</a>{% endif %}</td>
+        <td class="small nowrap" title="{{ v.user_agent }}">{{ v.device|device_icon }} {{ v.os }}<br><span class="muted">{{ v.browser }}{% if v.in_telegram %} · Mini App{% endif %}</span></td>
+        <td class="small">{{ v.source|source_label }}</td>
+        <td class="path">{{ v.landing_path|truncatechars:34 }}</td>
+        <td class="num">{{ v.pageviews }}</td>
+        <td class="small">{{ v.stage }}</td>
+        <td class="path">{{ v.last_path|truncatechars:34 }}</td>
+        <td class="small nowrap">{% if v.ip %}<a class="link" href="{% qs q=v.ip kind='all' stage='' %}">{{ v.ip }}</a>{% endif %}</td>
+      </tr>
+      {% empty %}<tr><td colspan="9" class="empty">Tashrif yo'q</td></tr>{% endfor %}
+    </table>
+  </div>
+  {% include "panel/_pager.html" %}
+</div>
+<p class="muted small" style="margin-top:12px;">Real odam — sahifada JavaScript ishlagan brauzer. Bot — qidiruv tizimlari, havola ko'rinishi (Telegram, Facebook), monitoring va dasturlar. Skaner — /.env, /wp-admin kabi zaiflik qidiradigan so'rovlar. Aniqlanmagan — brauzerga o'xshaydi, lekin sahifani ochib darhol yopgan yoki JS ishlamagan. Eski ma'lumotlar avtomatik tozalanadi (bot va skanerlar 30 kundan, sahifa ko'rishlar 60 kundan keyin).</p>
+{% endblock %}

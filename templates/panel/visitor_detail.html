@@ -1,0 +1,73 @@
+{% extends "panel/base.html" %}
+{% load panel_tags %}
+{% block title %}Tashrifchi{% endblock %}
+{% block heading %}<span class="badge b-{{ v.kind|kind_color }}" style="font-size:14px;vertical-align:4px;">{{ v.get_kind_display }}</span> {{ v.ip|default:"IP yo'q" }}{% endblock %}
+{% block subheading %}<p>{{ v.first_seen|date:"d.m.Y H:i" }} — {{ v.last_seen|date:"d.m.Y H:i" }} · {{ v.pageviews }} ta sahifa · {{ v.duration|duration_short }}</p>{% endblock %}
+{% block actions %}<a href="{% url 'panel:visits' %}" class="btn btn-light">← Tashriflar</a>{% endblock %}
+
+{% block style %}
+.path { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; word-break: break-all; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; padding: 14px 16px; }
+{% endblock %}
+
+{% block content %}
+<div class="grid g-main">
+  <div class="card">
+    <div class="card-h"><h2>🧭 Yo'l — qaysi sahifalarni ochdi</h2><span class="muted small">yangidan eskiga</span></div>
+    <div class="table-wrap">
+      <table class="t">
+        <tr><th>Vaqt</th><th>Sahifa</th><th class="num">Javob</th></tr>
+        {% for pv in views %}
+        <tr>
+          <td class="nowrap small">{{ pv.created_at|date:"d.m H:i:s" }}</td>
+          <td class="path">{% if pv.method != "GET" %}<span class="badge b-gray">{{ pv.method }}</span> {% endif %}{{ pv.path }}</td>
+          <td class="num"><span class="badge b-{% if pv.status < 300 %}green{% elif pv.status < 400 %}sky{% elif pv.status == 404 %}amber{% else %}red{% endif %}">{{ pv.status }}</span></td>
+        </tr>
+        {% empty %}<tr><td colspan="3" class="empty">Yozuv yo'q</td></tr>{% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <div class="grid" style="align-content:start;">
+    <div class="card">
+      <div class="card-h"><h2>🔻 Nima qildi</h2></div>
+      <div class="steps">
+        <span class="badge b-green">✓ Saytga keldi</span>
+        <span class="badge b-{% if v.did_builder %}green{% else %}gray{% endif %}">{% if v.did_builder %}✓{% else %}✗{% endif %} Yaratishni ochdi</span>
+        <span class="badge b-{% if v.did_generate %}green{% else %}gray{% endif %}">{% if v.did_generate %}✓{% else %}✗{% endif %} Rezyume yaratdi</span>
+        <span class="badge b-{% if v.did_login %}green{% else %}gray{% endif %}">{% if v.did_login %}✓{% else %}✗{% endif %} Kirdi</span>
+        <span class="badge b-{% if v.did_unlock %}green{% else %}gray{% endif %}">{% if v.did_unlock %}✓{% else %}✗{% endif %} Ochdi</span>
+        <span class="badge b-{% if v.did_download %}green{% else %}gray{% endif %}">{% if v.did_download %}✓{% else %}✗{% endif %} Yukladi</span>
+      </div>
+      <ul class="list">
+        <li><span class="muted">Qayerda to'xtadi</span><b>{{ v.stage }}</b></li>
+        <li><span class="muted">Kirgan sahifa</span><span class="path">{{ v.landing_path }}</span></li>
+        <li><span class="muted">Oxirgi sahifa</span><span class="path">{{ v.last_path }}</span></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h2>Ma'lumot</h2></div>
+      <ul class="list">
+        <li><span class="muted">Foydalanuvchi</span><span>{% if v.user %}<a class="link" href="{% url 'panel:user_detail' v.user_id %}">{{ v.user.get_full_name|default:v.user.username }}</a>{% else %}anonim{% endif %}</span></li>
+        {% if v.bot_name %}<li><span class="muted">Bot</span><span>{{ v.bot_name }}</span></li>{% endif %}
+        <li><span class="muted">Manba</span><span>{{ source_label }}{% if v.utm_campaign %} · {{ v.utm_campaign }}{% endif %}</span></li>
+        {% if v.referrer %}<li><span class="muted">Referrer</span><span class="path">{{ v.referrer|truncatechars:60 }}</span></li>{% endif %}
+        <li><span class="muted">Qurilma</span><span>{{ v.device|device_icon }} {{ v.device }} · {{ v.os }} · {{ v.browser }}{% if v.in_telegram %} · Telegram Mini App{% endif %}</span></li>
+        <li><span class="muted">IP</span><span>{{ v.ip|default:"—" }}{% if same_ip %} · <a class="link" href="{% url 'panel:visits' %}?kind=all&q={{ v.ip }}&days=30">yana {{ same_ip }} ta</a>{% endif %}</span></li>
+      </ul>
+      <p class="small muted" style="padding:0 16px 12px;word-break:break-all;">{{ v.user_agent|default:"User-Agent yo'q" }}</p>
+      {% if v.ip %}
+      <form method="post" action="{% url 'panel:visitor_block_ip' v.pk %}" style="padding:0 16px 16px;">{% csrf_token %}
+        {% if ip_blocked %}
+        <input type="hidden" name="unblock" value="1">
+        <button class="btn btn-green btn-sm">IP ni blokdan chiqarish</button>
+        {% else %}
+        <button class="btn btn-red btn-sm" data-confirm="{{ v.ip }} bloklansinmi? Bu IP dan hech kim saytni ocha olmaydi.">⛔ IP ni bloklash</button>
+        {% endif %}
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

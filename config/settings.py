@@ -102,6 +102,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "apps.core.activity.BlockAndPresenceMiddleware",
+    "apps.core.analytics.VisitTrackingMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "apps.core.middleware.TelegramFrameMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",

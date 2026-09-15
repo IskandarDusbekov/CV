@@ -14,6 +14,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from apps.core.activity import log_activity
+from apps.core.analytics import mark_step
 from apps.users.models import CompanyBranding, PricingPlan, UserProfile
 
 from . import quotas
@@ -156,6 +157,7 @@ def unlock_with_credit(request, cv_id):
     root.unlock(save=False)
     root.save(update_fields=["user", "is_unlocked", "unlocked_at", "updated_at"])
     log_activity(request, "cv_unlock", cv=str(root.public_id))
+    mark_step(request, "unlock")
     messages.success(request, "Rezyume ochildi! Endi PDF va Word yuklab olishingiz mumkin.")
     return redirect("cv_preview", cv_id=cv.public_id)
 
@@ -228,6 +230,7 @@ def download_pdf(request, cv_id, inline=False):
                             status=500, content_type="text/plain; charset=utf-8")
 
     log_activity(request, "download_pdf", cv=str(cv.public_id), template=cv.selected_template)
+    mark_step(request, "download")
     disposition = "inline" if (inline or request.GET.get("inline")) else "attachment"
     return _file_response(pdf_file, "application/pdf", _filename(cv, "pdf"), disposition)
 
@@ -244,6 +247,7 @@ def download_docx(request, cv_id):
 
     content = render_cv_to_docx(cv, request.user)
     log_activity(request, "download_docx", cv=str(cv.public_id), template=cv.selected_template)
+    mark_step(request, "download")
     return _file_response(
         content,
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -291,6 +295,7 @@ def download_link(request, cv_id, fmt):
     if error:
         return error
     token = signing.TimestampSigner(salt=_DL_SALT).sign(f"{cv.public_id}:{fmt}:{request.user.pk}")
+    mark_step(request, "download")
     return JsonResponse({
         "url": request.build_absolute_uri(reverse("signed_download", args=[token])),
         "file_name": _filename(cv, fmt),
@@ -342,6 +347,7 @@ def send_to_telegram(request, cv_id, fmt):
     if not send_document(chat_id, content, _filename(cv, fmt), caption=f"📄 {cv.cv_json.get('full_name', '')} — rezyume"):
         return JsonResponse({"error": "Telegram'ga yuborib bo'lmadi. Botni bloklamaganingizni tekshiring."}, status=502)
     log_activity(request, f"download_{fmt}", cv=str(cv.public_id), via="telegram_chat")
+    mark_step(request, "download")
     return JsonResponse({"ok": True})
 
 
@@ -463,6 +469,7 @@ def generate_cv(request):
 
     quotas.record(request, AIUsage.KIND_GENERATE, cv=cv, meta=meta)
     log_activity(request, "cv_create", cv=str(cv.public_id), name=result.get("full_name", ""))
+    mark_step(request, "generate")
     if not request.user.is_authenticated:
         owned_ids = request.session.get("owned_cv_ids", [])
         owned_ids.append(cv.id)
