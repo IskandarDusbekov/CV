@@ -179,9 +179,10 @@
     <a href="/" class="logo"><img class="logo-mark" src="{% static 'brand/logo-mark.svg' %}" alt="" width="30" height="30"><span>{{ site.brand_base }}<small>{{ site.brand_tld }}</small></span></a>
     <div class="nav-links">
       <a href="/cv/templates/" class="{% if '/cv/templ' in path %}on{% endif %}">Shablonlar</a>
-      <a href="/biz-haqimizda/" class="{% if path == '/biz-haqimizda/' %}on{% endif %}">Biz haqimizda</a>
+      <a href="/qollanma/" class="{% if path == '/qollanma/' %}on{% endif %}">Qo'llanma</a>
       <a href="/pricing/" class="{% if path == '/pricing/' %}on{% endif %}">Narxlar</a>
       <a href="/aloqa/" class="{% if path == '/aloqa/' %}on{% endif %}">Aloqa</a>
+      <a href="/biz-haqimizda/" class="only-sm">Biz haqimizda</a>
       {% if request.user.is_authenticated %}
         <a href="/users/dashboard/" class="{% if '/dashboard' in path %}on{% endif %}">Kabinet</a>
         {% if request.user.is_staff %}<a href="/panel/">⚡ Panel</a>{% endif %}
@@ -231,7 +232,7 @@
         <a href="/" class="logo" style="padding:0;color:var(--ink);"><img class="logo-mark" src="{% static 'brand/logo-mark.svg' %}" alt="" width="30" height="30"><span>{{ site.brand_base }}<small>{{ site.brand_tld }}</small></span></a>
         <p style="margin-top:12px;max-width:300px;font-size:14px;color:var(--muted);">Oddiy matndan professional rezyume. O'zbek, rus va ingliz tillarida.</p>
       </div>
-      <div><h4>Mahsulot</h4><a href="/cv/namuna/">Namuna rezyume</a><a href="/cv/builder/">Rezyume yaratish</a><a href="/cv/templates/">Shablonlar</a><a href="/pricing/">Narxlar</a></div>
+      <div><h4>Mahsulot</h4><a href="/cv/namuna/">Namuna rezyume</a><a href="/cv/builder/">Rezyume yaratish</a><a href="/cv/templates/">Shablonlar</a><a href="/qollanma/">Ishga topshirish qo'llanmasi</a><a href="/pricing/">Narxlar</a></div>
       <div><h4>Akkaunt</h4><a href="/users/login/">Kirish</a><a href="/users/signup/">Ro'yxatdan o'tish</a><a href="/users/dashboard/">Kabinet</a></div>
       <div><h4>Kompaniya</h4>{% for p in footer_pages %}<a href="{{ p.get_absolute_url }}">{{ p.title }}</a>{% endfor %}{% if TELEGRAM_BOT_USERNAME %}<a href="https://t.me/{{ TELEGRAM_BOT_USERNAME }}" target="_blank">Telegram bot</a>{% endif %}{% if site.contact_phone %}<a href="tel:{{ site.contact_phone|cut:' ' }}">{{ site.contact_phone }}</a>{% endif %}</div>
     </div>

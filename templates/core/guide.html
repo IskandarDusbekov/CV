@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}Ishga qanday topshiraman? Qo'llanma — {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
+
+{% block extra_style %}
+.gd { padding: 40px 0 0; }
+.gd-hero { max-width: 760px; margin: 0 auto; text-align: center; }
+.gd-hero h1 { margin-top: 12px; font-size: clamp(32px, 5vw, 56px); line-height: 1.02; font-weight: 800; letter-spacing: -.045em; }
+.gd-hero p { margin: 12px auto 0; max-width: 580px; font-size: 17px; color: var(--muted); }
+.search { position: relative; max-width: 620px; margin: 26px auto 0; }
+.search input { width: 100%; min-height: 58px; padding: 0 18px 0 52px; border: 1.5px solid var(--line-2); border-radius: 18px; background: #fff; font: inherit; font-size: 16.5px; color: var(--ink); outline: none; box-shadow: var(--shadow-sm); }
+.search input:focus { border-color: var(--ink); box-shadow: 0 0 0 4px rgba(21,22,26,.08); }
+.search svg { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--muted-2); }
+.topics { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 18px auto 0; max-width: 880px; }
+.topic { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font-size: 14px; font-weight: 700; color: var(--ink-2); }
+.topic:hover { border-color: var(--ink); }
+.topic em { font-style: normal; font-size: 12px; color: var(--muted-2); }
+
+.gd-grid { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 40px; align-items: start; margin-top: 48px; }
+.toc { position: sticky; top: 88px; display: grid; gap: 2px; }
+.toc > a { display: flex; gap: 8px; padding: 8px 12px; border-radius: 10px; font-size: 14px; font-weight: 600; color: var(--muted); }
+.toc > a:hover, .toc > a.on { background: #fff; color: var(--ink); }
+.toc .cta-mini { margin-top: 14px; padding: 16px; border-radius: 16px; background: var(--ink); color: #fff; }
+.toc .cta-mini b { display: block; font-size: 15px; line-height: 1.25; }
+.toc .cta-mini .btn { margin-top: 12px; width: 100%; }
+
+.sec { scroll-margin-top: 84px; margin-bottom: 40px; }
+.sec-h { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.sec-h i { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: #fff; border: 1px solid var(--line); font-style: normal; font-size: 20px; flex-shrink: 0; }
+.sec-h h2 { font-size: 24px; font-weight: 800; letter-spacing: -.03em; }
+.qa { background: #fff; border: 1px solid var(--line); border-radius: 18px; margin-bottom: 8px; scroll-margin-top: 84px; }
+.qa summary { display: flex; justify-content: space-between; gap: 14px; align-items: center; padding: 16px 18px; cursor: pointer; list-style: none; font-size: 16px; font-weight: 700; line-height: 1.35; }
+.qa summary::-webkit-details-marker { display: none; }
+.qa summary::after { content: "+"; flex-shrink: 0; width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--bg); font-size: 18px; font-weight: 700; color: var(--muted); transition: transform .2s; }
+.qa[open] summary::after { content: "−"; background: var(--ink); color: #fff; }
+.qa[open] { border-color: var(--line-2); box-shadow: var(--shadow-sm); }
+.ans { padding: 0 18px 18px; font-size: 15.5px; line-height: 1.7; color: var(--ink-2); }
+.ans p { margin: 0 0 10px; } .ans p:last-child { margin-bottom: 0; }
+.ans ul, .ans ol { margin: 0 0 10px; padding-left: 20px; } .ans li { margin-bottom: 5px; }
+.ans a { text-decoration: underline; text-underline-offset: 3px; }
+.ans code { padding: 1px 6px; border-radius: 6px; background: var(--bg); font-size: 14px; overflow-wrap: anywhere; }
+.tpl { position: relative; margin: 10px 0 12px; padding: 14px 16px 44px; border-radius: 14px; background: var(--bg); border-left: 3px solid var(--lime); white-space: pre-line; font-size: 15px; color: var(--ink); }
+.copy { position: absolute; right: 10px; bottom: 10px; min-height: 30px; padding: 0 12px; border: 1px solid var(--line-2); border-radius: 9px; background: #fff; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.qa-foot { display: flex; justify-content: flex-end; padding: 0 18px 12px; }
+.qa-link { border: 0; background: none; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--muted-2); cursor: pointer; }
+.qa-link:hover { color: var(--ink); }
+.empty { display: none; padding: 28px; border-radius: 18px; background: #fff; border: 1px dashed var(--line-2); text-align: center; color: var(--muted); }
+.empty.show { display: block; }
+
+.cta-big { margin-top: 20px; padding: 36px; border-radius: 26px; background: var(--ink); color: #fff; display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+.cta-big h2 { font-size: 28px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+.cta-big p { margin-top: 6px; color: #a1a3ab; }
+
+@media (max-width: 900px) {
+  .gd { padding-top: 24px; }
+  .gd-grid { grid-template-columns: minmax(0, 1fr); gap: 0; margin-top: 28px; }
+  .toc { display: none; }
+  .topics { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; margin-left: -16px; margin-right: -16px; padding: 0 16px 6px; scrollbar-width: none; }
+  .topic { flex-shrink: 0; }
+  .sec-h h2 { font-size: 21px; }
+  .qa summary { padding: 14px 14px; font-size: 15.5px; }
+  .ans { padding: 0 14px 14px; font-size: 15px; }
+  .cta-big { padding: 26px 22px; }
+  .cta-big h2 { font-size: 23px; }
+}
+{% endblock %}
+
+{% block content %}
+<div class="gd">
+  <div class="wrap">
+    <div class="gd-hero">
+      <span class="eyebrow">Qo'llanma · {{ total }} ta savol</span>
+      <h1>Ishga topshirish — <span class="serif">oddiy</span> tilda</h1>
+      <p>Diplom kerakmi? Tajriba yo'q bo'lsa nima yoziladi? HR'ga nima deb yuboriladi? Eng ko'p beriladigan savollarga aniq javoblar.</p>
+      <label class="search">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="q" placeholder="Savolingizni yozing: diplom, tajriba, maosh…" autocomplete="off" aria-label="Qo'llanmadan qidirish">
+      </label>
+      <div class="topics">
+        {% for s in sections %}<a class="topic" href="#{{ s.id }}">{{ s.icon }} {{ s.title }} <em>{{ s.items|length }}</em></a>{% endfor %}
+      </div>
+    </div>
+
+    <div class="gd-grid">
+      <nav class="toc" aria-label="Bo'limlar">
+        {% for s in sections %}<a href="#{{ s.id }}" data-toc="{{ s.id }}"><span>{{ s.icon }}</span>{{ s.title }}</a>{% endfor %}
+        <div class="cta-mini">
+          <b>Rezyumengiz tayyormi?</b>
+          <a href="/cv/builder/" class="btn btn-accent btn-sm">Bepul yaratish →</a>
+        </div>
+      </nav>
+
+      <div id="faq">
+        {% for s in sections %}
+        <section class="sec" id="{{ s.id }}" data-sec>
+          <div class="sec-h"><i>{{ s.icon }}</i><h2>{{ s.title }}</h2></div>
+          {% for item in s.items %}
+          <details class="qa" id="{{ item.n }}" data-qa>
+            <summary>{{ item.q }}</summary>
+            <div class="ans">{{ item.a }}</div>
+            <div class="qa-foot"><button type="button" class="qa-link" data-link="{{ item.n }}">🔗 Havolani nusxalash</button></div>
+          </details>
+          {% endfor %}
+        </section>
+        {% if forloop.counter == 2 %}
+        <div class="cta-big" style="margin:0 0 40px;">
+          <div><h2>Tajriba kam bo'lsa ham — yaxshi rezyume</h2><p>Savollarga javob bering, AI borini chiroyli va halol yozadi. ~1 daqiqa.</p></div>
+          <a href="/cv/builder/" class="btn btn-accent btn-lg">Rezyume yaratish →</a>
+        </div>
+        {% endif %}
+        {% endfor %}
+        <div class="empty" id="empty">Bu so'z bo'yicha savol topilmadi. Boshqacha yozib ko'ring yoki <a href="/aloqa/" style="text-decoration:underline;">bizga yozing</a> — qo'llanmaga qo'shamiz.</div>
+
+        <div class="cta-big">
+          <div><h2>Endi rezyumeni tayyorlaymiz</h2><p>2 ta rezyume bepul · PDF va Word · Telegram orqali 2 bosishda kirish.</p></div>
+          <a href="/cv/builder/" class="btn btn-accent btn-lg">Bepul boshlash →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="application/ld+json">{{ faq_schema }}</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var items = Array.prototype.slice.call(document.querySelectorAll('[data-qa]'));
+  var sections = Array.prototype.slice.call(document.querySelectorAll('[data-sec]'));
+  var input = document.getElementById('q'), empty = document.getElementById('empty');
+
+  function norm(s) { return s.toLowerCase().replace(/[‘’ʻʼ`´]/g, "'").replace(/\s+/g, ' '); }
+
+  // Qidiruv: savol va javob matni bo'yicha, har bir so'z alohida mos kelishi kerak
+  var timer;
+  input.addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      var words = norm(input.value.trim()).split(' ').filter(function (w) { return w.length > 1; });
+      var shown = 0;
+      items.forEach(function (d) {
+        var hay = norm(d.textContent);
+        var ok = words.every(function (w) { return hay.indexOf(w) !== -1; });
+        d.hidden = !ok;
+        if (ok) shown++;
+        d.open = !!(words.length && ok && shown <= 3);
+      });
+      sections.forEach(function (s) { s.hidden = !s.querySelector('[data-qa]:not([hidden])'); });
+      document.querySelectorAll('.cta-big').forEach(function (c, i) { if (i === 0) c.hidden = words.length > 0; });
+      empty.classList.toggle('show', shown === 0);
+    }, 120);
+  });
+
+  // Havola bilan kelinsa (#tajribasiz-2) — savolni ochib ko'rsatamiz
+  function openFromHash() {
+    var el = location.hash && document.getElementById(location.hash.slice(1));
+    if (el && el.matches('[data-qa]')) { el.open = true; el.scrollIntoView({ block: 'start' }); }
+  }
+  window.addEventListener('hashchange', openFromHash);
+  openFromHash();
+
+  function copyText(text, btn, done) {
+    var restore = btn.textContent;
+    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () {
+      btn.textContent = done;
+    }).catch(function () { btn.textContent = 'Belgilab nusxalang'; }).finally(function () {
+      setTimeout(function () { btn.textContent = restore; }, 1600);
+    });
+  }
+
+  document.querySelectorAll('.tpl[data-copy]').forEach(function (box) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'copy'; b.textContent = 'Nusxalash';
+    b.addEventListener('click', function () { copyText(box.childNodes[0].textContent.trim(), b, '✓ Nusxalandi'); });
+    box.appendChild(b);
+  });
+  document.querySelectorAll('[data-link]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      copyText(location.origin + location.pathname + '#' + b.dataset.link, b, '✓ Havola nusxalandi');
+    });
+  });
+
+  // Chap menyuda joriy bo'limni belgilash
+  if ('IntersectionObserver' in window) {
+    var links = {};
+    document.querySelectorAll('[data-toc]').forEach(function (a) { links[a.dataset.toc] = a; });
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          Object.keys(links).forEach(function (k) { links[k].classList.toggle('on', k === e.target.id); });
+        }
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    sections.forEach(function (s) { io.observe(s); });
+  }
+})();
+</script>
+{% endblock %}

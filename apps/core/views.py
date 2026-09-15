@@ -29,6 +29,23 @@ def pricing(request):
     return render(request, "core/pricing.html", _plans())
 
 
+def guide(request):
+    import json
+
+    from django.utils.safestring import mark_safe
+
+    from .guide import SECTIONS, faq_schema
+
+    sections = [{**s, "items": [{"q": q, "a": mark_safe(a), "n": f"{s['id']}-{i}"} for i, (q, a) in enumerate(s["items"], 1)]}
+                for s in SECTIONS]
+    return render(request, "core/guide.html", {
+        "sections": sections,
+        "total": sum(len(s["items"]) for s in SECTIONS),
+        # </script> ichida xavfsiz bo'lishi uchun "<" ni escape qilamiz
+        "faq_schema": mark_safe(json.dumps(faq_schema(), ensure_ascii=False).replace("<", "\\u003c")),
+    })
+
+
 def page(request, slug):
     obj = get_object_or_404(Page, slug=slug, is_published=True)
     return render(request, "core/page.html", {"page": obj})
