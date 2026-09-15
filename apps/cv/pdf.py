@@ -19,6 +19,8 @@ import os
 
 from django.template.loader import render_to_string
 
+from apps.core.models import SiteSettings
+
 from .services import build_cv_context
 
 logger = logging.getLogger(__name__)
@@ -46,6 +48,7 @@ def build_pdf_html(cv, user, company_branding=None) -> str:
     context = build_cv_context(cv, user)
     context["company_branding"] = company_branding if context["is_pro"] else None
     context["pdf_mode"] = True
+    context["site"] = SiteSettings.load()
 
     photo_b64 = _photo_to_base64(cv)
     if photo_b64:

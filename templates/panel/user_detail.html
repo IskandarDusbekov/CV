@@ -1,0 +1,131 @@
+{% extends "panel/base.html" %}
+{% load mycv panel_tags %}
+{% block title %}{{ u.get_full_name|default:u.username }}{% endblock %}
+{% block heading %}{{ u.get_full_name|default:u.username }}{% if profile.is_blocked %} <span class="badge b-red" style="vertical-align:middle;">bloklangan</span>{% endif %}{% endblock %}
+{% block subheading %}<p>{{ profile.phone|default:"telefon yo'q" }}{% if profile.telegram_username %} · <a class="link" href="https://t.me/{{ profile.telegram_username }}" target="_blank">@{{ profile.telegram_username }}</a>{% endif %} · ro'yxatdan {{ profile.created_at|date:"d.m.Y H:i" }}</p>{% endblock %}
+{% block actions %}<a href="{% url 'panel:users' %}" class="btn btn-light">← Ro'yxat</a><a href="{% url 'admin:users_userprofile_change' profile.pk %}" class="btn btn-light" target="_blank">Django admin'da</a>{% endblock %}
+
+{% block style %}
+.acts form { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.acts .row { padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.acts .row:last-child { border-bottom: 0; }
+.acts label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.acts .input { width: 90px; }
+.acts .wide { flex: 1; min-width: 160px; }
+{% endblock %}
+
+{% block content %}
+<div class="grid g-4" style="margin-bottom:14px;">
+  <div class="card kpi"><small>Kreditlar</small><b>{{ profile.credits }}</b><span>1 kredit = 1 CV</span></div>
+  <div class="card kpi"><small>Tarif</small><b>{% if is_pro %}Pro{% else %}Bepul{% endif %}</b><span>{% if is_pro %}{{ profile.premium_until|date:"d.m.Y" }} gacha{% else %}obunasiz{% endif %}</span></div>
+  <div class="card kpi"><small>To'lagan</small><b>{{ paid_total|money }}</b><span>so'm, tasdiqlangan</span></div>
+  <div class="card kpi"><small>AI xarajati</small><b>${{ ai_cost|floatformat:4 }}</b><span>{{ ai_count }} ta so'rov</span></div>
+</div>
+
+<div class="grid g-main">
+  <div class="grid" style="align-content:start;">
+    <div class="card">
+      <div class="card-h"><h2>📄 CV lar ({{ cvs|length }})</h2></div>
+      <div class="table-wrap">
+        <table class="t">
+          <tr><th>Ism / lavozim</th><th>Shablon</th><th>Holat</th><th>Sana</th><th></th></tr>
+          {% for cv in cvs %}
+          <tr>
+            <td><b>{{ cv.cv_json.full_name|default:"—" }}</b><br><span class="muted small">{{ cv.cv_json.job_title|truncatechars:40 }}</span></td>
+            <td class="small">{{ cv.get_selected_template_display }}</td>
+            <td>{% if cv.is_unlocked %}<span class="badge b-green">ochiq</span>{% endif %}{% if cv.parent_id %}<span class="badge b-violet">🎯 moslashtirilgan</span>{% endif %}</td>
+            <td class="nowrap small">{{ cv.created_at|date:"d.m.Y H:i" }}</td>
+            <td class="nowrap"><a class="btn btn-light btn-sm" href="{% url 'cv_preview' cv.public_id %}" target="_blank">Ko'rish</a></td>
+          </tr>
+          {% empty %}<tr><td colspan="5" class="empty">CV yo'q</td></tr>{% endfor %}
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h2>💳 To'lovlar</h2></div>
+      <div class="table-wrap">
+        <table class="t">
+          <tr><th>#</th><th>Paket</th><th class="num">Summa</th><th>Holat</th><th>Sana</th></tr>
+          {% for req in payments %}
+          <tr><td><a class="link" href="{% url 'panel:payments' %}?status=all&q=%23{{ req.pk }}">#{{ req.pk }}</a></td><td>{{ req.plan.name }}</td><td class="num">{{ req.amount|money }}</td>
+            <td><span class="badge b-{{ req.status|payment_color }}">{{ req.get_status_display }}</span></td><td class="small nowrap">{{ req.created_at|date:"d.m.Y H:i" }}</td></tr>
+          {% empty %}<tr><td colspan="5" class="empty">To'lov yo'q</td></tr>{% endfor %}
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h2>🕓 Faollik</h2><a class="btn btn-light btn-sm" href="{% url 'panel:activity' %}?q={{ u.username }}">Hammasi</a></div>
+      <ul class="list">
+        {% for a in activity %}
+        <li><span><span class="badge b-{{ a.action|action_color }}">{{ a.get_action_display }}</span>
+          {% for k, v in a.meta.items %}<span class="muted small"> {{ k }}: {{ v|truncatechars:40 }}</span>{% endfor %}</span>
+          <span class="muted small nowrap">{{ a.ip|default:"" }} · {{ a.created_at|date:"d.m H:i" }}</span></li>
+        {% empty %}<li class="muted">Faollik yo'q</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid" style="align-content:start;">
+    <div class="card acts">
+      <div class="card-h"><h2>⚡ Amallar</h2></div>
+      <div class="row">
+        <label>Kredit qo'shish / ayirish</label>
+        <form method="post" action="{% url 'panel:user_action' u.pk %}">{% csrf_token %}
+          <input type="hidden" name="action" value="credits">
+          <button class="btn btn-light btn-sm" name="quick" value="1">+1</button>
+          <button class="btn btn-light btn-sm" name="quick" value="3">+3</button>
+          <button class="btn btn-light btn-sm" name="quick" value="-1">−1</button>
+          <input class="input" type="number" name="amount" placeholder="±N" style="width:70px;">
+          <button class="btn btn-sm">Qo'llash</button>
+        </form>
+      </div>
+      <div class="row">
+        <label>Pro</label>
+        <form method="post" action="{% url 'panel:user_action' u.pk %}">{% csrf_token %}
+          <input type="hidden" name="action" value="pro">
+          <input class="input" type="number" name="days" value="{{ pro_plan.duration_days|default:30 }}" min="1"> kun
+          <button class="btn btn-sm">{% if is_pro %}Uzaytirish{% else %}Pro berish{% endif %}</button>
+        </form>
+        {% if is_pro %}
+        <form method="post" action="{% url 'panel:user_action' u.pk %}" style="margin-top:6px;">{% csrf_token %}
+          <input type="hidden" name="action" value="remove_pro">
+          <button class="btn btn-light btn-sm" data-confirm="Pro olib tashlansinmi?">Pro ni olib tashlash</button>
+        </form>
+        {% endif %}
+      </div>
+      <div class="row">
+        <label>Bloklash</label>
+        {% if profile.is_blocked %}
+        <p class="small" style="margin-bottom:8px;">Sabab: {{ profile.block_reason|default:"—" }}{% if ip_blocked %} · IP ham bloklangan{% endif %}</p>
+        <form method="post" action="{% url 'panel:user_action' u.pk %}">{% csrf_token %}
+          <input type="hidden" name="action" value="unblock">
+          <button class="btn btn-green btn-sm">Blokdan chiqarish</button>
+        </form>
+        {% elif u.is_staff %}
+        <p class="small muted">Admin foydalanuvchini bloklab bo'lmaydi.</p>
+        {% else %}
+        <form method="post" action="{% url 'panel:user_action' u.pk %}">{% csrf_token %}
+          <input type="hidden" name="action" value="block">
+          <input class="input wide" name="reason" placeholder="Sabab (foydalanuvchi ko'radi)">
+          <label style="display:flex;gap:6px;align-items:center;margin:0;font-weight:600;color:var(--ink);"><input type="checkbox" name="with_ip" value="1"> IP {{ profile.last_ip|default:"" }} ham</label>
+          <button class="btn btn-red btn-sm" data-confirm="Foydalanuvchi bloklansinmi?">⛔ Bloklash</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h2>Ma'lumotlar</h2></div>
+      <ul class="list">
+        <li><span class="muted">Username</span><span>{{ u.username }}</span></li>
+        <li><span class="muted">Telegram ID</span><span>{{ profile.telegram_id|default:"—" }}</span></li>
+        <li><span class="muted">Oxirgi faollik</span><span>{{ profile.last_seen|date:"d.m.Y H:i"|default:"—" }}</span></li>
+        <li><span class="muted">Oxirgi IP</span><span>{% if profile.last_ip %}<a class="link" href="{% url 'panel:activity' %}?q={{ profile.last_ip }}">{{ profile.last_ip }}</a>{% else %}—{% endif %}</span></li>
+        <li><span class="muted">Oxirgi kirish</span><span>{{ u.last_login|date:"d.m.Y H:i"|default:"—" }}</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

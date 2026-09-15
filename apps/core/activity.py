@@ -2,6 +2,7 @@
 import logging
 import traceback
 
+from django.conf import settings
 from django.contrib.auth import logout
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.dispatch import receiver
@@ -88,7 +89,7 @@ class BlockAndPresenceMiddleware:
         from .models import BlockedIP
 
         ip = client_ip(request)
-        if not request.path.startswith("/admin/"):
+        if not request.path.startswith("/" + settings.ADMIN_URL):
             if ip and BlockedIP.objects.filter(ip=ip).exists():
                 return render(request, "core/blocked.html", {"reason": "IP manzilingiz bloklangan."}, status=403)
 

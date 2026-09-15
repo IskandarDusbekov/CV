@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load mycv %}
-{% block title %}{{ cv_data.full_name }} — CV · mycv.uz{% endblock %}
+{% block title %}{{ cv_data.full_name }} — CV · {{ site.site_name|default:'mycv.uz' }}{% endblock %}
 
 {% block extra_style %}
 .pv { padding: 24px 0 0; }

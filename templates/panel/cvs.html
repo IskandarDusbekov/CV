@@ -1,0 +1,48 @@
+{% extends "panel/base.html" %}
+{% load panel_tags %}
+{% block title %}CV lar{% endblock %}
+{% block heading %}CV lar{% endblock %}
+{% block subheading %}<p>{{ page.paginator.count }} ta</p>{% endblock %}
+
+{% block content %}
+<div class="filters">
+  <div class="tabs">
+    <a href="{% qs f='' %}" class="{% if not f %}on{% endif %}">Hammasi</a>
+    <a href="{% qs f='unlocked' %}" class="{% if f == 'unlocked' %}on{% endif %}">Ochilgan</a>
+    <a href="{% qs f='tailored' %}" class="{% if f == 'tailored' %}on{% endif %}">Moslashtirilgan</a>
+    <a href="{% qs f='anon' %}" class="{% if f == 'anon' %}on{% endif %}">Anonim</a>
+  </div>
+  <form method="get" style="display:flex;gap:6px;flex:1;justify-content:flex-end;flex-wrap:wrap;">
+    <input type="hidden" name="f" value="{{ f }}">
+    <select class="input" name="t" onchange="this.form.submit()">
+      <option value="">Barcha shablonlar</option>
+      {% for code, label in templates %}<option value="{{ code }}" {% if t == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <input class="input search" name="q" value="{{ q }}" placeholder="Ism, lavozim yoki egasining telefoni">
+    <button class="btn btn-light">Qidirish</button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="t">
+      <tr><th>CV</th><th>Egasi</th><th>Shablon</th><th>Holat</th><th>Yaratilgan</th><th></th></tr>
+      {% for cv in page %}
+      <tr>
+        <td><b>{{ cv.cv_json.full_name|default:"—" }}</b><br><span class="muted small">{{ cv.cv_json.job_title|truncatechars:50 }}</span></td>
+        <td>{% if cv.user %}<a class="link" href="{% url 'panel:user_detail' cv.user_id %}">{{ cv.user.get_full_name|default:cv.user.username }}</a>{% else %}<span class="muted">anonim</span>{% endif %}</td>
+        <td class="small">{{ cv.get_selected_template_display }}</td>
+        <td>{% if cv.is_unlocked %}<span class="badge b-green">ochiq</span>{% endif %}
+          {% if cv.parent_id %}<span class="badge b-violet" title="{{ cv.tailor_report.vacancy_title }}">🎯 {{ cv.tailor_report.vacancy_title|default:"moslashtirilgan"|truncatechars:24 }}</span>{% endif %}</td>
+        <td class="nowrap small">{{ cv.created_at|date:"d.m.Y H:i" }}</td>
+        <td class="nowrap">
+          <a class="btn btn-light btn-sm" href="{% url 'cv_preview' cv.public_id %}" target="_blank">Ko'rish</a>
+          <a class="btn btn-light btn-sm" href="{% url 'view_pdf' cv.public_id %}" target="_blank">PDF</a>
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="6" class="empty">Topilmadi</td></tr>{% endfor %}
+    </table>
+  </div>
+  {% include "panel/_pager.html" %}
+</div>
+{% endblock %}

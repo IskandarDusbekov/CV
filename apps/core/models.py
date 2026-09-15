@@ -75,6 +75,16 @@ class SiteSettings(models.Model):
         return obj
 
     @property
+    def brand_base(self):
+        """Logotip uchun: "mycv.uz" → "mycv"."""
+        return self.site_name.rsplit(".", 1)[0] if "." in self.site_name else self.site_name
+
+    @property
+    def brand_tld(self):
+        """Logotip uchun: "mycv.uz" → ".uz"."""
+        return "." + self.site_name.rsplit(".", 1)[1] if "." in self.site_name else ""
+
+    @property
     def effective_bot_username(self):
         return (self.bot_username or getattr(settings, "TELEGRAM_BOT_USERNAME", "") or "").lstrip("@")
 
@@ -147,6 +157,8 @@ class ActivityLog(models.Model):
         ("contact", "Murojaat yubordi"),
         ("blocked", "Bloklandi"),
         ("unblocked", "Blokdan chiqarildi"),
+        ("credits_changed", "Kreditlari o'zgartirildi"),
+        ("pro_granted", "Pro berildi"),
         ("limit_reached", "Limitga yetdi"),
     ]
 

@@ -56,6 +56,9 @@ CSRF_TRUSTED_ORIGINS = _env_list(
     ["https://postbox-cargo-reawake.ngrok-free.dev"],
 )
 
+# Django admin manzili: masalan "boshqaruv-7k2x/" (oxirida / bilan)
+ADMIN_URL = _env("ADMIN_URL", "admin/").strip("/") + "/"
+
 if not DEBUG:
     # Nginx HTTPS ni o'zi tugatadi va X-Forwarded-Proto yuboradi
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -84,6 +87,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.users",
     "apps.cv",
+    "apps.panel",
 ]
 
 MIDDLEWARE = [
@@ -208,9 +212,10 @@ JAZZMIN_SETTINGS = {
     "show_sidebar": True,
     "navigation_expanded": True,
     "topmenu_links": [
+        {"name": "⚡ Boshqaruv paneli", "url": "/panel/"},
         {"name": "Bosh sahifa", "url": "admin:index"},
         {"name": "Saytni ochish", "url": "/", "new_window": True},
-        {"name": "💳 Tekshirish kerak", "url": "/admin/users/paymentrequest/?status__exact=pending"},
+        {"name": "💳 Tekshirish kerak", "url": "/panel/tolovlar/"},
     ],
     "order_with_respect_to": [
         "users.paymentrequest", "users.userprofile", "cv.cv", "cv.aiusage", "core.activitylog", "core.errorlog",

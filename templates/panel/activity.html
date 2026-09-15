@@ -1,0 +1,36 @@
+{% extends "panel/base.html" %}
+{% load panel_tags %}
+{% block title %}Faollik{% endblock %}
+{% block heading %}Faollik jurnali{% endblock %}
+{% block subheading %}<p>Kim, qachon, qaysi IP dan nima qildi</p>{% endblock %}
+
+{% block content %}
+<form method="get" class="filters">
+  <select class="input" name="action" onchange="this.form.submit()">
+    <option value="">Barcha harakatlar</option>
+    {% for code, label in actions %}<option value="{{ code }}" {% if action == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <input class="input search" name="q" value="{{ q }}" placeholder="Ism, telefon, username yoki IP">
+  <button class="btn btn-light">Qidirish</button>
+  {% if action or q %}<a href="{% url 'panel:activity' %}" class="btn btn-light">Tozalash</a>{% endif %}
+</form>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="t">
+      <tr><th>Vaqt</th><th>Foydalanuvchi</th><th>Harakat</th><th>Tafsilot</th><th>IP</th><th>Qurilma</th></tr>
+      {% for a in page %}
+      <tr>
+        <td class="nowrap small">{{ a.created_at|date:"d.m.Y H:i:s" }}</td>
+        <td>{% if a.user %}<a class="link" href="{% url 'panel:user_detail' a.user_id %}">{{ a.user.get_full_name|default:a.user.username }}</a>{% else %}<span class="muted">anonim</span>{% endif %}</td>
+        <td><span class="badge b-{{ a.action|action_color }}">{{ a.get_action_display }}</span></td>
+        <td class="small">{% for k, v in a.meta.items %}<span class="muted">{{ k }}:</span> {{ v|truncatechars:50 }}{% if not forloop.last %} · {% endif %}{% endfor %}</td>
+        <td class="small nowrap">{% if a.ip %}<a class="link" href="{% qs q=a.ip action='' %}">{{ a.ip }}</a>{% endif %}</td>
+        <td class="small muted" title="{{ a.user_agent }}">{{ a.user_agent|truncatechars:34 }}</td>
+      </tr>
+      {% empty %}<tr><td colspan="6" class="empty">Yozuv yo'q</td></tr>{% endfor %}
+    </table>
+  </div>
+  {% include "panel/_pager.html" %}
+</div>
+{% endblock %}

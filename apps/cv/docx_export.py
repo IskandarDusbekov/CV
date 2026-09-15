@@ -15,6 +15,8 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
+from apps.core.models import SiteSettings
+
 from .services import build_cv_context
 
 
@@ -499,7 +501,7 @@ def render_cv_to_docx(cv, user) -> bytes:
     core = doc.core_properties
     core.title = f"{data['full_name']} — CV"
     core.author = data["full_name"]
-    core.comments = "mycv.uz orqali yaratilgan"
+    core.comments = f"{SiteSettings.load().site_name} orqali yaratilgan"
 
     photo_path = ""
     if getattr(cv, "photo", None):

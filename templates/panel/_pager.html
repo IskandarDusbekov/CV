@@ -1,0 +1,11 @@
+{% load panel_tags %}
+{% if page.paginator.num_pages > 1 %}
+<div class="pager">
+  <span>{{ page.start_index }}–{{ page.end_index }} / {{ page.paginator.count }}</span>
+  <div>
+    {% if page.has_previous %}<a class="btn btn-light btn-sm" href="{% qs page=page.previous_page_number %}">← Oldingi</a>{% endif %}
+    <span class="btn btn-light btn-sm" style="pointer-events:none;">{{ page.number }} / {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a class="btn btn-light btn-sm" href="{% qs page=page.next_page_number %}">Keyingi →</a>{% endif %}
+  </div>
+</div>
+{% endif %}

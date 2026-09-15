@@ -19,6 +19,18 @@ Buyruqlarni ketma-ket bajaring. `mycv.uz` o'rniga o'z domeningizni yozing.
 
 ---
 
+## 0.5. Domenni serverga ulash (DNS)
+
+Domen sotib olgan joyingizda (registrator paneli → DNS) ikkita yozuv qo'shing:
+
+| Turi | Nomi (Host) | Qiymati | TTL |
+|---|---|---|---|
+| A | `@` | `SERVER_IP` | 3600 |
+| A | `www` | `SERVER_IP` | 3600 |
+
+Tekshirish (kompyuterda): `nslookup mycv.uz` — server IP si chiqishi kerak. Odatda 5–30 daqiqa, ba'zan 24 soatgacha tarqaladi.
+SSL (8-bosqich) faqat DNS tarqalgandan keyin ishlaydi.
+
 ## 1. Serverni tayyorlash (root sifatida)
 
 ```bash
@@ -100,6 +112,7 @@ nano .env
 
 Albatta o'zgartiring:
 - `SECRET_KEY` — `python -c "import secrets; print(secrets.token_urlsafe(50))"`
+- `ADMIN_URL` — Django admin manzili, masalan `boshqaruv-7k2x` (kundalik ish uchun `/panel/` bor)
 - `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS`, `SITE_URL`
 - `DB_PASSWORD` — 2-bosqichdagi parol
 - `OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`
@@ -145,29 +158,39 @@ certbot --nginx -d mycv.uz -d www.mycv.uz --redirect -m email@misol.uz --agree-t
 
 SSL ishlashini tekshirgach, `.env` da `SECURE_HSTS_SECONDS=31536000` qo'yib, `systemctl restart mycv-web` qiling.
 
-## 9. Admin paneldagi birinchi sozlamalar
+## 9. Birinchi sozlamalar
 
-`https://mycv.uz/admin/` ga kiring:
+Kundalik ish — **`https://mycv.uz/panel/`** (6-bosqichdagi superuser login/paroli bilan kiring):
 
-1. **Sayt sozlamalari** — karta raqami va egasi, bot username, **admin chat ID lari** (yangi cheklar shu yerga keladi), aloqa ma'lumotlari, bepul limitlar, AI modeli va narxlari.
-2. **Tariflar va paketlar** — kredit paketlari (`1 ta CV`, `3 ta CV`…) va Pro narxlari.
-3. **Sahifalar** — «Biz haqimizda» va «Aloqa» matnlari.
-4. Botni sinab ko'ring: botga `/start` yozing → raqamni yuboring → `/tolov` → paket tanlang → test chek yuboring → admin panelda **To'lovlar** bo'limida tasdiqlang.
+1. **Sozlamalar va narxlar** → **Sayt nomi** ga domeningizni yozing (masalan `mycv.uz`) — logotip, sarlavhalar, CV dagi belgi va bot matnlari shu nomdan olinadi.
+2. Shu sahifada — karta raqami va egasi, bot username, **admin chat ID lari** (yangi cheklar shu yerga keladi), aloqa ma'lumotlari, limitlar, AI modeli; yuqoridagi jadvalda narxlar.
+3. Botni sinab ko'ring: botga `/start` → raqamni yuboring → `/tolov` → paket tanlang → test chek yuboring → panelda **To'lovlar** da tasdiqlang.
+
+Kam ishlatiladigan narsalar (sahifalar matni, brendinglar) — `https://mycv.uz/ADMIN_URL/` (Django admin).
 
 ---
 
 ## Yangilash (keyingi deploylar)
 
+Kompyuterda o'zgarishlarni GitHub ga yuboring (`git push`), keyin serverda bitta buyruq:
+
 ```bash
-su - mycv && cd app
-git pull                     # yoki scp bilan yangi fayllar
-source venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py collectstatic --noinput
-exit
-systemctl restart mycv-web mycv-bot
+sudo bash /home/mycv/app/deploy/update.sh
 ```
+
+Skript: `git pull` → kutubxonalar → migratsiya → statik fayllar → tekshiruv → sayt va botni qayta ishga tushirish → `/healthz/` ni tekshirish.
+
+Private repo bo'lsa, serverda bir marta deploy key qo'shing:
+
+```bash
+sudo -u mycv ssh-keygen -t ed25519 -N "" -f /home/mycv/.ssh/id_ed25519
+cat /home/mycv/.ssh/id_ed25519.pub   # GitHub → repo → Settings → Deploy keys → Add
+sudo -u mycv git -C /home/mycv/app remote set-url origin git@github.com:SIZNING/REPO.git
+```
+
+## Monitoring
+
+`https://mycv.uz/healthz/` — sayt va baza ishlasa `{"status": "ok"}` qaytaradi. Uni bepul UptimeRobot yoki BetterStack ga qo'shing — sayt tushib qolsa SMS/Telegram xabar keladi.
 
 ## Zaxira nusxa (backup)
 
@@ -206,6 +229,8 @@ Barcha `ERROR` darajadagi xatolar admin panelning **Xatoliklar** bo'limiga ham y
 | **403 CSRF verification failed** (forma/admin) | `DJANGO_CSRF_TRUSTED_ORIGINS` da `https://` li domen yo'q | `https://mycv.uz` ni qo'shing, restart |
 | Sahifa cheksiz qayta yo'naltiriladi | `SECURE_SSL_REDIRECT=True`, nginx `X-Forwarded-Proto` yubormayapti | `deploy/nginx.conf` dagi `proxy_set_header X-Forwarded-Proto $scheme;` qatori borligini tekshiring |
 | CSS/JS yuklanmaydi (sayt «yalang'och») | `collectstatic` qilinmagan yoki nginx fayllarni o'qiy olmaydi | `python manage.py collectstatic --noinput`, `chmod 755 /home/mycv` |
+| `update.sh: $'\r': command not found` | fayl Windows qator oxiri (CRLF) bilan kelgan | `.gitattributes` buni oldini oladi; bir martalik: `sed -i 's/\r$//' deploy/*.sh deploy/*.service` |
+| Admin panel 404 | `ADMIN_URL` o'zgargan | `.env` dagi `ADMIN_URL` manzilidan kiring; kundalik ish uchun `/panel/` |
 | `collectstatic`: `MissingFileError ... bootstrap.bundle.min.js.map` | hash'li Manifest storage yoqilgan | `settings.py` da `whitenoise.storage.CompressedStaticFilesStorage` bo'lishi kerak (loyihada shunday) |
 | **PDF yaratishda xatolik** | Chromium yoki uning tizim kutubxonalari yo'q | `python -m playwright install chromium` (mycv foydalanuvchisi) va `playwright install-deps chromium` (root) |
 | PDF `Timeout` / server qotib qoladi | RAM yetmaydi | `deploy/gunicorn.conf.py` da `workers = 2`, swap qo'shing: `fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile` |
@@ -223,7 +248,8 @@ Barcha `ERROR` darajadagi xatolar admin panelning **Xatoliklar** bo'limiga ham y
 ## Xavfsizlik bo'yicha eslatmalar
 
 - `.env` faylini hech qachon git ga qo'shmang (`.gitignore` da bor).
-- Admin panel manzilini o'zgartirish tavsiya etiladi: `config/urls.py` da `admin/` → masalan `boshqaruv-7x/`.
+- Django admin manzilini `.env` dagi `ADMIN_URL` bilan taxmin qilib bo'lmaydigan qiling. `/panel/` faqat staff foydalanuvchilarga ochiladi.
+- Superuser parolini kuchli qiling: `python manage.py changepassword admin`.
 - CV manzillari UUID bilan (`/cv/preview/3f2c…/`), shuning uchun raqamni o'zgartirib boshqa CV ni ochib bo'lmaydi.
 - To'lov cheklari `/media/receipts/` orqali ochilmaydi — ular faqat admin panelda ko'rinadi.
 - Shubhali foydalanuvchi yoki IP ni admin paneldan bloklang: **Foydalanuvchilar → ⛔ Bloklash** yoki **Bloklangan IP lar**.

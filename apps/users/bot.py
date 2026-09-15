@@ -105,7 +105,7 @@ def _handle_start(chat_id: int, sender: dict, payload: str) -> None:
 
     send_message(
         chat_id,
-        "👋 <b>mycv.uz ga xush kelibsiz!</b>\n\n"
+        f"👋 <b>{SiteSettings.load().site_name} ga xush kelibsiz!</b>\n\n"
         "Kirish uchun pastdagi <b>📱 Raqamni yuborish</b> tugmasini bosing.\n"
         "Kod kiritish shart emas — raqamingiz tasdiqlanishi bilan saytga kirasiz.\n\n"
         "<i>Agar kirishni siz boshlamagan bo'lsangiz, raqam yubormang.</i>",
@@ -399,7 +399,7 @@ def _handle_update(update: dict) -> None:
         _show_balance(chat_id, sender["id"])
     elif text == BTN_SITE:
         url = _site_url("/")
-        send_message(chat_id, url if not _url_ok(url) else "Sayt:", reply_markup={"inline_keyboard": [[{"text": "🌐 mycv.uz", "url": url}]]} if _url_ok(url) else None)
+        send_message(chat_id, url if not _url_ok(url) else "Sayt:", reply_markup={"inline_keyboard": [[{"text": f"🌐 {SiteSettings.load().site_name}", "url": url}]]} if _url_ok(url) else None)
     elif profile:
         send_message(chat_id, "Quyidagi tugmalardan birini tanlang 👇", reply_markup=_main_keyboard())
     else:

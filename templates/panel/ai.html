@@ -1,0 +1,66 @@
+{% extends "panel/base.html" %}
+{% load mycv %}
+{% block title %}AI xarajati{% endblock %}
+{% block heading %}AI xarajati{% endblock %}
+{% block subheading %}<p>Model: <b>{{ site.ai_model }}</b> · kirish ${{ site.ai_price_input_per_1m }} / chiqish ${{ site.ai_price_output_per_1m }} har 1M token · 1$ = {{ site.usd_to_uzs|money }} so'm</p>{% endblock %}
+{% block actions %}<a href="{% url 'panel:settings' %}#site" class="btn btn-light">Model va narxlarni o'zgartirish</a>{% endblock %}
+
+{% block content %}
+<div class="grid g-3" style="margin-bottom:14px;">
+  <div class="card kpi"><small>Bugun</small><b>${{ today.cost|floatformat:4 }}</b><span>≈ {{ today.uzs|money }} so'm · {{ today.n }} so'rov · xato {{ today.failed }}</span></div>
+  <div class="card kpi"><small>Shu oy</small><b>${{ month.cost|floatformat:3 }}</b><span>≈ {{ month.uzs|money }} so'm · {{ month.n }} so'rov · xato {{ month.failed }}</span></div>
+  <div class="card kpi"><small>Jami</small><b>${{ all.cost|floatformat:4 }}</b><span>≈ {{ all.uzs|money }} so'm · {{ all.n }} so'rov · {{ all.tin|default:0|money }} / {{ all.tout|default:0|money }} token</span></div>
+</div>
+
+<div class="card" style="margin-bottom:14px;">
+  <div class="card-h"><h2>So'nggi 30 kun, $ / kun</h2></div>
+  <div class="card-b">
+    <div class="bars">
+      {% for d in chart %}
+      <div class="bar" title="{{ d.label }}: ${{ d.cost|floatformat:4 }}"><div class="pair"><i class="l" style="height:{{ d.h }}%;"></i></div><em>{% if forloop.counter|divisibleby:3 or forloop.last %}{{ d.label }}{% endif %}</em></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="grid g-3" style="margin-bottom:14px;">
+  <div class="card">
+    <div class="card-h"><h2>Turi bo'yicha (shu oy)</h2></div>
+    <table class="t">
+      <tr><th>Tur</th><th class="num">So'rov</th><th class="num">$</th><th class="num">O'rtacha</th></tr>
+      {% for r in by_kind %}<tr><td>{% if r.kind == "generate" %}CV yaratish{% else %}Moslashtirish{% endif %}</td><td class="num">{{ r.n }}</td><td class="num">{{ r.cost|floatformat:4 }}</td><td class="num">{{ r.avg_ms|floatformat:0 }} ms</td></tr>
+      {% empty %}<tr><td colspan="4" class="empty">Ma'lumot yo'q</td></tr>{% endfor %}
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>Model bo'yicha (shu oy)</h2></div>
+    <table class="t">
+      <tr><th>Model</th><th class="num">So'rov</th><th class="num">$</th></tr>
+      {% for r in by_model %}<tr><td>{{ r.model|default:"—" }}</td><td class="num">{{ r.n }}</td><td class="num">{{ r.cost|floatformat:4 }}</td></tr>
+      {% empty %}<tr><td colspan="3" class="empty">Ma'lumot yo'q</td></tr>{% endfor %}
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>Eng ko'p sarflaganlar (shu oy)</h2></div>
+    <table class="t">
+      <tr><th>Foydalanuvchi</th><th class="num">So'rov</th><th class="num">$</th></tr>
+      {% for r in top_users %}<tr><td><a class="link" href="{% url 'panel:user_detail' r.user_id %}">{{ r.user__first_name|default:r.user__username }}</a></td><td class="num">{{ r.n }}</td><td class="num">{{ r.cost|floatformat:4 }}</td></tr>
+      {% empty %}<tr><td colspan="3" class="empty">Ma'lumot yo'q</td></tr>{% endfor %}
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-h"><h2>❌ Muvaffaqiyatsiz so'rovlar</h2><span class="muted small">limitga hisoblanmaydi</span></div>
+  <div class="table-wrap">
+    <table class="t">
+      <tr><th>Vaqt</th><th>Kim</th><th>Tur</th><th>Xato</th><th class="num">Davomiylik</th></tr>
+      {% for u in failed %}
+      <tr><td class="nowrap small">{{ u.created_at|date:"d.m H:i" }}</td>
+        <td>{% if u.user %}<a class="link" href="{% url 'panel:user_detail' u.user_id %}">{{ u.user.get_full_name|default:u.user.username }}</a>{% else %}<span class="muted">{{ u.ip|default:"anonim" }}</span>{% endif %}</td>
+        <td class="small">{{ u.get_kind_display }}</td><td class="small">{{ u.error|truncatechars:120 }}</td><td class="num small">{{ u.duration_ms }} ms</td></tr>
+      {% empty %}<tr><td colspan="5" class="empty">Xato yo'q 🎉</td></tr>{% endfor %}
+    </table>
+  </div>
+</div>
+{% endblock %}

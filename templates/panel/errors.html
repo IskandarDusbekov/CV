@@ -1,0 +1,55 @@
+{% extends "panel/base.html" %}
+{% load panel_tags %}
+{% block title %}Xatolar{% endblock %}
+{% block heading %}Xatolar{% endblock %}
+{% block subheading %}<p>Saytda, AI da va botda yuz bergan barcha xatolar avtomatik shu yerga yoziladi.</p>{% endblock %}
+{% block actions %}
+<form method="post" action="{% url 'panel:errors_resolve' %}">{% csrf_token %}<input type="hidden" name="all" value="1">
+  <button class="btn btn-light" data-confirm="Barcha ochiq xatolar hal qilindi deb belgilansinmi?">Hammasini hal qilindi deb belgilash</button></form>
+{% endblock %}
+
+{% block style %}
+.err { border-bottom: 1px solid var(--line); }
+.err:last-child { border-bottom: 0; }
+.err summary { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px 16px; cursor: pointer; list-style: none; }
+.err summary::-webkit-details-marker { display: none; }
+.err summary b { display: block; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.err pre { margin: 0 16px 14px; padding: 12px; max-height: 420px; overflow: auto; border-radius: 10px; background: #15161a; color: #e5e7eb; font-size: 12px; line-height: 1.5; white-space: pre-wrap; }
+.err.resolved summary b { color: var(--muted); text-decoration: line-through; }
+{% endblock %}
+
+{% block content %}
+{% if grouped %}
+<div class="card" style="margin-bottom:14px;">
+  <div class="card-h"><h2>Eng ko'p takrorlanayotgan ochiq xatolar</h2></div>
+  <ul class="list">
+    {% for g in grouped %}<li><span>{{ g.message|truncatechars:110 }}<br><span class="muted small">{{ g.source }}</span></span><span class="badge b-red">{{ g.n }} marta</span></li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="filters">
+  <div class="tabs">
+    <a href="{% qs show='open' %}" class="{% if show == 'open' %}on{% endif %}">Ochiq</a>
+    <a href="{% qs show='all' %}" class="{% if show == 'all' %}on{% endif %}">Hammasi</a>
+  </div>
+</div>
+
+<form method="post" action="{% url 'panel:errors_resolve' %}" class="card">
+  {% csrf_token %}
+  <div class="card-h"><h2>{{ page.paginator.count }} ta</h2><button class="btn btn-sm">Belgilanganlarni hal qilindi deb belgilash</button></div>
+  {% for e in page %}
+  <details class="err {% if e.is_resolved %}resolved{% endif %}">
+    <summary>
+      <input type="checkbox" name="ids" value="{{ e.pk }}" onclick="event.stopPropagation()" {% if e.is_resolved %}disabled{% endif %}>
+      <span><b>{{ e.message }}</b><span class="muted small">{{ e.source }}{% if e.method %} · {{ e.method }}{% endif %}{% if e.path %} {{ e.path }}{% endif %}{% if e.user %} · {{ e.user.get_full_name|default:e.user.username }}{% endif %}{% if e.ip %} · {{ e.ip }}{% endif %}</span></span>
+      <span class="muted small nowrap">{{ e.created_at|date:"d.m.Y H:i" }}</span>
+    </summary>
+    {% if e.traceback %}<pre>{{ e.traceback }}</pre>{% else %}<pre>{{ e.message }}</pre>{% endif %}
+  </details>
+  {% empty %}
+  <div class="empty">Ochiq xatolar yo'q 🎉</div>
+  {% endfor %}
+  {% include "panel/_pager.html" %}
+</form>
+{% endblock %}

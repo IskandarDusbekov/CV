@@ -1,0 +1,51 @@
+{% extends "panel/base.html" %}
+{% load panel_tags %}
+{% block title %}Murojaatlar{% endblock %}
+{% block heading %}Murojaatlar{% endblock %}
+{% block subheading %}<p>«Aloqa» sahifasidagi formadan kelgan xabarlar</p>{% endblock %}
+
+{% block style %}
+.msg { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; padding: 16px; }
+.msg p.body { margin-top: 8px; white-space: pre-wrap; line-height: 1.6; }
+.msg form { display: flex; flex-direction: column; gap: 8px; }
+.msg textarea { min-height: 70px; resize: vertical; }
+@media (max-width: 860px) { .msg { grid-template-columns: 1fr; } }
+{% endblock %}
+
+{% block content %}
+<div class="filters">
+  <div class="tabs">
+    <a href="{% qs show='open' %}" class="{% if show == 'open' %}on{% endif %}">Yangi</a>
+    <a href="{% qs show='all' %}" class="{% if show == 'all' %}on{% endif %}">Hammasi</a>
+  </div>
+</div>
+
+<div class="grid">
+  {% for m in page %}
+  <div class="card msg">
+    <div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <b style="font-size:16px;">{{ m.name }}</b>
+        <span class="badge b-sky">{{ m.contact }}</span>
+        {% if m.is_resolved %}<span class="badge b-green">javob berildi</span>{% else %}<span class="badge b-amber">yangi</span>{% endif %}
+      </div>
+      <span class="muted small">{{ m.created_at|date:"d.m.Y H:i" }}{% if m.user %} · <a class="link" href="{% url 'panel:user_detail' m.user_id %}">profil</a>{% endif %}{% if m.ip %} · {{ m.ip }}{% endif %}</span>
+      <p class="body">{{ m.message }}</p>
+    </div>
+    <form method="post" action="{% url 'panel:message_resolve' m.pk %}">
+      {% csrf_token %}
+      <textarea class="input" name="note" placeholder="Ichki izoh (ixtiyoriy)">{{ m.admin_note }}</textarea>
+      {% if m.is_resolved %}
+      <button class="btn btn-light" name="reopen" value="1">Qayta ochish</button>
+      {% else %}
+      <button class="btn btn-green">✓ Javob berildi</button>
+      {% endif %}
+      {% if "@" in m.contact and "." not in m.contact %}<a class="btn btn-light" href="https://t.me/{{ m.contact|cut:'@' }}" target="_blank">Telegram'da yozish</a>{% endif %}
+    </form>
+  </div>
+  {% empty %}
+  <div class="card empty">Yangi murojaat yo'q</div>
+  {% endfor %}
+</div>
+{% if page.paginator.num_pages > 1 %}<div class="card" style="margin-top:12px;">{% include "panel/_pager.html" %}</div>{% endif %}
+{% endblock %}

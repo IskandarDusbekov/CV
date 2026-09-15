@@ -1,5 +1,9 @@
+from django.conf import settings
 from django.contrib import messages
+from django.db import connection
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.cache import cache_control
 
 from apps.cv.services import demo_template_context, template_choices
 from apps.users.models import PricingPlan
@@ -50,6 +54,31 @@ def contact(request):
             messages.success(request, "Xabaringiz yuborildi! Tez orada javob beramiz.")
             return redirect("contact")
     return render(request, "core/contact.html", {"page": obj})
+
+
+@cache_control(max_age=86400, public=True)
+def robots_txt(request):
+    lines = [
+        "User-agent: *",
+        f"Disallow: /{settings.ADMIN_URL}",
+        "Disallow: /panel/",
+        "Disallow: /users/",
+        "Disallow: /cv/preview/",
+        "Disallow: /cv/download/",
+        "Disallow: /cv/share/",
+        "Allow: /",
+    ]
+    return HttpResponse("\n".join(lines) + "\n", content_type="text/plain")
+
+
+def healthz(request):
+    """Monitoring uchun: sayt va baza ishlayaptimi."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        return JsonResponse({"status": "ok"})
+    except Exception:
+        return JsonResponse({"status": "db_error"}, status=503)
 
 
 def _notify_admins(msg):

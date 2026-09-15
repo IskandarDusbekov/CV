@@ -1,0 +1,95 @@
+{% extends "panel/base.html" %}
+{% load mycv panel_tags %}
+{% block title %}To'lovlar{% endblock %}
+{% block heading %}To'lovlar{% endblock %}
+{% block subheading %}<p>Bot orqali yuborilgan cheklar. Tasdiqlasangiz kredit yoki Pro avtomatik qo'shiladi va foydalanuvchiga botda xabar boradi.</p>{% endblock %}
+
+{% block style %}
+.pay-list { display: grid; gap: 12px; }
+.pay { display: grid; grid-template-columns: 170px minmax(0, 1fr) 280px; gap: 18px; padding: 16px; }
+.pay.done { opacity: .85; }
+.rc { display: block; width: 170px; height: 220px; border-radius: 10px; overflow: hidden; background: #f1f1ee; border: 1px solid var(--line); }
+.rc img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.rc.none { display: grid; place-items: center; color: var(--muted); font-size: 12.5px; text-align: center; padding: 10px; }
+.info h3 { font-size: 17px; font-weight: 800; }
+.info dl { display: grid; grid-template-columns: 110px 1fr; gap: 6px 10px; margin: 12px 0 0; font-size: 13.5px; }
+.info dt { color: var(--muted); } .info dd { margin: 0; font-weight: 600; }
+.amount { font-size: 26px; font-weight: 800; letter-spacing: -.03em; }
+.decide { display: flex; flex-direction: column; gap: 8px; }
+.decide textarea { width: 100%; min-height: 60px; resize: vertical; }
+.caption { margin-top: 10px; padding: 8px 10px; border-radius: 8px; background: #f7f7f4; font-size: 13px; }
+@media (max-width: 1000px) { .pay { grid-template-columns: 1fr; } .rc { width: 100%; height: 300px; } }
+{% endblock %}
+
+{% block content %}
+<div class="filters">
+  <div class="tabs">
+    <a href="{% qs status='pending' %}" class="{% if status == 'pending' %}on{% endif %}">Tekshirilmoqda<em>{{ status_counts.pending|default:0 }}</em></a>
+    <a href="{% qs status='approved' %}" class="{% if status == 'approved' %}on{% endif %}">Tasdiqlangan<em>{{ status_counts.approved|default:0 }}</em></a>
+    <a href="{% qs status='rejected' %}" class="{% if status == 'rejected' %}on{% endif %}">Rad etilgan<em>{{ status_counts.rejected|default:0 }}</em></a>
+    <a href="{% qs status='awaiting_receipt' %}" class="{% if status == 'awaiting_receipt' %}on{% endif %}">Chek kutilmoqda<em>{{ status_counts.awaiting_receipt|default:0 }}</em></a>
+    <a href="{% qs status='all' %}" class="{% if status == 'all' %}on{% endif %}">Hammasi</a>
+  </div>
+  <form method="get" style="display:flex;gap:6px;flex:1;justify-content:flex-end;">
+    <input type="hidden" name="status" value="{{ status }}">
+    <input class="input search" name="q" value="{{ q }}" placeholder="Ism, telefon, @username yoki #raqam">
+    <button class="btn btn-light">Qidirish</button>
+  </form>
+</div>
+
+<div class="pay-list">
+  {% for req in page %}
+  {% with prof=req.user.profile %}
+  <div class="card pay {% if req.status != 'pending' %}done{% endif %}" id="p{{ req.pk }}">
+    {% if req.receipt %}
+      <a class="rc" href="{% url 'panel:receipt' req.pk %}" target="_blank" title="To'liq ko'rish">
+        {% if ".pdf" in req.receipt.name|lower %}<span class="rc none">📎 PDF chek<br>ochish</span>{% else %}<img src="{% url 'panel:receipt' req.pk %}" alt="chek" loading="lazy">{% endif %}
+      </a>
+    {% else %}
+      <div class="rc none">Chek hali<br>yuborilmagan</div>
+    {% endif %}
+
+    <div class="info">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+        <div>
+          <h3><a href="{% url 'panel:user_detail' req.user_id %}">{{ req.user.get_full_name|default:req.user.username }}</a></h3>
+          <span class="muted">#{{ req.pk }} · {{ prof.phone }}{% if prof.telegram_username %} · @{{ prof.telegram_username }}{% endif %}</span>
+        </div>
+        <span class="badge b-{{ req.status|payment_color }}">{{ req.get_status_display }}</span>
+      </div>
+      <dl>
+        <dt>Paket</dt><dd>{{ req.plan.name }} {% if req.plan.is_credit_pack %}<span class="badge b-violet">+{{ req.plan.credits }} kredit</span>{% else %}<span class="badge b-ink">Pro {{ req.plan.duration_days }} kun</span>{% endif %}</dd>
+        <dt>Summa</dt><dd class="amount">{{ req.amount|money }} so'm</dd>
+        <dt>Chek vaqti</dt><dd>{{ req.receipt_at|date:"d.m.Y H:i"|default:"—" }}{% if req.receipt_at %} <span class="muted">({{ req.receipt_at|timesince }} oldin)</span>{% endif %}</dd>
+        <dt>Hozirgi balans</dt><dd>{{ prof.credits }} kredit{% if prof.premium_until %} · Pro {{ prof.premium_until|date:"d.m.Y" }} gacha{% endif %}</dd>
+        {% if req.reviewed_by %}<dt>Ko'rib chiqdi</dt><dd>{{ req.reviewed_by.get_full_name|default:req.reviewed_by.username }} · {{ req.reviewed_at|date:"d.m.Y H:i" }}</dd>{% endif %}
+        {% if req.admin_note %}<dt>Izoh</dt><dd>{{ req.admin_note }}</dd>{% endif %}
+      </dl>
+      {% if req.receipt_caption %}<div class="caption">💬 {{ req.receipt_caption }}</div>{% endif %}
+    </div>
+
+    <div class="decide">
+      {% if req.status == "pending" or req.status == "awaiting_receipt" %}
+      <form method="post" action="{% url 'panel:payment_decide' req.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="approve">
+        <button class="btn btn-green btn-lg" style="width:100%;" data-confirm="#{{ req.pk }}: {{ req.amount|money }} so'm kelganini tekshirdingizmi? Tasdiqlansinmi?">✅ Tasdiqlash</button>
+      </form>
+      <form method="post" action="{% url 'panel:payment_decide' req.pk %}" class="decide">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="reject">
+        <textarea class="input" name="note" placeholder="Rad etish sababi (foydalanuvchiga yuboriladi)"></textarea>
+        <button class="btn btn-light" style="width:100%;color:#b91c1c;">❌ Rad etish</button>
+      </form>
+      {% else %}
+      <a href="{% url 'panel:user_detail' req.user_id %}" class="btn btn-light">Foydalanuvchini ochish</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endwith %}
+  {% empty %}
+  <div class="card empty">{% if status == "pending" %}Tekshiriladigan chek yo'q ✅{% else %}Hech narsa topilmadi{% endif %}</div>
+  {% endfor %}
+</div>
+{% if page.paginator.num_pages > 1 %}<div class="card" style="margin-top:12px;">{% include "panel/_pager.html" %}</div>{% endif %}
+{% endblock %}

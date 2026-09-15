@@ -1,0 +1,53 @@
+{% extends "panel/base.html" %}
+{% load panel_tags %}
+{% block title %}Foydalanuvchilar{% endblock %}
+{% block heading %}Foydalanuvchilar{% endblock %}
+{% block subheading %}<p>{{ page.paginator.count }} ta</p>{% endblock %}
+
+{% block content %}
+<div class="filters">
+  <div class="tabs">
+    <a href="{% qs f='' %}" class="{% if not f %}on{% endif %}">Hammasi</a>
+    <a href="{% qs f='online' %}" class="{% if f == 'online' %}on{% endif %}">Onlayn</a>
+    <a href="{% qs f='credits' %}" class="{% if f == 'credits' %}on{% endif %}">Kreditli</a>
+    <a href="{% qs f='pro' %}" class="{% if f == 'pro' %}on{% endif %}">Pro</a>
+    <a href="{% qs f='blocked' %}" class="{% if f == 'blocked' %}on{% endif %}">Bloklangan</a>
+  </div>
+  <form method="get" style="display:flex;gap:6px;flex:1;justify-content:flex-end;flex-wrap:wrap;">
+    <input type="hidden" name="f" value="{{ f }}">
+    <select class="input" name="sort" onchange="this.form.submit()">
+      <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>Yangi qo'shilgan</option>
+      <option value="-last_seen" {% if sort == '-last_seen' %}selected{% endif %}>Oxirgi faol</option>
+      <option value="-credits" {% if sort == '-credits' %}selected{% endif %}>Kredit ko'p</option>
+      <option value="-cv_count" {% if sort == '-cv_count' %}selected{% endif %}>CV ko'p</option>
+    </select>
+    <input class="input search" name="q" value="{{ q }}" placeholder="Ism, telefon, @username yoki IP">
+    <button class="btn btn-light">Qidirish</button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="t">
+      <tr><th>Foydalanuvchi</th><th>Telefon</th><th>Telegram</th><th class="num">CV</th><th class="num">Kredit</th><th>Tarif</th><th>Oxirgi faollik</th><th>IP</th><th>Ro'yxatdan</th></tr>
+      {% for prof in page %}
+      <tr>
+        <td><a href="{% url 'panel:user_detail' prof.user_id %}" class="name">{{ prof.user.get_full_name|default:prof.user.username }}</a>
+          {% if prof.is_blocked %}<span class="badge b-red">bloklangan</span>{% endif %}{% if prof.user.is_staff %}<span class="badge b-ink">admin</span>{% endif %}</td>
+        <td class="nowrap">{{ prof.phone|default:"—" }}</td>
+        <td>{% if prof.telegram_username %}<a class="link" href="https://t.me/{{ prof.telegram_username }}" target="_blank">@{{ prof.telegram_username }}</a>{% elif prof.telegram_id %}✓{% else %}—{% endif %}</td>
+        <td class="num">{{ prof.cv_count }}</td>
+        <td class="num">{% if prof.credits %}<b>{{ prof.credits }}</b>{% else %}0{% endif %}</td>
+        <td>{% if prof.premium_until and prof.premium_until >= now %}<span class="badge b-ink">Pro · {{ prof.premium_until|date:"d.m" }}</span>{% else %}<span class="muted">bepul</span>{% endif %}</td>
+        <td class="nowrap">{% if prof.last_seen %}{{ prof.last_seen|timesince }} oldin{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td class="small muted">{{ prof.last_ip|default:"" }}</td>
+        <td class="nowrap small">{{ prof.created_at|date:"d.m.Y" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9" class="empty">Topilmadi</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% include "panel/_pager.html" %}
+</div>
+{% endblock %}

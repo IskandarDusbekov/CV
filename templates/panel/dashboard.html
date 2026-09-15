@@ -1,0 +1,79 @@
+{% extends "panel/base.html" %}
+{% load mycv panel_tags %}
+{% block title %}Bosh sahifa{% endblock %}
+{% block heading %}Salom, {{ request.user.first_name|default:request.user.username }} 👋{% endblock %}
+{% block subheading %}<p>{% now "l, j F Y" %}</p>{% endblock %}
+
+{% block content %}
+<div class="grid g-4" style="margin-bottom:14px;">
+  <a href="{% url 'panel:payments' %}" class="card kpi {% if payments_pending %}hot{% endif %}">
+    <small>💳 Tekshirish kerak</small><b>{{ payments_pending }}</b><span>to'lov cheki</span></a>
+  <a href="{% url 'panel:payments' %}?status=approved" class="card kpi">
+    <small>💰 Tushum · shu oy</small><b>{{ revenue_month|money }}</b><span>bugun {{ revenue_today|money }} · jami {{ revenue_total|money }} so'm</span></a>
+  <a href="{% url 'panel:users' %}" class="card kpi">
+    <small>👤 Foydalanuvchilar</small><b>{{ users_total }}</b><span>bugun +{{ users_today }} · onlayn {{ users_online }}</span></a>
+  <a href="{% url 'panel:cvs' %}" class="card kpi">
+    <small>📄 CV lar</small><b>{{ cvs_total }}</b><span>bugun +{{ cvs_today }} · ochilgan {{ cvs_unlocked }}</span></a>
+  <a href="{% url 'panel:ai' %}" class="card kpi">
+    <small>✨ AI xarajati · shu oy</small><b>${{ ai_cost_month|floatformat:3 }}</b><span>≈ {{ ai_cost_month_uzs|money }} so'm</span></a>
+  <a href="{% url 'panel:ai' %}" class="card kpi {% if ai_failed_today %}hot{% endif %}">
+    <small>✨ AI so'rovlari · bugun</small><b>{{ ai_today }}</b><span>xato: {{ ai_failed_today }} · ${{ ai_cost_today|floatformat:4 }}</span></a>
+  <a href="{% url 'panel:errors' %}" class="card kpi {% if errors_open %}hot{% endif %}">
+    <small>🐞 Hal qilinmagan xatolar</small><b>{{ errors_open }}</b><span>server, AI, bot</span></a>
+  <a href="{% url 'panel:messages' %}" class="card kpi {% if messages_new %}hot{% endif %}">
+    <small>✉️ Yangi murojaatlar</small><b>{{ messages_new }}</b><span>aloqa formasi</span></a>
+</div>
+
+<div class="grid g-main" style="margin-bottom:14px;">
+  <div class="card">
+    <div class="card-h"><h2>So'nggi 14 kun</h2><div class="legend"><span>CV</span><span class="g">yangi foydalanuvchi</span></div></div>
+    <div class="card-b">
+      <div class="bars">
+        {% for d in chart %}
+        <div class="bar" title="{{ d.label }}: {{ d.cvs }} CV, {{ d.users }} foydalanuvchi, {{ d.revenue|money }} so'm">
+          <div class="pair"><i style="height:{{ d.cv_h }}%;"></i><i class="g" style="height:{{ d.user_h }}%;"></i></div>
+          <em>{{ d.label }}</em>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><h2>💳 Kutayotgan to'lovlar</h2><a href="{% url 'panel:payments' %}" class="btn btn-light btn-sm">Hammasi</a></div>
+    <ul class="list">
+      {% for req in pending_payments %}
+      <li>
+        <span><b>{{ req.user.get_full_name|default:req.user.username }}</b><br><span class="muted small">#{{ req.pk }} · {{ req.plan.name }} · {{ req.receipt_at|timesince }} oldin</span></span>
+        <span style="text-align:right;"><b>{{ req.amount|money }}</b><br><a href="{% url 'panel:payments' %}#p{{ req.pk }}" class="link small">ko'rish</a></span>
+      </li>
+      {% empty %}
+      <li class="muted">Hozircha tekshiriladigan chek yo'q ✅</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div class="grid g-main">
+  <div class="card">
+    <div class="card-h"><h2>🕓 So'nggi faollik</h2><a href="{% url 'panel:activity' %}" class="btn btn-light btn-sm">Hammasi</a></div>
+    <ul class="list">
+      {% for a in recent_activity %}
+      <li>
+        <span>{% if a.user %}<a href="{% url 'panel:user_detail' a.user_id %}" class="name">{{ a.user.get_full_name|default:a.user.username }}</a>{% else %}<span class="muted">anonim</span>{% endif %}
+          <span class="badge b-{{ a.action|action_color }}">{{ a.get_action_display }}</span></span>
+        <span class="muted small nowrap">{{ a.ip|default:"" }} · {{ a.created_at|date:"d.m H:i" }}</span>
+      </li>
+      {% empty %}<li class="muted">Faollik yo'q</li>{% endfor %}
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-h"><h2>🐞 So'nggi xatolar</h2><a href="{% url 'panel:errors' %}" class="btn btn-light btn-sm">Hammasi</a></div>
+    <ul class="list">
+      {% for e in recent_errors %}
+      <li><span>{{ e.message|truncatechars:70 }}<br><span class="muted small">{{ e.source }}{% if e.path %} · {{ e.path }}{% endif %}</span></span><span class="muted small nowrap">{{ e.created_at|date:"d.m H:i" }}</span></li>
+      {% empty %}<li class="muted">Xatolar yo'q 🎉</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}
