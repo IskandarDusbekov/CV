@@ -36,7 +36,7 @@ logger = logging.getLogger("apps.cv")
 
 
 def example(request):
-    """'Bepul CV yaratish' dan keyin birinchi ko'rinadigan tayyor namuna."""
+    """'Bepul rezyume yaratish' dan keyin birinchi ko'rinadigan tayyor namuna."""
     templates = [{**t, **demo_template_context(t["code"])} for t in template_choices(DEFAULT_TEMPLATE)]
     return render(request, "cv/example.html", {"templates": templates, "quota": quotas.generate_quota(request)})
 
@@ -68,7 +68,7 @@ def preview(request, cv_id):
 
 @require_POST
 def unlock_with_credit(request, cv_id):
-    """1 kredit sarflab CV ni (va uning moslashtirilgan versiyalarini) ochish."""
+    """1 kredit sarflab rezyumeni (va uning moslashtirilgan versiyalarini) ochish."""
     cv = _private_cv(request, cv_id)
     if not request.user.is_authenticated:
         return redirect(f"{reverse('user_login')}?next={quote(reverse('cv_preview', args=[cv.public_id]))}")
@@ -87,7 +87,7 @@ def unlock_with_credit(request, cv_id):
     root.unlock(save=False)
     root.save(update_fields=["user", "is_unlocked", "unlocked_at", "updated_at"])
     log_activity(request, "cv_unlock", cv=str(root.public_id))
-    messages.success(request, "CV ochildi! Endi PDF va Word yuklab olishingiz mumkin.")
+    messages.success(request, "Rezyume ochildi! Endi PDF va Word yuklab olishingiz mumkin.")
     return redirect("cv_preview", cv_id=cv.public_id)
 
 
@@ -131,7 +131,7 @@ def tailor_cv(request, cv_id):
     if not request.user.is_authenticated:
         request.session["owned_cv_ids"] = request.session.get("owned_cv_ids", []) + [tailored.id]
 
-    messages.success(request, "Tayyor! CV vakansiyaga moslashtirildi — asl nusxa o'zgarmadi.")
+    messages.success(request, "Tayyor! Rezyume vakansiyaga moslashtirildi — asl nusxa o'zgarmadi.")
     return redirect("cv_preview", cv_id=tailored.public_id)
 
 
@@ -147,7 +147,7 @@ def download_pdf(request, cv_id, inline=False):
     if isinstance(cv, HttpResponse):
         return cv
     if not user_can_download_pdf(request.user, cv):
-        messages.warning(request, "Yuklab olish uchun CV'ni kredit yoki Pro bilan oching.")
+        messages.warning(request, "Yuklab olish uchun rezyumeni kredit yoki Pro bilan oching.")
         return redirect("cv_preview", cv_id=cv.public_id)
 
     try:
@@ -168,7 +168,7 @@ def download_docx(request, cv_id):
     if isinstance(cv, HttpResponse):
         return cv
     if not user_can_download_docx(request.user, cv):
-        messages.warning(request, "Yuklab olish uchun CV'ni kredit yoki Pro bilan oching.")
+        messages.warning(request, "Yuklab olish uchun rezyumeni kredit yoki Pro bilan oching.")
         return redirect("cv_preview", cv_id=cv.public_id)
 
     from .docx_export import render_cv_to_docx
@@ -236,9 +236,9 @@ def remove_photo(request, cv_id):
 def toggle_share_link(request, cv_id):
     cv = get_object_or_404(CV, public_id=cv_id)
     if not _is_owner(request.user, cv):
-        raise Http404("CV topilmadi.")
+        raise Http404("Rezyume topilmadi.")
     if not user_can_share_cv(request.user, cv):
-        messages.warning(request, "Ommaviy havola CV ochilgandan so'ng ishlaydi.")
+        messages.warning(request, "Ommaviy havola rezyume ochilgandan so'ng ishlaydi.")
         return redirect("cv_preview", cv_id=cv.public_id)
 
     if request.POST.get("action", "enable").strip().lower() == "disable":
@@ -325,7 +325,7 @@ def _private_cv(request, cv_id, staff_ok=True):
     cv = get_object_or_404(CV.objects.select_related("parent", "user"), public_id=cv_id)
     if _can_access_private_cv(request, cv) or (staff_ok and request.user.is_staff):
         return cv
-    raise Http404("CV topilmadi.")
+    raise Http404("Rezyume topilmadi.")
 
 
 def _downloadable_cv(request, cv_id):

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="robots" content="noindex">
+  <title>{{ site.site_name|default:'tezrezyume.uz' }}</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root { --bg: var(--tg-theme-bg-color, #f6f6f3); --text: var(--tg-theme-text-color, #111); --hint: var(--tg-theme-hint-color, #6b6f76);
+            --btn: var(--tg-theme-button-color, #229ed9); --btn-text: var(--tg-theme-button-text-color, #fff); }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 18px; background: var(--bg); color: var(--text);
+           font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; }
+    .box { width: 100%; max-width: 360px; }
+    .logo { font-weight: 800; font-size: 22px; letter-spacing: -.02em; margin-bottom: 22px; }
+    .logo small { color: var(--hint); font-weight: 600; }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    p { color: var(--hint); margin: 0 0 20px; }
+    .spin { width: 34px; height: 34px; margin: 0 auto 18px; border-radius: 50%; border: 3px solid rgba(127,127,127,.25); border-top-color: var(--btn); animation: r .8s linear infinite; }
+    @keyframes r { to { transform: rotate(360deg); } }
+    .btn { display: block; width: 100%; padding: 14px 16px; border: 0; border-radius: 12px; background: var(--btn); color: var(--btn-text);
+           font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }
+    .btn.light { background: transparent; color: var(--btn); margin-top: 8px; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="logo">{{ site.brand_base|default:'tezrezyume' }}<small>{{ site.brand_tld|default:'.uz' }}</small></div>
+
+    <div id="s-loading"><div class="spin"></div><h1>Kirilmoqda…</h1><p>Telegram hisobingiz tekshirilmoqda.</p></div>
+
+    <div id="s-phone" hidden>
+      <h1>Raqamingizni ulashing</h1>
+      <p>Bir marta raqamingizni tasdiqlasangiz, keyingi safar sayt darhol ochiladi.</p>
+      <button class="btn" id="phone-btn" type="button">📱 Raqamni ulashish</button>
+    </div>
+
+    <div id="s-wait" hidden><div class="spin"></div><h1>Raqam tasdiqlanmoqda…</h1><p>Bir necha soniya.</p></div>
+
+    <div id="s-error" hidden>
+      <h1 id="err-title">Kirib bo'lmadi</h1>
+      <p id="err-text">Botni qayta oching va «Saytni ochish» tugmasini bosing.</p>
+      <button class="btn" id="retry-btn" type="button">Qayta urinish</button>
+      <a class="btn light" id="site-link" href="{{ next_url }}">Saytga o'tish</a>
+    </div>
+
+    <div id="s-outside" hidden>
+      <h1>Bu sahifa Telegram ichida ochiladi</h1>
+      <p>Brauzerda kirish uchun Telegram tugmasidan foydalaning.</p>
+      <a class="btn" href="{% url 'user_login' %}?next={{ next_url|urlencode }}">Kirish sahifasi</a>
+    </div>
+    {% csrf_token %}
+  </div>
+
+<script>
+(function () {
+  var tg = window.Telegram && window.Telegram.WebApp;
+  var NEXT = "{{ next_url|escapejs }}";
+  var AUTH_URL = "{% url 'telegram_webapp_auth' %}";
+  var CSRF = document.querySelector('input[name=csrfmiddlewaretoken]').value;
+  var states = ["loading", "phone", "wait", "error", "outside"];
+
+  function show(name) {
+    states.forEach(function (s) { document.getElementById("s-" + s).hidden = s !== name; });
+  }
+  function fail(title, text) {
+    document.getElementById("err-title").textContent = title;
+    document.getElementById("err-text").textContent = text;
+    show("error");
+  }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  function auth() {
+    var body = new URLSearchParams({ init_data: tg.initData, next: NEXT });
+    return fetch(AUTH_URL, { method: "POST", body: body, credentials: "same-origin", headers: { "X-CSRFToken": CSRF } })
+      .then(function (r) { return r.json().catch(function () { return { status: "error" }; }); })
+      .catch(function () { return { status: "network" }; });
+  }
+
+  function handle(d) {
+    if (d.status === "ok") { location.replace(d.redirect || NEXT); return true; }
+    if (d.status === "blocked") { fail("Hisob bloklangan", "Savollar bo'lsa, yordam xizmatiga yozing."); return true; }
+    if (d.status === "invalid") { fail("Sessiya eskirgan", "Botni yopib, «Saytni ochish» tugmasini qayta bosing."); return true; }
+    if (d.status === "network") { fail("Internet bilan muammo", "Aloqani tekshirib, qayta urinib ko'ring."); return true; }
+    if (d.status !== "need_phone") { fail("Kirib bo'lmadi", "Birozdan so'ng qayta urinib ko'ring."); return true; }
+    return false;
+  }
+
+  function start() {
+    show("loading");
+    auth().then(function (d) { if (!handle(d)) show("phone"); });
+  }
+
+  document.getElementById("retry-btn").addEventListener("click", start);
+  document.getElementById("phone-btn").addEventListener("click", function () {
+    if (!tg.requestContact || !tg.isVersionAtLeast || !tg.isVersionAtLeast("6.9")) {
+      tg.showAlert("Botga qayting va «📱 Raqamni yuborish» tugmasini bosing, so'ng saytni qayta oching.", function () { tg.close(); });
+      return;
+    }
+    tg.requestContact(function (shared) {
+      if (!shared) return;
+      show("wait");
+      // Kontakt botga keladi va bot akkauntni yaratadi — tayyor bo'lguncha kutamiz
+      (async function () {
+        for (var i = 0; i < 15; i++) {
+          await sleep(1500);
+          var d = await auth();
+          if (handle(d)) return;
+        }
+        fail("Raqam hali kelmadi", "Bir oz kutib, «Qayta urinish» ni bosing.");
+      })();
+    });
+  });
+
+  if (!tg || !tg.initData) { show("outside"); return; }
+  tg.ready();
+  tg.expand();
+  start();
+})();
+</script>
+</body>
+</html>

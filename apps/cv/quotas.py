@@ -1,10 +1,10 @@
 """
-AI limitlari — kim nechta CV yaratishi va vakansiyaga moslashtirishi mumkin.
+AI limitlari — kim nechta rezyume yaratishi va vakansiyaga moslashtirishi mumkin.
 Barcha raqamlar admin paneldan o'zgaradi (Sayt sozlamalari va Tariflar).
 
-  Bepul          : site.free_cv_limit ta CV, site.free_tailor_limit ta moslashtirish (umumiy)
-  Ochilgan CV    : shu CV uchun site.tailor_per_unlocked_cv ta moslashtirish (kredit bilan ochilgan)
-  Pro            : obuna davri ichida plan.max_cvs ta CV va plan.max_tailorings ta moslashtirish
+  Bepul          : site.free_cv_limit ta rezyume, site.free_tailor_limit ta moslashtirish (umumiy)
+  Ochilgan rezyume: shu rezyume uchun site.tailor_per_unlocked_cv ta moslashtirish (kredit bilan ochilgan)
+  Pro            : obuna davri ichida plan.max_cvs ta rezyume va plan.max_tailorings ta moslashtirish
 
 Anonim foydalanuvchi sessiya va IP bo'yicha hisoblanadi. Faqat muvaffaqiyatli AI so'rovlari sanaladi.
 """
@@ -83,12 +83,12 @@ def generate_quota(request):
         limit = plan.max_cvs or 30
         used = _usage(request, AIUsage.KIND_GENERATE).filter(created_at__gte=start).count()
         return Quota(used < limit, used, limit, "pro",
-                     "" if used < limit else f"Pro davri uchun {limit} ta CV limiti tugadi. Keyingi davrda yangilanadi.")
+                     "" if used < limit else f"Pro davri uchun {limit} ta rezyume limiti tugadi. Keyingi davrda yangilanadi.")
 
     limit = SiteSettings.load().free_cv_limit
     used = _usage(request, AIUsage.KIND_GENERATE).count()
     message = "" if used < limit else (
-        f"Bepul {limit} ta CV limiti tugadi. Mavjud CV'ingizni kredit bilan oching yoki ko'p CV uchun Pro oling."
+        f"Bepul {limit} ta rezyume limiti tugadi. Mavjud rezyumengizni kredit bilan oching yoki ko'p rezyume uchun Pro oling."
     )
     return Quota(used < limit, used, limit, "free", message)
 
@@ -107,12 +107,12 @@ def tailor_quota(request, cv):
         limit = site.tailor_per_unlocked_cv
         used = AIUsage.objects.filter(kind=AIUsage.KIND_TAILOR, success=True).filter(Q(cv=root) | Q(cv__parent=root)).count()
         return Quota(used < limit, used, limit, "cv",
-                     "" if used < limit else f"Bu CV uchun {limit} ta moslashtirish limiti tugadi. Pro bilan ko'proq.")
+                     "" if used < limit else f"Bu rezyume uchun {limit} ta moslashtirish limiti tugadi. Pro bilan ko'proq.")
 
     limit = site.free_tailor_limit
     used = _usage(request, AIUsage.KIND_TAILOR).count()
     return Quota(used < limit, used, limit, "free",
-                 "" if used < limit else f"Bepul moslashtirish ishlatildi. CV'ni kredit bilan ochsangiz yana {site.tailor_per_unlocked_cv} ta beriladi.")
+                 "" if used < limit else f"Bepul moslashtirish ishlatildi. Rezyumeni kredit bilan ochsangiz yana {site.tailor_per_unlocked_cv} ta beriladi.")
 
 
 def record(request, kind, cv=None, meta=None, error=""):

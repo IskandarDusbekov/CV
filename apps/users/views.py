@@ -18,7 +18,7 @@ from apps.cv.services import TEMPLATE_META, normalize_cv_data, resolve_template_
 
 from apps.core.models import SiteSettings
 
-from .models import CompanyBranding, PaymentRequest, PaymentTransaction, PricingPlan, TelegramLoginToken
+from .models import CompanyBranding, PaymentRequest, PaymentTransaction, PricingPlan, TelegramLoginToken, UserProfile
 from .services import activate_transaction, fail_transaction
 from .telegram_auth import (
     bot_username,
@@ -27,6 +27,7 @@ from .telegram_auth import (
     create_login_token,
     deep_link,
     get_active_token,
+    verify_webapp_init_data,
 )
 
 _SESSION_TOKEN_KEY = "tg_login_token"
@@ -89,13 +90,57 @@ def telegram_login_status(request):
 
 @require_GET
 def telegram_login_complete(request, token):
-    """Bot yuborgan "Saytga kirish" havolasi."""
+    """Eski bot xabarlaridagi bir martalik havola (endi bot Mini App tugmasini yuboradi)."""
     obj = TelegramLoginToken.objects.filter(token=token).first()
     user = consume_token(obj) if obj else None
     if user is None:
-        messages.error(request, "Havola eskirgan yoki allaqachon ishlatilgan. Qaytadan kiring.")
+        if request.user.is_authenticated:
+            return redirect("user_dashboard")
+        messages.info(request, "Bu havola eskirgan. Botdagi «Saytni ochish» tugmasini bosing — u har doim ishlaydi.")
         return redirect("user_login")
     return redirect(_finish_login(request, user))
+
+
+# ─── TELEGRAM MINI APP ────────────────────────────────────────────────────────
+
+def _safe_next(request, value, default="/users/dashboard/"):
+    if value and url_has_allowed_host_and_scheme(value, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return value
+    return default
+
+
+@require_GET
+def telegram_webapp(request):
+    """Botdagi «Saytni ochish» tugmasi ochadigan sahifa: initData bilan avtomatik kiradi."""
+    return render(request, "users/tg_app.html", {
+        "next_url": _safe_next(request, request.GET.get("next", "")),
+        "bot_username": bot_username(),
+    })
+
+
+@require_POST
+def telegram_webapp_auth(request):
+    """Mini App initData ni tekshiradi va Telegram ID bo'yicha akkauntga kiritadi."""
+    tg_user = verify_webapp_init_data(request.POST.get("init_data", ""))
+    if tg_user is None:
+        return JsonResponse({"status": "invalid"}, status=403)
+
+    next_url = _safe_next(request, request.POST.get("next", ""))
+    profile = UserProfile.objects.select_related("user").filter(telegram_id=tg_user["id"]).first()
+    if profile is None:
+        # Raqam hali ulashilmagan: sahifa requestContact so'raydi, bot akkauntni yaratadi
+        return JsonResponse({"status": "need_phone"})
+    if profile.is_blocked:
+        return JsonResponse({"status": "blocked"}, status=403)
+
+    user = profile.user
+    if tg_user.get("username") and tg_user["username"] != profile.telegram_username:
+        UserProfile.objects.filter(pk=profile.pk).update(telegram_username=tg_user["username"][:100])
+    if request.user.is_authenticated and request.user.pk == user.pk:
+        return JsonResponse({"status": "ok", "redirect": next_url})
+
+    request.session[_SESSION_NEXT_KEY] = next_url
+    return JsonResponse({"status": "ok", "redirect": _finish_login(request, user)})
 
 
 @require_POST

@@ -499,7 +499,7 @@ def render_cv_to_docx(cv, user) -> bytes:
     normal.font.color.rgb = _rgb(theme.text)
 
     core = doc.core_properties
-    core.title = f"{data['full_name']} — CV"
+    core.title = f"{data['full_name']} — Rezyume"
     core.author = data["full_name"]
     core.comments = f"{SiteSettings.load().site_name} orqali yaratilgan"
 

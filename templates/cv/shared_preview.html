@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ cv_data.full_name }} — CV{% endblock %}
+{% block title %}{{ cv_data.full_name }} — Rezyume{% endblock %}
 
 {% block extra_style %}
 .sh { padding: 24px 0 0; }
@@ -24,7 +24,7 @@
       <div><h1>{{ cv_data.full_name }}</h1><p>{{ cv_data.job_title }}</p></div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-light btn-sm" onclick="window.print()">Chop etish</button>
-        <a href="/cv/builder/" class="btn btn-dark btn-sm">O'z CV'ingizni yarating</a>
+        <a href="/cv/builder/" class="btn btn-dark btn-sm">O'z rezyumengizni yarating</a>
       </div>
     </div>
     <div class="sh-stage">

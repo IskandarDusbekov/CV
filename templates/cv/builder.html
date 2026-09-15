@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}CV yaratish — {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
+{% block title %}Rezyume yaratish — {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
 
 {% block extra_style %}
 .b { max-width: 820px; margin: 0 auto; padding: 36px 16px 0; }
@@ -66,7 +66,7 @@ details.more[open] summary::before { content: "− "; }
       <div class="opts">
         <div class="opt field" style="margin:0;"><label>Qaysi lavozimga?</label><input type="text" id="target-job" placeholder="Masalan: SMM menejer"></div>
         <div class="opt">
-          <label>CV tili</label>
+          <label>Rezyume tili</label>
           <div class="seg" id="lang-seg">
             <button type="button" class="sel" data-lang="auto">Avto</button>
             <button type="button" data-lang="uz">O'zb</button>
@@ -79,10 +79,10 @@ details.more[open] summary::before { content: "− "; }
       </div>
     </details>
 
-    <button class="btn btn-dark go" id="generate-btn" type="button"><span id="btn-text">CV'ni tayyorlash</span> →</button>
+    <button class="btn btn-dark go" id="generate-btn" type="button"><span id="btn-text">Rezyumeni tayyorlash</span> →</button>
     <div class="status" id="status"></div>
     <div class="meta">
-      <span>{% if quota.tier == "pro" %}Pro: <b>{{ quota.remaining }}</b> ta CV qoldi{% else %}Bepul: <b>{{ quota.remaining }} / {{ quota.limit }}</b> ta CV qoldi{% endif %}</span>
+      <span>{% if quota.tier == "pro" %}Pro: <b>{{ quota.remaining }}</b> ta rezyume qoldi{% else %}Bepul: <b>{{ quota.remaining }} / {{ quota.limit }}</b> ta rezyume qoldi{% endif %}</span>
       <a href="/cv/namuna/">Natija qanday bo'lishini ko'rish</a>
     </div>
   </div>
@@ -91,8 +91,8 @@ details.more[open] summary::before { content: "− "; }
     <h2>Bepul limit tugadi</h2>
     <p>{{ quota.message }}</p>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-      {% if request.user.is_authenticated %}<a href="/users/dashboard/" class="btn btn-light">Mening CV'larim</a>{% else %}<a href="/users/login/?next=/users/dashboard/" class="btn btn-light">Kirish</a>{% endif %}
-      <a href="/pricing/" class="btn btn-accent">Pro — {{ pro_plan.max_cvs|default:30 }} ta CV</a>
+      {% if request.user.is_authenticated %}<a href="/users/dashboard/" class="btn btn-light">Mening rezyumelarim</a>{% else %}<a href="/users/login/?next=/users/dashboard/" class="btn btn-light">Kirish</a>{% endif %}
+      <a href="/pricing/" class="btn btn-accent">Pro — {{ pro_plan.max_cvs|default:30 }} ta rezyume</a>
     </div>
   </div>
   {% endif %}
@@ -101,7 +101,7 @@ details.more[open] summary::before { content: "− "; }
 <div class="overlay" id="overlay">
   <div class="overlay-in">
     <div class="spinner dark"></div>
-    <h3>CV yozilmoqda…</h3>
+    <h3>Rezyume yozilmoqda…</h3>
     <p id="overlay-step">Matningiz o'qilmoqda</p>
   </div>
 </div>

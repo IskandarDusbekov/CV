@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Namuna CV — {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
+{% block title %}Namuna rezyume — {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
 
 {% block extra_style %}
 .ex { padding: 28px 0 0; }
@@ -38,8 +38,8 @@
   <div class="wrap">
     <div class="ex-head">
       <span class="eyebrow">Tayyor namuna</span>
-      <h1>Mana shunday CV <span class="serif">sizniki</span> ham bo'ladi</h1>
-      <p>Bu CV pastdagi bitta chalkash matndan AI tomonidan yozilgan. Dizaynni almashtirib ko'ring.</p>
+      <h1>Mana shunday rezyume <span class="serif">sizniki</span> ham bo'ladi</h1>
+      <p>Bu rezyume pastdagi bitta chalkash matndan AI tomonidan yozilgan. Dizaynni almashtirib ko'ring.</p>
     </div>
 
     <div class="ex-grid">
@@ -59,20 +59,20 @@
           <div class="from">Foydalanuvchi yozgani</div>
           <div class="raw">“salom men sardor nazarov 6 yil backend dasturchiman hozir uzum marketda seniorman oldin clickda 3 yil ishlaganman python django fastapi postgres redis docker bilaman tatuni bitirganman rus tili yaxshi ingliz b2”</div>
           <div class="down">↓</div>
-          <div class="result"><i>✦</i>AI ~15 soniyada yonidagi CV'ni yozdi</div>
+          <div class="result"><i>✦</i>AI ~15 soniyada yonidagi rezyumeni yozdi</div>
         </div>
 
         <div class="go">
           <h2>O'zingiznikini yarating</h2>
           <p>Xuddi shunday yozing: kimsiz, qayerda ishlagansiz, nimalarni bilasiz. Tartib va imlo muhim emas.</p>
-          <a href="/cv/builder/" class="btn btn-accent btn-lg btn-block">O'z CV'imni yaratish →</a>
-          <div class="q">{% if quota.tier == "pro" %}Pro: <b>{{ quota.remaining }}</b> ta CV qoldi{% elif quota.allowed %}Bepul: <b>{{ quota.remaining }} ta</b> CV yaratish qoldi{% else %}Bepul limit tugagan — <a href="/pricing/" style="color:#fff;text-decoration:underline;">Pro</a>{% endif %}</div>
+          <a href="/cv/builder/" class="btn btn-accent btn-lg btn-block">O'z rezyumemni yaratish →</a>
+          <div class="q">{% if quota.tier == "pro" %}Pro: <b>{{ quota.remaining }}</b> ta rezyume qoldi{% elif quota.allowed %}Bepul: <b>{{ quota.remaining }} ta</b> rezyume yaratish qoldi{% else %}Bepul limit tugagan — <a href="/pricing/" style="color:#fff;text-decoration:underline;">Pro</a>{% endif %}</div>
         </div>
 
         <div class="card card-in">
           <ol class="steps3">
             <li><span>1</span>Matn yozasiz — ro'yxatdan o'tmasdan</li>
-            <li><span>2</span>AI CV tuzadi, ekranda ko'rasiz</li>
+            <li><span>2</span>AI rezyume tuzadi, ekranda ko'rasiz</li>
             <li><span>3</span>Yoqsa — Telegram orqali kirib, yuklab olasiz</li>
           </ol>
         </div>

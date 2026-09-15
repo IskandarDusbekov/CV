@@ -31,7 +31,7 @@
 <div class="pay">
   <span class="eyebrow">To'lov</span>
   <h1>Kredit yoki <span class="serif">Pro</span> sotib olish</h1>
-  <p class="sub">1 kredit = 1 CV ochiladi (PDF + Word, muddatsiz). Balansingiz: <b>{% if request.user.is_authenticated %}{{ request.user.profile.credits }}{% else %}—{% endif %} kredit</b></p>
+  <p class="sub">1 kredit = 1 rezyume ochiladi (PDF + Word, muddatsiz). Balansingiz: <b>{% if request.user.is_authenticated %}{{ request.user.profile.credits }}{% else %}—{% endif %} kredit</b></p>
   {% if site.payment_notice %}<div class="notice">✈️ {{ site.payment_notice }}</div>{% endif %}
 
   <ol class="how">
@@ -51,7 +51,7 @@
       {% if plan.is_featured %}<span class="flag">Tavsiya</span>{% endif %}
       <h3>{{ plan.name }}</h3>
       <div class="price">{{ plan.price|money }} <small>so'm</small></div>
-      <p>{% if plan.credits > 1 %}1 CV = {{ plan.price_per_credit|money }} so'm · {% endif %}{{ plan.description }}</p>
+      <p>{% if plan.credits > 1 %}1 rezyume = {{ plan.price_per_credit|money }} so'm · {% endif %}{{ plan.description }}</p>
       {% if request.user.is_authenticated %}
       <a href="{{ link }}" target="_blank" rel="noopener" class="btn btn-tg btn-block">✈️ Botda to'lash</a>
       {% else %}
@@ -63,7 +63,7 @@
     <div class="plan pro">
       <h3>{{ plan.name }}</h3>
       <div class="price">{{ plan.price|money }} <small>so'm / {{ plan.duration_days }} kun</small></div>
-      <p>{{ plan.max_cvs }} ta CV, {{ plan.max_tailorings }} ta moslashtirish, barcha CV'lar ochiq, kompaniya brendingi.</p>
+      <p>{{ plan.max_cvs }} ta rezyume, {{ plan.max_tailorings }} ta moslashtirish, barcha rezyumelar ochiq, kompaniya brendingi.</p>
       {% if request.user.is_authenticated %}
       <a href="{{ link }}" target="_blank" rel="noopener" class="btn btn-block" style="background:#fff;color:var(--ink);">✈️ Botda to'lash</a>
       {% else %}

@@ -52,18 +52,18 @@
         <span class="eyebrow">Kabinet</span>
         <h1>Salom, {{ request.user.first_name|default:"do'st" }} 👋</h1>
       </div>
-      <a href="/cv/builder/" class="btn btn-dark">+ Yangi CV</a>
+      <a href="/cv/builder/" class="btn btn-dark">+ Yangi rezyume</a>
     </div>
 
     <div class="stats">
-      <div class="stat"><small>CV yaratish</small><b>{{ quota.remaining }} <span style="font-size:15px;">/ {{ quota.limit }}</span></b><span>{% if quota.tier == "pro" %}Pro davrida qoldi{% else %}bepul qoldi{% endif %}</span></div>
-      <div class="stat"><small>Kreditlar</small><b>{{ profile.credits }}</b><span>ochilgan CV: {{ unlocked_count }} · <a href="/users/payments/" style="text-decoration:underline;">sotib olish</a></span></div>
+      <div class="stat"><small>Rezyume yaratish</small><b>{{ quota.remaining }} <span style="font-size:15px;">/ {{ quota.limit }}</span></b><span>{% if quota.tier == "pro" %}Pro davrida qoldi{% else %}bepul qoldi{% endif %}</span></div>
+      <div class="stat"><small>Kreditlar</small><b>{{ profile.credits }}</b><span>ochilgan rezyume: {{ unlocked_count }} · <a href="/users/payments/" style="text-decoration:underline;">sotib olish</a></span></div>
       <div class="stat {% if is_pro %}dark{% endif %}"><small>Tarif</small><b>{% if is_pro %}Pro{% else %}Bepul{% endif %}</b><span>{% if is_pro and profile.premium_until %}{{ profile.premium_until|date:"d.m.Y" }} gacha{% elif is_pro %}faol{% else %}obunasiz{% endif %}</span></div>
     </div>
 
     <div class="dash-grid">
       <section>
-        <div class="sec-h"><h2>Mening CV'larim</h2></div>
+        <div class="sec-h"><h2>Mening rezyumelarim</h2></div>
         <div class="cv-list">
           {% for item in items %}
           {% with cv=item.cv %}
@@ -90,7 +90,7 @@
           </article>
           {% endwith %}
           {% endfor %}
-          <a href="/cv/builder/" class="new-cv"><div><i>+</i>Yangi CV yaratish<br><span style="font-weight:500;font-size:13px;">~1 daqiqa</span></div></a>
+          <a href="/cv/builder/" class="new-cv"><div><i>+</i>Yangi rezyume yaratish<br><span style="font-weight:500;font-size:13px;">~1 daqiqa</span></div></a>
         </div>
       </section>
 
@@ -103,11 +103,11 @@
         </div>
 
         {% if is_pro %}
-        <div class="box"><h3>Kompaniya brendingi</h3><p class="help" style="margin:0 0 12px;">CV pastida kompaniyangiz nomi.</p><a href="/users/branding/" class="btn btn-light btn-sm btn-block">Sozlash</a></div>
+        <div class="box"><h3>Kompaniya brendingi</h3><p class="help" style="margin:0 0 12px;">Rezyume pastida kompaniyangiz nomi.</p><a href="/users/branding/" class="btn btn-light btn-sm btn-block">Sozlash</a></div>
         {% elif pro_plan %}
         <div class="pro-box">
-          <h3>Ko'p CV kerakmi?</h3>
-          <p>Pro: {{ pro_plan.duration_days }} kunda {{ pro_plan.max_cvs }} ta CV, {{ pro_plan.max_tailorings }} ta moslashtirish, hammasi PDF + Word — {{ pro_plan.price|money }} so'm.</p>
+          <h3>Ko'p rezyume kerakmi?</h3>
+          <p>Pro: {{ pro_plan.duration_days }} kunda {{ pro_plan.max_cvs }} ta rezyume, {{ pro_plan.max_tailorings }} ta moslashtirish, hammasi PDF + Word — {{ pro_plan.price|money }} so'm.</p>
           <a href="/pricing/" class="btn btn-accent btn-sm btn-block">Pro haqida</a>
         </div>
         {% endif %}

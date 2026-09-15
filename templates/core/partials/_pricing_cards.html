@@ -8,7 +8,7 @@
     </div>
     <div class="price-amount">0 <span>so'm</span></div>
     <ul class="price-list">
-      <li><b>{{ FREE_CV_LIMIT }} ta</b> CV yaratish</li>
+      <li><b>{{ FREE_CV_LIMIT }} ta</b> rezyume yaratish</li>
       <li><b>{{ FREE_TAILOR_LIMIT }} ta</b> vakansiyaga moslashtirish</li>
       <li>9 ta shablonda ekranda ko'rish</li>
       <li class="off">PDF va Word yuklab olish yo'q</li>
@@ -20,12 +20,12 @@
     <span class="price-flag">Kreditlar · obunasiz</span>
     <div class="price-head">
       <h3>Kredit paketlari</h3>
-      <p>1 kredit = 1 CV ochiladi, muddatsiz</p>
+      <p>1 kredit = 1 rezyume ochiladi, muddatsiz</p>
     </div>
     <div class="packs">
       {% for pack in credit_packs %}
       <div class="pack {% if pack.is_featured %}is-best{% endif %}">
-        <div><b>{{ pack.name }}</b>{% if pack.credits > 1 %}<small>1 CV = {{ pack.price_per_credit|money }} so'm</small>{% endif %}</div>
+        <div><b>{{ pack.name }}</b>{% if pack.credits > 1 %}<small>1 rezyume = {{ pack.price_per_credit|money }} so'm</small>{% endif %}</div>
         <span>{{ pack.price|money }} so'm</span>
       </div>
       {% empty %}
@@ -35,7 +35,7 @@
     <ul class="price-list">
       <li><b>PDF + Word</b> — cheksiz yuklab olish</li>
       <li>9 ta shablon, belgisiz</li>
-      <li>Har bir CV uchun <b>{{ site.tailor_per_unlocked_cv }} ta</b> moslashtirish</li>
+      <li>Har bir rezyume uchun <b>{{ site.tailor_per_unlocked_cv }} ta</b> moslashtirish</li>
     </ul>
     <a href="/users/payments/" class="btn btn-accent btn-block">Kredit sotib olish</a>
   </article>
@@ -47,9 +47,9 @@
     </div>
     <div class="price-amount">{{ pro_plan.price|default:49900|money }} <span>so'm / {{ pro_plan.duration_days|default:30 }} kun</span></div>
     <ul class="price-list">
-      <li><b>{{ pro_plan.max_cvs|default:30 }} ta</b> CV yaratish</li>
+      <li><b>{{ pro_plan.max_cvs|default:30 }} ta</b> rezyume yaratish</li>
       <li><b>{{ pro_plan.max_tailorings|default:50 }} ta</b> vakansiyaga moslashtirish</li>
-      <li>Barcha CV'lar ochiq: PDF + Word</li>
+      <li>Barcha rezyumelar ochiq: PDF + Word</li>
       <li>Kompaniya brendingi</li>
       <li>Avtomatik yangilanmaydi</li>
     </ul>

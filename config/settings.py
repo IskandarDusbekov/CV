@@ -69,6 +69,9 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_REFERRER_POLICY = "same-origin"
     X_FRAME_OPTIONS = "DENY"
+    # Telegram Mini App web.telegram.org da iframe ichida ochiladi — kirish cookie'lari u yerda ham ishlashi uchun
+    SESSION_COOKIE_SAMESITE = "None"
+    CSRF_COOKIE_SAMESITE = "None"
 
 # ── Application definition ───────────────────────────────────────────────────
 INSTALLED_APPS = [
@@ -100,6 +103,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "apps.core.activity.BlockAndPresenceMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "apps.core.middleware.TelegramFrameMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 

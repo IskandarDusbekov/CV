@@ -11,7 +11,14 @@ from . import bot
 from apps.core.models import ActivityLog, BlockedIP, ContactMessage, ErrorLog, SiteSettings
 
 from .models import PaymentRequest, PricingPlan, TelegramLoginToken, UserProfile
-from .telegram_auth import confirm_token, consume_token, create_login_token, normalize_phone
+from .telegram_auth import (
+    confirm_token,
+    consume_token,
+    create_login_token,
+    get_or_create_user,
+    normalize_phone,
+    verify_webapp_init_data,
+)
 
 User = get_user_model()
 
@@ -79,6 +86,73 @@ class TelegramLoginTests(TestCase):
         self.assertIsNotNone(cv.user_id)
 
 
+BOT_TOKEN = "123456:TEST"
+
+
+def _init_data(user_id=777, auth_date=None, token=BOT_TOKEN, **extra):
+    """Telegram klienti kabi imzolangan initData yasaydi."""
+    import hashlib
+    import hmac
+    import json
+    import time
+    from urllib.parse import urlencode
+
+    fields = {"auth_date": str(auth_date or int(time.time())), "query_id": "AAH",
+              "user": json.dumps({"id": user_id, "first_name": "Ali", "username": "ali_tg"}), **extra}
+    secret = hmac.new(b"WebAppData", token.encode(), hashlib.sha256).digest()
+    check = "\n".join(f"{k}={v}" for k, v in sorted(fields.items()))
+    fields["hash"] = hmac.new(secret, check.encode(), hashlib.sha256).hexdigest()
+    return urlencode(fields)
+
+
+@override_settings(TELEGRAM_BOT_TOKEN=BOT_TOKEN)
+class TelegramWebAppTests(TestCase):
+    def _auth(self, init_data, next_url="/users/dashboard/"):
+        return self.client.post(reverse("telegram_webapp_auth"), {"init_data": init_data, "next": next_url})
+
+    def test_verify_accepts_valid_and_rejects_tampered_or_old(self):
+        self.assertEqual(verify_webapp_init_data(_init_data(user_id=5))["id"], 5)
+        self.assertEqual(verify_webapp_init_data(_init_data(user_id=5, signature="abc"))["id"], 5)
+        self.assertIsNone(verify_webapp_init_data(_init_data(user_id=5).replace("ali_tg", "hacker")))
+        self.assertIsNone(verify_webapp_init_data(_init_data(user_id=5, token="999:OTHER")))
+        self.assertIsNone(verify_webapp_init_data(_init_data(user_id=5, auth_date=1_000_000)))
+        self.assertIsNone(verify_webapp_init_data(""))
+
+    def test_linked_account_logs_in(self):
+        user = get_or_create_user(phone="998901112233", telegram_id=777)
+        data = self._auth(_init_data(), next_url="/cv/builder/").json()
+        self.assertEqual(data, {"status": "ok", "redirect": "/cv/builder/"})
+        self.assertEqual(int(self.client.session["_auth_user_id"]), user.pk)
+        # Qayta ochilganda qayta login yozilmaydi
+        self.assertEqual(self._auth(_init_data()).json()["status"], "ok")
+        self.assertEqual(ActivityLog.objects.filter(user=user, action__in=["login", "register"]).count(), 1)
+
+    def test_unknown_telegram_user_needs_phone(self):
+        self.assertEqual(self._auth(_init_data(user_id=1)).json()["status"], "need_phone")
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_invalid_and_blocked(self):
+        self.assertEqual(self._auth("hash=bad&auth_date=1").status_code, 403)
+        user = get_or_create_user(phone="998901112233", telegram_id=777)
+        UserProfile.objects.filter(user=user).update(is_blocked=True)
+        self.assertEqual(self._auth(_init_data()).json()["status"], "blocked")
+
+    def test_external_next_is_ignored(self):
+        get_or_create_user(phone="998901112233", telegram_id=777)
+        self.assertEqual(self._auth(_init_data(), next_url="https://evil.example/").json()["redirect"], "/users/dashboard/")
+
+    def test_page_renders(self):
+        r = self.client.get(reverse("telegram_webapp") + "?next=/cv/builder/")
+        self.assertContains(r, "telegram-web-app.js")
+        self.assertContains(r, "/cv/builder/")
+
+    def test_old_bot_link_for_logged_in_user_goes_to_dashboard(self):
+        user = get_or_create_user(phone="998901112233", telegram_id=777)
+        self.client.force_login(user)
+        r = self.client.get(reverse("telegram_login_complete", args=["eskirgan"]))
+        self.assertRedirects(r, reverse("user_dashboard"), fetch_redirect_response=False)
+
+
 @mock.patch.object(bot, "send_message")
 class BotTests(TestCase):
     def _update(self, **message):
@@ -93,12 +167,23 @@ class BotTests(TestCase):
         self.assertEqual(token.status, TelegramLoginToken.STATUS_CONFIRMED)
         self.assertEqual(token.phone, "+998901112233")
 
-    def test_plain_start_then_contact_creates_magic_link(self, send):
+    @override_settings(SITE_URL="https://tezrezyume.uz")
+    def test_plain_start_then_contact_sends_webapp_button_not_expiring_link(self, send):
         self._update(text="/start")
         self._update(contact={"phone_number": "+998901112233", "user_id": 42})
-        token = TelegramLoginToken.objects.get(telegram_id=42)
-        self.assertEqual(token.status, TelegramLoginToken.STATUS_CONFIRMED)
-        self.assertTrue(any(token.token in str(c) for c in send.call_args_list))
+        self.assertTrue(UserProfile.objects.filter(telegram_id=42, phone="+998901112233").exists())
+        self.assertFalse(TelegramLoginToken.objects.exists())
+        sent = str(send.call_args_list)
+        self.assertIn("'web_app': {'url': 'https://tezrezyume.uz/users/tg/?next=", sent)
+        self.assertNotIn("/users/login/tg/", sent)
+
+    @override_settings(SITE_URL="https://tezrezyume.uz")
+    def test_start_for_linked_account_opens_site_without_asking_phone(self, send):
+        get_or_create_user(phone="998901112233", telegram_id=42)
+        self._update(text="/start")
+        sent = str(send.call_args_list)
+        self.assertIn("web_app", sent)
+        self.assertNotIn("request_contact", sent)
 
     def test_foreign_contact_rejected(self, send):
         self._update(text="/start")

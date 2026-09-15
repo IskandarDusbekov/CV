@@ -16,12 +16,12 @@
 <div class="narrow">
   <a href="/users/dashboard/" class="btn btn-ghost btn-sm" style="padding-left:0;">← Kabinet</a>
   <h1>Kompaniya brendingi</h1>
-  <p>Pro tarifda CV pastida {{ site.site_name|default:'tezrezyume.uz' }} o'rniga kompaniyangiz nomi chiqadi — HR agentliklar uchun.</p>
+  <p>Pro tarifda rezyume pastida {{ site.site_name|default:'tezrezyume.uz' }} o'rniga kompaniyangiz nomi chiqadi — HR agentliklar uchun.</p>
 
   <div class="card form-card">
     <div class="footer-preview">
       <div id="preview-text">{% if branding.name %}{{ branding.get_footer_display }}{% else %}Kompaniya nomi · Tavsif{% endif %}</div>
-      <small>CV pastida shunday ko'rinadi</small>
+      <small>Rezyume pastida shunday ko'rinadi</small>
     </div>
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}

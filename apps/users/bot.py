@@ -6,6 +6,8 @@ Ishga tushirish:
 
 Kirish (kodsiz):
   saytdagi tugma → /start <token> → "📱 Raqamni yuborish" → sayt avtomatik kiradi.
+  Botning o'zidan: «🌐 Saytni ochish» (Telegram Mini App) → initData imzosi bilan darhol kiradi,
+  hech qanday eskiradigan havola yo'q.
 
 To'lov (qo'lda, Click/Payme ulangungacha):
   /start pay_<kod> yoki "💳 Kredit sotib olish" → paket tanlanadi → karta rekvizitlari →
@@ -17,6 +19,7 @@ Karta raqami, egasi, admin chat ID lari va boshqalar admin paneldagi "Sayt sozla
 import logging
 import time
 from datetime import timedelta
+from urllib.parse import urlencode
 
 import requests
 from django.conf import settings
@@ -27,7 +30,7 @@ from django.utils import timezone
 from apps.core.models import SiteSettings
 
 from .models import PaymentRequest, PricingPlan, TelegramLoginToken, UserProfile
-from .telegram_auth import confirm_token, create_login_token, get_active_token, get_or_create_user
+from .telegram_auth import confirm_token, get_active_token, get_or_create_user
 
 logger = logging.getLogger("telegram_bot")
 
@@ -36,7 +39,8 @@ BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
 BTN_BUY = "💳 Kredit sotib olish"
 BTN_BALANCE = "📊 Balansim"
-BTN_SITE = "🌐 Saytga o'tish"
+BTN_SITE = "🌐 Saytni ochish"
+LEGACY_BTN_SITE = "🌐 Saytga o'tish"
 
 
 # ─── Telegram API helpers ─────────────────────────────────────────────────────
@@ -71,6 +75,23 @@ def _url_ok(url: str) -> bool:
     return url.startswith("https://") or (url.startswith("http://") and "localhost" not in url and "127.0.0.1" not in url)
 
 
+def _site_button(text: str, path: str = "/users/dashboard/") -> dict | None:
+    """Saytni Telegram Mini App sifatida ochadigan tugma — foydalanuvchi avtomatik kiradi.
+
+    Mini App faqat https bilan ishlaydi; lokal muhitda oddiy havola qaytaramiz.
+    """
+    url = _site_url(reverse("telegram_webapp")) + "?" + urlencode({"next": path})
+    if url.startswith("https://"):
+        return {"text": text, "web_app": {"url": url}}
+    plain = _site_url(path)
+    return {"text": text, "url": plain} if _url_ok(plain) else None
+
+
+def _site_markup(text: str = "🌐 Saytni ochish", path: str = "/users/dashboard/") -> dict | None:
+    button = _site_button(text, path)
+    return {"inline_keyboard": [[button]]} if button else None
+
+
 def _money(value) -> str:
     return f"{int(value):,}".replace(",", " ")
 
@@ -100,8 +121,16 @@ def _handle_start(chat_id: int, sender: dict, payload: str) -> None:
     if token:
         token.telegram_id = user_id
         token.save(update_fields=["telegram_id"])
-    else:
-        create_login_token(telegram_id=user_id)
+
+    profile = _profile(user_id)
+    if profile and not token:
+        # Akkaunt allaqachon bog'langan — raqam so'ramaymiz, saytni ochamiz
+        send_message(chat_id, "👋 <b>Qaytganingizdan xursandmiz!</b>\nSaytni ochish uchun pastdagi tugmani bosing.",
+                     reply_markup=_main_keyboard())
+        markup = _site_markup()
+        if markup:
+            send_message(chat_id, "👇", reply_markup=markup)
+        return
 
     send_message(
         chat_id,
@@ -131,20 +160,21 @@ def _handle_contact(chat_id: int, sender: dict, contact: dict) -> None:
         send_message(chat_id, "⛔ Hisobingiz bloklangan. Savollar bo'lsa, yordam xizmatiga yozing.")
         return
 
+    # Saytdagi kirish sahifasi kutib turgan bo'lsa — o'sha brauzer avtomatik kiradi
     token = (
         TelegramLoginToken.objects.filter(telegram_id=user_id, status=TelegramLoginToken.STATUS_PENDING, expires_at__gt=timezone.now())
-        .order_by("-created_at").first()
-    ) or create_login_token(telegram_id=user_id)
-    confirm_token(token, telegram_id=user_id, **names)
+        .exclude(session_key="").order_by("-created_at").first()
+    )
+    if token:
+        confirm_token(token, telegram_id=user_id, **names)
 
-    send_message(chat_id, "✅ <b>Raqamingiz tasdiqlandi!</b>\nSaytga qayting — sahifa avtomatik ochiladi.",
-                 reply_markup=_main_keyboard())
-    url = _site_url(reverse("telegram_login_complete", args=[token.token]))
-    hint = f"Yoki shu havola orqali kiring ({TelegramLoginToken.TTL_MINUTES} daqiqa amal qiladi):"
-    if _url_ok(url):
-        send_message(chat_id, hint, reply_markup={"inline_keyboard": [[{"text": "🔓 Saytga kirish", "url": url}]]})
-    else:
-        send_message(chat_id, f"{hint}\n{url}")
+    text = "✅ <b>Raqamingiz tasdiqlandi!</b>"
+    if token:
+        text += "\nSaytdagi sahifa o'zi ochiladi. Telegram ichida ochish uchun pastdagi tugmani bosing."
+    send_message(chat_id, text, reply_markup=_main_keyboard())
+    markup = _site_markup("🔓 Saytni ochish")
+    if markup:
+        send_message(chat_id, "Saytga kirish tugmasi har doim ishlaydi — muddati tugamaydi 👇", reply_markup=markup)
 
 
 # ─── To'lov ───────────────────────────────────────────────────────────────────
@@ -170,11 +200,11 @@ def _show_packages(chat_id: int, telegram_id: int, highlight: str = "") -> None:
     for plan in plans:
         star = "⭐ " if plan.code == highlight or plan.is_featured else ""
         if plan.is_credit_pack:
-            per = f" (1 CV = {_money(plan.price_per_credit)} so'm)" if plan.credits > 1 else ""
+            per = f" (1 rezyume = {_money(plan.price_per_credit)} so'm)" if plan.credits > 1 else ""
             lines.append(f"{star}<b>{plan.name}</b> — {_money(plan.price)} so'm{per}")
         else:
             lines.append(f"{star}<b>{plan.name}</b> — {_money(plan.price)} so'm / {plan.duration_days} kun "
-                         f"({plan.max_cvs} ta CV, {plan.max_tailorings} ta moslashtirish)")
+                         f"({plan.max_cvs} ta rezyume, {plan.max_tailorings} ta moslashtirish)")
         buttons.append([{"text": f"{star}{plan.name} — {_money(plan.price)} so'm", "callback_data": f"buy:{plan.id}"}])
 
     lines.append(f"\nBalansingiz: <b>{profile.credits}</b> kredit")
@@ -194,7 +224,7 @@ def _start_purchase(chat_id: int, telegram_id: int, plan_id: str) -> None:
     req = PaymentRequest.objects.create(user=profile.user, plan=plan, amount=plan.price, telegram_chat_id=chat_id)
 
     site = SiteSettings.load()
-    what = f"{plan.credits} ta kredit (CV ochish)" if plan.is_credit_pack else f"Pro — {plan.duration_days} kun"
+    what = f"{plan.credits} ta kredit (rezyume ochish)" if plan.is_credit_pack else f"Pro — {plan.duration_days} kun"
     send_message(
         chat_id,
         f"🧾 <b>Buyurtma #{req.pk}</b>: {plan.name}\n"
@@ -291,14 +321,12 @@ def notify_payment_result(req: PaymentRequest) -> None:
         if req.plan.is_credit_pack:
             text = (f"🎉 <b>To'lov tasdiqlandi!</b> (#{req.pk})\n"
                     f"Hisobingizga <b>{req.plan.credits} kredit</b> qo'shildi. Balans: <b>{req.user.profile.credits}</b>.\n\n"
-                    "Saytda CV sahifasida «Kredit bilan ochish» tugmasini bosing.")
+                    "Saytda rezyume sahifasida «Kredit bilan ochish» tugmasini bosing.")
         else:
             until = req.user.profile.premium_until
             text = (f"🎉 <b>Pro faollashtirildi!</b> (#{req.pk})\n"
                     + (f"Amal qiladi: <b>{until:%d.%m.%Y}</b> gacha." if until else ""))
-        url = _site_url(reverse("user_dashboard"))
-        markup = {"inline_keyboard": [[{"text": "🌐 Saytga o'tish", "url": url}]]} if _url_ok(url) else None
-        send_message(chat_id, text, reply_markup=markup)
+        send_message(chat_id, text, reply_markup=_site_markup())
     elif req.status == PaymentRequest.STATUS_REJECTED:
         send_message(chat_id, f"❌ <b>To'lov tasdiqlanmadi</b> (#{req.pk})\n"
                               f"Sabab: {req.admin_note or 'chek ma`lumotlari mos kelmadi'}\n\n"
@@ -397,9 +425,9 @@ def _handle_update(update: dict) -> None:
         _show_packages(chat_id, sender["id"])
     elif text in {BTN_BALANCE, "/balans"}:
         _show_balance(chat_id, sender["id"])
-    elif text == BTN_SITE:
-        url = _site_url("/")
-        send_message(chat_id, url if not _url_ok(url) else "Sayt:", reply_markup={"inline_keyboard": [[{"text": f"🌐 {SiteSettings.load().site_name}", "url": url}]]} if _url_ok(url) else None)
+    elif text in {BTN_SITE, LEGACY_BTN_SITE, "/sayt"}:
+        markup = _site_markup(f"🌐 {SiteSettings.load().site_name}")
+        send_message(chat_id, "Saytni ochish 👇" if markup else _site_url("/"), reply_markup=markup)
     elif profile:
         send_message(chat_id, "Quyidagi tugmalardan birini tanlang 👇", reply_markup=_main_keyboard())
     else:
@@ -418,7 +446,12 @@ def run_polling() -> None:
         {"command": "start", "description": "Boshlash / kirish"},
         {"command": "tolov", "description": "Kredit yoki Pro sotib olish"},
         {"command": "balans", "description": "Balansim"},
+        {"command": "sayt", "description": "Saytni ochish"},
     ])
+    menu = _site_button("Sayt")
+    if menu and "web_app" in menu:
+        # Chat pastidagi «Sayt» tugmasi — Mini App, har doim kirgan holda ochiladi
+        _post("setChatMenuButton", menu_button={"type": "web_app", "text": "Sayt", "web_app": menu["web_app"]})
     logger.info("Telegram bot ishga tushdi (long polling)...")
     offset = 0
 
