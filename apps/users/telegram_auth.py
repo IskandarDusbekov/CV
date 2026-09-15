@@ -24,7 +24,7 @@ def normalize_phone(raw: str) -> str:
 def bot_username() -> str:
     from apps.core.models import SiteSettings
 
-    return SiteSettings.load().effective_bot_username or "mycv_uz_bot"
+    return SiteSettings.load().effective_bot_username or "tezrezyume_bot"
 
 
 def create_login_token(session_key: str = "", telegram_id=None) -> TelegramLoginToken:

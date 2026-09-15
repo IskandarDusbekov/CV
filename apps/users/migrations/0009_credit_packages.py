@@ -30,9 +30,9 @@ def seed_site(apps, schema_editor):
     SiteSettings.objects.get_or_create(pk=1)
     Page.objects.get_or_create(slug="biz-haqimizda", defaults={
         "title": "Biz haqimizda",
-        "subtitle": "mycv.uz — ish qidiruvchilar uchun AI yordamchi",
+        "subtitle": "tezrezyume.uz — ish qidiruvchilar uchun AI yordamchi",
         "sort_order": 1,
-        "body": "mycv.uz — O'zbekistondagi ish qidiruvchilar uchun yaratilgan AI CV builder.\n\n"
+        "body": "tezrezyume.uz — O'zbekistondagi ish qidiruvchilar uchun yaratilgan AI CV builder.\n\n"
                 "Biz ishonamizki, yaxshi mutaxassis chiroyli rezyume yoza olmagani uchun ishdan qolmasligi kerak. "
                 "Shuning uchun xizmatimiz oddiy: o'zingiz haqingizda erkin yozasiz — AI uni professional, "
                 "ATS tizimlaridan o'tadigan CV ga aylantiradi.\n\n"

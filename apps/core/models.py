@@ -11,7 +11,7 @@ class SiteSettings(models.Model):
     CACHE_KEY = "site_settings"
 
     # Sayt
-    site_name = models.CharField("Sayt nomi", max_length=100, default="mycv.uz")
+    site_name = models.CharField("Sayt nomi", max_length=100, default="tezrezyume.uz")
     maintenance_message = models.CharField("E'lon (sayt tepasida)", max_length=300, blank=True,
                                            help_text="Bo'sh bo'lsa ko'rsatilmaydi")
 
@@ -76,12 +76,12 @@ class SiteSettings(models.Model):
 
     @property
     def brand_base(self):
-        """Logotip uchun: "mycv.uz" → "mycv"."""
+        """Logotip uchun: "tezrezyume.uz" → "tezrezyume"."""
         return self.site_name.rsplit(".", 1)[0] if "." in self.site_name else self.site_name
 
     @property
     def brand_tld(self):
-        """Logotip uchun: "mycv.uz" → ".uz"."""
+        """Logotip uchun: "tezrezyume.uz" → ".uz"."""
         return "." + self.site_name.rsplit(".", 1)[1] if "." in self.site_name else ""
 
     @property

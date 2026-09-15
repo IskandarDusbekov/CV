@@ -1,0 +1,17 @@
+[Unit]
+Description=tezrezyume.uz web (gunicorn)
+After=network.target postgresql.service
+
+[Service]
+User=tezrezyume
+Group=www-data
+WorkingDirectory=/home/tezrezyume/app
+EnvironmentFile=/home/tezrezyume/app/.env
+RuntimeDirectory=tezrezyume
+RuntimeDirectoryMode=0775
+ExecStart=/home/tezrezyume/app/venv/bin/gunicorn -c deploy/gunicorn.conf.py config.wsgi
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

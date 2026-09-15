@@ -1,5 +1,5 @@
 """
-Django settings for mycv.uz CV Builder project.
+Django settings for tezrezyume.uz CV Builder project.
 
 Barcha maxfiy va muhitga bog'liq qiymatlar .env dan o'qiladi (namuna: .env.example).
 Biznes sozlamalari (karta raqami, narxlar, limitlar, AI modeli) — admin panel → "Sayt sozlamalari".
@@ -131,8 +131,8 @@ if _env("DB_ENGINE", "sqlite").lower() in ("postgres", "postgresql"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": _env("DB_NAME", "mycv"),
-            "USER": _env("DB_USER", "mycv"),
+            "NAME": _env("DB_NAME", "tezrezyume"),
+            "USER": _env("DB_USER", "tezrezyume"),
             "PASSWORD": _env("DB_PASSWORD", ""),
             "HOST": _env("DB_HOST", "127.0.0.1"),
             "PORT": _env("DB_PORT", "5432"),
@@ -204,11 +204,11 @@ CLICK_MERCHANT_ID = _env("CLICK_MERCHANT_ID", "")
 
 # ── Jazzmin admin ─────────────────────────────────────────────────────────────
 JAZZMIN_SETTINGS = {
-    "site_title": "mycv.uz admin",
-    "site_header": "mycv.uz",
-    "site_brand": "mycv.uz",
-    "welcome_sign": "mycv.uz boshqaruv paneli",
-    "copyright": "mycv.uz",
+    "site_title": "tezrezyume.uz admin",
+    "site_header": "tezrezyume.uz",
+    "site_brand": "tezrezyume.uz",
+    "welcome_sign": "tezrezyume.uz boshqaruv paneli",
+    "copyright": "tezrezyume.uz",
     "show_sidebar": True,
     "navigation_expanded": True,
     "topmenu_links": [

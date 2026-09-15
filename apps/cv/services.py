@@ -406,7 +406,7 @@ DEMO_CV_JSON = {
     ],
     "projects": [
         {
-            "title": "mycv.uz — AI CV Builder",
+            "title": "tezrezyume.uz — AI CV Builder",
             "description": "Matndan professional CV yaratuvchi platforma, 7 ta shablon va PDF/Word eksport.",
             "technologies": ["Django", "OpenAI", "Playwright"],
         },

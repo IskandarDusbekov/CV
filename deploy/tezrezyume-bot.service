@@ -1,0 +1,15 @@
+[Unit]
+Description=tezrezyume.uz Telegram bot (long polling)
+After=network.target postgresql.service
+
+[Service]
+User=tezrezyume
+Group=tezrezyume
+WorkingDirectory=/home/tezrezyume/app
+EnvironmentFile=/home/tezrezyume/app/.env
+ExecStart=/home/tezrezyume/app/venv/bin/python manage.py runbot
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

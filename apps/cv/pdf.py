@@ -1,5 +1,5 @@
 """
-PDF rendering for mycv.uz CV Builder.
+PDF rendering for tezrezyume.uz CV Builder.
 
 Ekranda ko'rinadigan shablon (cv/partials/cv_template_<code>.html) PDF uchun ham aynan
 o'zi ishlatiladi — shuning uchun PDF preview bilan bir xil chiqadi. Shablonlar A4 kengligida
@@ -94,7 +94,8 @@ def _render_playwright(html: str) -> bytes:
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        # Kichik RAM li VPS uchun: /dev/shm o'rniga diskdan foydalanish, GPU va ortiqcha jarayonlarsiz
+        browser = p.chromium.launch(args=["--disable-dev-shm-usage", "--disable-gpu", "--no-zygote", "--disable-extensions"])
         try:
             page = browser.new_page(viewport={"width": 794, "height": 1123})
             page.emulate_media(media="print")
