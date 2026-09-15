@@ -11,6 +11,7 @@ urlpatterns = [
     path('preview/<uuid:cv_id>/', views.preview, name='cv_preview'),
     path('unlock/<uuid:cv_id>/', views.unlock_with_credit, name='unlock_cv'),
     path('tailor/<uuid:cv_id>/', views.tailor_cv, name='tailor_cv'),
+    path('details/<uuid:cv_id>/', views.save_details, name='cv_details'),
     path('share/<str:token>/', views.shared_preview, name='shared_cv_preview'),
     path('template/<uuid:cv_id>/change/', views.change_template, name='change_cv_template'),
     path('share/<uuid:cv_id>/toggle/', views.toggle_share_link, name='toggle_cv_share_link'),

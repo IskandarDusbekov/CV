@@ -91,11 +91,30 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
 .tailor textarea { margin-top: 10px; resize: vertical; font-size: 14px; }
 .sw u { background: var(--green); color: #fff; }
 
+.details .field { margin-bottom: 10px; }
+.details .field label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: 700; }
+.det-row { display: flex; gap: 8px; margin-top: 4px; }
+.det-row .btn { flex: 1; }
+.m-bar { display: none; }
+.rail > * { scroll-margin-top: 84px; }
+
 @media (max-width: 1060px) {
-  .pv-grid { grid-template-columns: 1fr; }
-  .rail { position: static; order: -1; }
-  .stage { padding: 12px; border-radius: 16px; }
+  .pv { padding-top: 14px; }
+  .pv-top { margin-bottom: 12px; gap: 10px; }
+  .pv-top h1 { font-size: 21px; }
+  .pv-top .btn { display: none; }
+  .pv-grid { grid-template-columns: 1fr; gap: 16px; }
+  /* Telefonda: avval rezyume, keyin yo'l-yo'lakay — ma'lumot, moslashtirish, yuklab olish */
+  .rail { position: static; }
+  .r-details { order: 1; } .r-tailor { order: 2; } .r-templates { order: 3; } .r-download { order: 4; }
+  .r-unlock { order: 5; } .r-photo { order: 6; } .r-share { order: 7; }
+  .stage { padding: 10px; border-radius: 16px; }
+  .locked-ribbon { display: none; }
   .switch-grid { grid-template-columns: repeat(5, 1fr); }
+  .m-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; gap: 8px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+           background: rgba(245,243,238,.94); backdrop-filter: blur(12px); border-top: 1px solid var(--line); }
+  .m-bar .btn { flex: 1; min-height: 46px; }
+  .pv { padding-bottom: 76px; }
 }
 @media (max-width: 560px) { .switch-grid { grid-template-columns: repeat(4, 1fr); } }
 {% endblock %}
@@ -150,7 +169,25 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
       </div>
 
       <aside class="rail">
-        <div class="box">
+        {% if missing_details %}
+        <div class="box details r-details" id="details">
+          <div class="box-h"><h2>✍️ {{ missing_details|length }} ta ma'lumot yetishmayapti</h2></div>
+          <p class="muted-sm" style="margin:-6px 0 12px;">HR siz bilan bog'lanishi uchun. Bilmasangiz — o'tkazib yuboring.</p>
+          <form method="post" action="{% url 'cv_details' cv.public_id %}">
+            {% csrf_token %}
+            {% for f in missing_details %}
+            <div class="field"><label for="d-{{ f.name }}">{{ f.label }}</label>
+              <input class="input" id="d-{{ f.name }}" name="{{ f.name }}" type="{{ f.type }}" value="{{ f.value }}" placeholder="{{ f.placeholder }}" autocomplete="{{ f.autocomplete }}" maxlength="120"></div>
+            {% endfor %}
+            <div class="det-row">
+              <button class="btn btn-light" name="action" value="skip" formnovalidate>O'tkazib yuborish</button>
+              <button class="btn btn-dark" name="action" value="save">Saqlash</button>
+            </div>
+          </form>
+        </div>
+        {% endif %}
+
+        <div class="box r-download" id="download">
           <div class="box-h"><h2>Yuklab olish</h2></div>
           <div class="dl">
             {% if can_download_pdf %}
@@ -180,7 +217,7 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
         </div>
 
         {% if not is_unlocked %}
-        <div class="unlock" id="unlock">
+        <div class="unlock r-unlock" id="unlock">
           {% if request.user.is_authenticated and user_credits > 0 %}
           <h2>Kredit bilan oching</h2>
           <p style="margin:6px 0 14px;color:#a1a3ab;font-size:14px;">Balansingizda <b style="color:var(--lime);">{{ user_credits }} kredit</b> bor. 1 kredit = shu rezyume uchun PDF + Word, muddatsiz{% if site.tailor_per_unlocked_cv %} va {{ site.tailor_per_unlocked_cv }} ta moslashtirish{% endif %}.</p>
@@ -217,7 +254,7 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
         </div>
         {% endif %}
 
-        <div class="box tailor">
+        <div class="box tailor r-tailor" id="tailor">
           <div class="box-h"><h2>🎯 Vakansiyaga moslashtirish</h2><span class="badge badge-muted">{{ tailor_quota.remaining }} / {{ tailor_quota.limit }}</span></div>
           <p class="muted-sm">Ish e'lonini nusxalab qo'ying — AI rezyumeni shu vakansiyaga moslab qayta yozadi. Asl rezyume o'zgarmaydi.</p>
           {% if tailor_quota.allowed %}
@@ -231,7 +268,7 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
           {% endif %}
         </div>
 
-        <div class="box">
+        <div class="box r-templates">
           <div class="box-h"><h2>Shablon</h2><span class="muted-sm">almashtirish bepul</span></div>
           <form method="post" action="/cv/template/{{ cv.public_id }}/change/" class="switch-grid" id="tpl-form">
             {% csrf_token %}
@@ -245,7 +282,7 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
           </form>
         </div>
 
-        <div class="box">
+        <div class="box r-photo">
           <div class="photo-row">
             {% if cv.photo %}<img class="avatar" src="{{ cv.photo.url }}" alt="">{% else %}<div class="avatar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg></div>{% endif %}
             <div style="flex:1;min-width:0;"><b style="font-size:14px;">Rasm</b><div class="muted-sm" id="photo-status">JPG, PNG · 5 MB gacha</div></div>
@@ -255,7 +292,7 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
         </div>
 
         {% if request.user.is_authenticated %}
-        <div class="box">
+        <div class="box r-share">
           <div class="box-h"><h2>Ommaviy havola</h2>
             {% if share_available %}
             <form method="post" action="/cv/share/{{ cv.public_id }}/toggle/">{% csrf_token %}
@@ -273,6 +310,16 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
       </aside>
     </div>
   </div>
+</div>
+
+{# Telefonda pastda doim turadigan qisqa panel — rezyumeni ko'rishga xalal bermaydi #}
+<div class="m-bar">
+  <a href="#tailor" class="btn btn-light">🎯 Moslashtirish</a>
+  {% if can_download_pdf %}
+  <a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark">⬇ PDF</a>
+  {% else %}
+  <a href="{% if request.user.is_authenticated %}#unlock{% else %}{{ login_url }}{% endif %}" class="btn btn-dark">⬇ Yuklab olish</a>
+  {% endif %}
 </div>
 {% endblock %}
 

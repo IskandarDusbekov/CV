@@ -137,7 +137,7 @@
 </head>
 <body>
 <aside class="side">
-  <a href="{% url 'panel:dashboard' %}" class="brand"><i>cv</i><span>{{ site.site_name }}<small>Boshqaruv paneli</small></span></a>
+  <a href="{% url 'panel:dashboard' %}" class="brand"><i>tr</i><span>{{ site.site_name }}<small>Boshqaruv paneli</small></span></a>
   <nav class="nav">
     <a href="{% url 'panel:dashboard' %}" class="{% if p == 'dashboard' %}on{% endif %}"><span class="ic">◧</span>Bosh sahifa</a>
     <a href="{% url 'panel:payments' %}" class="{% if p == 'payments' %}on{% endif %}"><span class="ic">💳</span>To'lovlar{% if counts.payments %}<span class="cnt">{{ counts.payments }}</span>{% endif %}</a>
@@ -148,11 +148,13 @@
     <a href="{% url 'panel:errors' %}" class="{% if p == 'errors' %}on{% endif %}"><span class="ic">🐞</span>Xatolar{% if counts.errors %}<span class="cnt soft">{{ counts.errors }}</span>{% endif %}</a>
     <a href="{% url 'panel:activity' %}" class="{% if p == 'activity' %}on{% endif %}"><span class="ic">🕓</span>Faollik</a>
     <a href="{% url 'panel:messages' %}" class="{% if p == 'messages' %}on{% endif %}"><span class="ic">✉️</span>Murojaatlar{% if counts.messages %}<span class="cnt">{{ counts.messages }}</span>{% endif %}</a>
+    {% if request.user.is_superuser %}
     <div class="nav-group">Sozlash</div>
     <a href="{% url 'panel:settings' %}" class="{% if p == 'settings' %}on{% endif %}"><span class="ic">⚙️</span>Sozlamalar va narxlar</a>
+    {% endif %}
   </nav>
   <div class="side-foot">
-    <a href="{% url 'admin:index' %}" target="_blank">Django admin (qolgan hammasi) ↗</a>
+    {% if request.user.is_superuser %}<a href="{% url 'admin:index' %}" target="_blank">Django admin (qolgan hammasi) ↗</a>{% endif %}
     <a href="/" target="_blank">Saytni ochish ↗</a>
     <a href="/users/logout/">Chiqish · {{ request.user.get_full_name|default:request.user.username }}</a>
   </div>

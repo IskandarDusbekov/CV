@@ -52,7 +52,10 @@
         <span class="eyebrow">Kabinet</span>
         <h1>Salom, {{ request.user.first_name|default:"do'st" }} 👋</h1>
       </div>
-      <a href="/cv/builder/" class="btn btn-dark">+ Yangi rezyume</a>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        {% if request.user.is_staff %}<a href="/panel/" class="btn btn-light">⚡ Boshqaruv paneli</a>{% endif %}
+        <a href="/cv/builder/" class="btn btn-dark">+ Yangi rezyume</a>
+      </div>
     </div>
 
     <div class="stats">

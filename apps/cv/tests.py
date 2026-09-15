@@ -213,6 +213,43 @@ class CreditUnlockTests(TestCase):
         self.assertContains(self.client.get(reverse("cv_preview", args=[self.cv.public_id])), "Admin ko")
 
 
+class MissingDetailsTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="d", first_name="Dilnoza", last_name="Karimova")
+        UserProfile.objects.filter(user=self.user).update(phone="+998901112233")
+        self.client.force_login(self.user)
+        data = {**DEMO_CV_JSON, "phone": "", "email": "", "location": ""}
+        self.cv = CV.objects.create(user=self.user, raw_input_text="x", cv_json=data)
+        self.child = CV.objects.create(user=self.user, raw_input_text="x", cv_json={**data, "job_title": "Backend"}, parent=self.cv)
+
+    def test_preview_asks_only_missing_fields_prefilled_from_profile(self):
+        missing = self.client.get(reverse("cv_preview", args=[self.cv.public_id])).context["missing_details"]
+        self.assertEqual([f["name"] for f in missing], ["phone", "email", "location"])
+        self.assertEqual(missing[0]["value"], "+998901112233")
+
+    def test_save_updates_whole_family_without_touching_tailored_title(self):
+        self.client.post(reverse("cv_details", args=[self.child.public_id]),
+                         {"action": "save", "phone": "+998901112233", "location": " Toshkent ", "job_title": "Dev"})
+        self.cv.refresh_from_db(); self.child.refresh_from_db()
+        self.assertEqual((self.cv.cv_json["phone"], self.cv.cv_json["location"]), ("+998901112233", "Toshkent"))
+        self.assertEqual(self.child.cv_json["location"], "Toshkent")
+        self.assertEqual(self.cv.cv_json["job_title"], DEMO_CV_JSON["job_title"])
+        self.assertEqual(self.child.cv_json["job_title"], "Dev")
+
+    def test_skip_hides_card(self):
+        self.client.post(reverse("cv_details", args=[self.cv.public_id]), {"action": "skip"})
+        self.assertEqual(self.client.get(reverse("cv_preview", args=[self.cv.public_id])).context["missing_details"], [])
+
+    def test_other_user_cannot_edit(self):
+        self.client.force_login(User.objects.create_user(username="x"))
+        self.assertEqual(self.client.post(reverse("cv_details", args=[self.cv.public_id]), {"phone": "1"}).status_code, 404)
+
+    def test_builder_prefills_telegram_name_and_phone(self):
+        r = self.client.get(reverse("cv_builder"))
+        self.assertContains(r, 'value="Dilnoza Karimova"')
+        self.assertContains(r, 'value="+998901112233"')
+
+
 @mock.patch("apps.cv.views.generate_cv_from_text", return_value=(dict(DEMO_CV_JSON), META))
 class AICostTests(TestCase):
     def test_usage_cost_and_activity_recorded(self, _):

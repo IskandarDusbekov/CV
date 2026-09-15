@@ -4,6 +4,7 @@ xatolar, faollik, murojaatlar va sozlamalar. Kamroq kerak bo'ladigan narsalar Dj
 """
 from datetime import timedelta
 from functools import wraps
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -32,9 +33,22 @@ def staff_required(view):
     @wraps(view)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return redirect(f"{reverse('admin:login')}?next={request.get_full_path()}")
+            # Telegram orqali kirish: superuser «Panelga ruxsat» bergan foydalanuvchi ham shu yo'l bilan kiradi
+            return redirect(f"{reverse('user_login')}?{urlencode({'next': request.get_full_path()})}")
         if not request.user.is_staff:
             raise Http404
+        return view(request, *args, **kwargs)
+    return wrapper
+
+
+def superuser_required(view):
+    """Karta raqami, narxlar va adminlar ro'yxati — faqat bosh admin (superuser) uchun."""
+    @wraps(view)
+    @staff_required
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            messages.error(request, "Bu bo'lim faqat bosh admin uchun.")
+            return redirect("panel:dashboard")
         return view(request, *args, **kwargs)
     return wrapper
 
@@ -228,6 +242,19 @@ def user_action(request, user_id):
             BlockedIP.objects.filter(ip=profile.last_ip).delete()
         log_activity(request, "unblocked", user=user, by=request.user.username)
         messages.success(request, "Blokdan chiqarildi.")
+    elif action in {"make_staff", "remove_staff"}:
+        if not request.user.is_superuser:
+            messages.error(request, "Panelga ruxsatni faqat bosh admin beradi.")
+        elif user.is_superuser:
+            messages.error(request, "Bosh adminning ruxsatini bu yerdan o'zgartirib bo'lmaydi.")
+        else:
+            user.is_staff = action == "make_staff"
+            user.save(update_fields=["is_staff"])
+            if user.is_staff and profile.is_blocked:
+                UserProfile.objects.filter(pk=profile.pk).update(is_blocked=False, block_reason="")
+            log_activity(request, "staff_granted" if user.is_staff else "staff_removed", user=user, by=request.user.username)
+            messages.success(request, "Panelga ruxsat berildi — Telegram orqali kirib «⚡ Panel» ni ochadi." if user.is_staff
+                             else "Panelga ruxsat olib tashlandi.")
     return redirect("panel:user_detail", user_id=user.pk)
 
 
@@ -362,7 +389,7 @@ def message_resolve(request, pk):
 
 # ─── Sozlamalar va narxlar ────────────────────────────────────────────────────
 
-@staff_required
+@superuser_required
 def settings_view(request):
     site = SiteSettings.load()
     site = SiteSettings.objects.get(pk=site.pk)

@@ -18,7 +18,7 @@ class PanelAccessTests(TestCase):
     def test_anonymous_redirected_to_login(self):
         response = self.client.get(reverse("panel:dashboard"))
         self.assertEqual(response.status_code, 302)
-        self.assertIn(reverse("admin:login"), response["Location"])
+        self.assertTrue(response["Location"].startswith(reverse("user_login") + "?next="))
 
     def test_regular_user_gets_404(self):
         self.client.force_login(User.objects.create_user(username="u"))
@@ -26,9 +26,42 @@ class PanelAccessTests(TestCase):
             self.assertEqual(self.client.get(reverse(f"panel:{name}")).status_code, 404, name)
 
 
+class StaffPermissionTests(TestCase):
+    def setUp(self):
+        self.boss = User.objects.create_user(username="boss", is_staff=True, is_superuser=True)
+        self.helper = User.objects.create_user(username="helper")
+
+    def test_superuser_grants_panel_access_to_telegram_user(self):
+        self.client.force_login(self.boss)
+        self.client.post(reverse("panel:user_action", args=[self.helper.pk]), {"action": "make_staff"})
+        self.helper.refresh_from_db()
+        self.assertTrue(self.helper.is_staff)
+        self.assertTrue(ActivityLog.objects.filter(user=self.helper, action="staff_granted").exists())
+
+        self.client.force_login(self.helper)
+        self.assertEqual(self.client.get(reverse("panel:payments")).status_code, 200)
+        self.assertNotContains(self.client.get(reverse("panel:dashboard")), reverse("panel:settings"))
+        self.assertRedirects(self.client.get(reverse("panel:settings")), reverse("panel:dashboard"), fetch_redirect_response=False)
+        self.assertContains(self.client.get(reverse("user_dashboard")), "Boshqaruv paneli")
+
+        # Oddiy admin boshqalarga ruxsat bera olmaydi
+        other = User.objects.create_user(username="other")
+        self.client.post(reverse("panel:user_action", args=[other.pk]), {"action": "make_staff"})
+        other.refresh_from_db()
+        self.assertFalse(other.is_staff)
+
+    def test_remove_staff(self):
+        self.helper.is_staff = True
+        self.helper.save()
+        self.client.force_login(self.boss)
+        self.client.post(reverse("panel:user_action", args=[self.helper.pk]), {"action": "remove_staff"})
+        self.helper.refresh_from_db()
+        self.assertFalse(self.helper.is_staff)
+
+
 class PanelTests(TestCase):
     def setUp(self):
-        self.admin = User.objects.create_user(username="boss", is_staff=True)
+        self.admin = User.objects.create_user(username="boss", is_staff=True, is_superuser=True)
         self.client.force_login(self.admin)
         self.user = User.objects.create_user(username="buyer", first_name="Ali")
         UserProfile.objects.filter(user=self.user).update(phone="+998901112233", last_ip="10.0.0.5")

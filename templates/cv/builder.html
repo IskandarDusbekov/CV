@@ -2,34 +2,60 @@
 {% block title %}Rezyume yaratish — {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
 
 {% block extra_style %}
-.b { max-width: 820px; margin: 0 auto; padding: 36px 16px 0; }
-.b h1 { font-size: clamp(30px, 4.2vw, 48px); line-height: 1.03; font-weight: 800; letter-spacing: -.04em; }
-.b-sub { margin: 10px 0 22px; font-size: 17px; color: var(--muted); }
+.b { max-width: 720px; margin: 0 auto; padding: 28px 16px 0; }
+.b h1 { font-size: clamp(28px, 4.2vw, 44px); line-height: 1.05; font-weight: 800; letter-spacing: -.04em; }
+.b-sub { margin: 8px 0 18px; font-size: 16px; color: var(--muted); }
 .box { padding: 22px; background: #fff; border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow-sm); }
-textarea.big { width: 100%; min-height: 260px; padding: 18px; border: 0; border-radius: 16px; background: var(--bg); font: inherit; font-size: 17px; line-height: 1.65; color: var(--ink); resize: vertical; outline: none; }
-textarea.big:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff; }
+
+.modes { display: flex; padding: 4px; gap: 4px; margin-bottom: 14px; border-radius: 14px; background: var(--bg-2, #ebe8e1); }
+.modes button { flex: 1; min-height: 42px; border: 0; border-radius: 11px; background: transparent; font: inherit; font-size: 14px; font-weight: 700; color: var(--muted); cursor: pointer; }
+.modes button.sel { background: #fff; color: var(--ink); box-shadow: var(--shadow-sm); }
+
+.prog { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.prog-bar { flex: 1; height: 6px; border-radius: 99px; background: var(--bg); overflow: hidden; }
+.prog-bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: var(--ink); transition: width .25s; }
+.q h2 { font-size: 23px; font-weight: 800; letter-spacing: -.025em; line-height: 1.2; }
+.q .hint { margin: 4px 0 14px; font-size: 14.5px; color: var(--muted); }
+.q input.big, .q textarea.big { width: 100%; padding: 14px 16px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--bg); font: inherit; font-size: 17px; color: var(--ink); outline: none; }
+.q textarea.big { min-height: 150px; line-height: 1.6; resize: vertical; }
+.q input.big:focus, .q textarea.big:focus { border-color: var(--ink); background: #fff; }
+.q .sub-label { display: block; margin: 12px 0 6px; font-size: 13px; font-weight: 700; }
+.q .sub-label:first-of-type { margin-top: 0; }
+.picks { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.pick { padding: 8px 13px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font: inherit; font-size: 14px; font-weight: 600; color: var(--ink-2, #33353b); cursor: pointer; }
+.pick:hover { border-color: var(--ink); }
+.pick.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+.pick.on::before { content: "✓ "; }
+.picks-label { margin-top: 14px; font-size: 12.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+
+.nav-row { display: flex; gap: 8px; margin-top: 20px; }
+.nav-row .btn { min-height: 52px; font-size: 15.5px; border-radius: 14px; }
+.nav-row .next { flex: 1; }
+.nav-row .back-btn { padding: 0 16px; }
+.skip { display: block; margin: 12px auto 0; padding: 6px 10px; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 700; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+textarea.free { width: 100%; min-height: 260px; padding: 18px; border: 0; border-radius: 16px; background: var(--bg); font: inherit; font-size: 17px; line-height: 1.65; color: var(--ink); resize: vertical; outline: none; }
+textarea.free:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
 .chip { padding: 5px 11px; border-radius: 999px; background: var(--bg); font-size: 13px; font-weight: 700; color: var(--muted-2); transition: background .2s, color .2s; }
 .chip.ok { background: var(--green-soft); color: var(--green); }
 .chip.ok::before { content: "✓ "; }
-.go { margin-top: 16px; width: 100%; min-height: 60px; font-size: 17px; border-radius: 16px; }
-.meta { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 12px; font-size: 13.5px; color: var(--muted); }
-.meta b { color: var(--ink); }
-.meta a { text-decoration: underline; text-underline-offset: 3px; }
-details.more { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
-details.more summary { cursor: pointer; font-size: 14px; font-weight: 700; color: var(--muted); list-style: none; }
-details.more summary::before { content: "+ "; }
-details.more[open] summary::before { content: "− "; }
-.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.go { margin-top: 16px; width: 100%; min-height: 58px; font-size: 17px; border-radius: 16px; }
+
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
 .opt label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; }
 .seg { display: flex; padding: 4px; gap: 4px; border-radius: 12px; background: var(--bg); }
 .seg button { flex: 1; min-height: 36px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; }
 .seg button.sel { background: #fff; color: var(--ink); box-shadow: var(--shadow-sm); }
 .check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .check input { width: 18px; height: 18px; accent-color: var(--ink); }
+
+.meta { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 14px; font-size: 13.5px; color: var(--muted); }
+.meta b { color: var(--ink); }
+.meta a { text-decoration: underline; text-underline-offset: 3px; }
 .status { display: none; align-items: center; gap: 10px; margin-top: 12px; padding: 12px 14px; border-radius: 12px; font-size: 14.5px; font-weight: 600; }
 .status.show { display: flex; }
-.status.loading { background: var(--bg); } .status.error { background: var(--red-soft); color: #991b1b; }
+.status.error { background: var(--red-soft); color: #991b1b; }
 .limit { padding: 26px; border-radius: 24px; background: var(--ink); color: #fff; text-align: center; }
 .limit h2 { font-size: 24px; font-weight: 800; }
 .limit p { margin: 8px auto 18px; max-width: 460px; color: #a1a3ab; }
@@ -39,19 +65,132 @@ details.more[open] summary::before { content: "− "; }
 .overlay .spinner { width: 44px; height: 44px; margin: 0 auto 18px; border-width: 4px; }
 .overlay h3 { font-size: 22px; font-weight: 800; }
 .overlay p { margin-top: 6px; color: var(--muted); min-height: 24px; }
-@media (max-width: 640px) { .opts { grid-template-columns: 1fr; } textarea.big { min-height: 220px; font-size: 16px; } }
+@media (max-width: 640px) {
+  .b { padding-top: 18px; }
+  .b-sub { font-size: 15px; margin-bottom: 14px; }
+  .box { padding: 16px; border-radius: 20px; }
+  .q h2 { font-size: 20px; }
+  .opts { grid-template-columns: 1fr; }
+  textarea.free { min-height: 220px; font-size: 16px; }
+  .q input.big, .q textarea.big { font-size: 16px; }
+}
 {% endblock %}
 
 {% block content %}
 <div class="b">
-  <span class="eyebrow">1 qadam · ~1 daqiqa</span>
-  <h1 style="margin-top:10px;">O'zingiz haqingizda <span class="serif">shunchaki</span> yozing</h1>
-  <p class="b-sub">Qanday gapirsangiz, shunday yozing. Tartib, imlo, format — hammasini AI o'zi qiladi.</p>
+  <span class="eyebrow">~1 daqiqa · bilmaganingizni o'tkazib yuboring</span>
+  <h1 style="margin-top:8px;">Rezyumeni <span class="serif">birga</span> tuzamiz</h1>
+  <p class="b-sub">Oddiy savollarga javob bering — tartib, imlo va chiroyli jumlalarni AI o'zi qiladi.</p>
 
   {% if quota.allowed %}
-  <div class="box">
-    {% csrf_token %}
-    <textarea class="big" id="cv-text" maxlength="6000" autofocus
+  {% csrf_token %}
+  <div class="modes" role="tablist">
+    <button type="button" class="sel" data-mode="wizard">🪄 Savol-javob</button>
+    <button type="button" data-mode="free">✍️ O'zim yozaman</button>
+  </div>
+
+  <div class="box" id="wizard">
+    <div class="prog"><div class="prog-bar"><i id="prog-fill"></i></div><span id="prog-text">1 / 7</span></div>
+
+    <div class="q" data-step="name">
+      <h2>Ismingiz va familiyangiz?</h2>
+      <p class="hint">Rezyumening eng tepasida turadi.</p>
+      <input class="big" data-key="name" type="text" autocomplete="name" placeholder="Masalan: Dilnoza Karimova" value="{{ prefill.name }}">
+    </div>
+
+    <div class="q" data-step="job" hidden>
+      <h2>Qaysi ishga topshiryapsiz?</h2>
+      <p class="hint">Aniq bilmasangiz, eng ko'p qiziqqan yo'nalishni tanlang.</p>
+      <input class="big" data-key="job" type="text" placeholder="Masalan: Sotuvchi-konsultant">
+      <div class="picks" data-target="job" data-mode="set">
+        <button type="button" class="pick">Sotuvchi-konsultant</button><button type="button" class="pick">Kassir</button>
+        <button type="button" class="pick">Call-markaz operatori</button><button type="button" class="pick">Ofis menejeri</button>
+        <button type="button" class="pick">SMM menejer</button><button type="button" class="pick">Buxgalter</button>
+        <button type="button" class="pick">Dasturchi</button><button type="button" class="pick">O'qituvchi</button>
+        <button type="button" class="pick">Dizayner</button><button type="button" class="pick">Haydovchi</button>
+      </div>
+    </div>
+
+    <div class="q" data-step="contact" hidden>
+      <h2>Siz bilan qanday bog'lanishadi?</h2>
+      <p class="hint">HR qo'ng'iroq qilishi yoki yozishi uchun.</p>
+      <label class="sub-label" for="w-phone">Telefon</label>
+      <input class="big" id="w-phone" data-key="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+998 90 123 45 67" value="{{ prefill.phone }}">
+      <label class="sub-label" for="w-email">Email <span style="color:var(--muted);font-weight:600;">(bo'lsa)</span></label>
+      <input class="big" id="w-email" data-key="email" type="email" inputmode="email" autocomplete="email" placeholder="ism@gmail.com">
+      <label class="sub-label" for="w-city">Shahar</label>
+      <input class="big" id="w-city" data-key="city" type="text" autocomplete="address-level2" placeholder="Toshkent">
+      <div class="picks" data-target="city" data-mode="set">
+        <button type="button" class="pick">Toshkent</button><button type="button" class="pick">Samarqand</button>
+        <button type="button" class="pick">Buxoro</button><button type="button" class="pick">Andijon</button>
+        <button type="button" class="pick">Farg'ona</button><button type="button" class="pick">Namangan</button>
+        <button type="button" class="pick">Qarshi</button><button type="button" class="pick">Nukus</button>
+      </div>
+    </div>
+
+    <div class="q" data-step="exp" hidden>
+      <h2>Qayerda ishlagansiz?</h2>
+      <p class="hint">Kompaniya, qancha vaqt va nima qilganingiz. Oddiy gapiring — AI tartiblaydi.</p>
+      <textarea class="big" data-key="exp" placeholder="Masalan: Korzinkada 2 yil sotuvchi bo'ldim, kassada ishladim, mijozlarga maslahat berdim. Hozir Texnomartda konsultantman."></textarea>
+      <div class="picks" data-target="exp" data-mode="append">
+        <button type="button" class="pick" data-text="Hali rasmiy ish tajribam yo'q.">Tajribam yo'q</button>
+        <button type="button" class="pick" data-text="Hozir ham shu yerda ishlayman.">Hozir ham ishlayman</button>
+        <button type="button" class="pick" data-text="Amaliyot o'taganman.">Amaliyot o'taganman</button>
+        <button type="button" class="pick" data-text="Frilans/o'zim uchun ishlaganman.">Frilans</button>
+      </div>
+    </div>
+
+    <div class="q" data-step="edu" hidden>
+      <h2>Qayerda o'qigansiz?</h2>
+      <p class="hint">O'quv joyi, yo'nalish va yil — nimani eslasangiz.</p>
+      <textarea class="big" data-key="edu" style="min-height:110px;" placeholder="Masalan: TDIU, iqtisodiyot, 2019–2023"></textarea>
+      <div class="picks" data-target="edu" data-mode="append">
+        <button type="button" class="pick" data-text="Oliy ma'lumotli.">Oliy ma'lumot</button>
+        <button type="button" class="pick" data-text="Hozir talabaman.">Hozir talabaman</button>
+        <button type="button" class="pick" data-text="Kollej/texnikumni bitirganman.">Kollej / texnikum</button>
+        <button type="button" class="pick" data-text="Maktabni bitirganman.">Maktab</button>
+        <button type="button" class="pick" data-text="Qo'shimcha kurslarda o'qiganman.">Kurslar</button>
+      </div>
+    </div>
+
+    <div class="q" data-step="skills" hidden>
+      <h2>Nimalarni bilasiz?</h2>
+      <p class="hint">Bosib tanlang yoki o'zingiz yozing.</p>
+      <textarea class="big" data-key="skills" style="min-height:90px;" placeholder="Masalan: Excel, 1C, mijozlar bilan ishlash"></textarea>
+      <div class="picks-label">Ko'nikmalar</div>
+      <div class="picks" data-target="skills" data-mode="toggle">
+        <button type="button" class="pick">Kompyuter savodxonligi</button><button type="button" class="pick">Excel</button>
+        <button type="button" class="pick">Word</button><button type="button" class="pick">1C</button>
+        <button type="button" class="pick">Canva</button><button type="button" class="pick">Photoshop</button>
+        <button type="button" class="pick">CRM</button><button type="button" class="pick">Mijozlar bilan ishlash</button>
+        <button type="button" class="pick">Sotuv</button><button type="button" class="pick">Jamoada ishlash</button>
+        <button type="button" class="pick">B toifali haydovchilik guvohnomasi</button>
+      </div>
+      <div class="picks-label">Tillar</div>
+      <div class="picks" data-target="skills" data-mode="toggle">
+        <button type="button" class="pick">O'zbek tili</button><button type="button" class="pick">Rus tili</button>
+        <button type="button" class="pick">Ingliz tili</button><button type="button" class="pick">Koreys tili</button>
+        <button type="button" class="pick">Turk tili</button>
+      </div>
+    </div>
+
+    <div class="q" data-step="extra" hidden>
+      <h2>Oxirgi qadam</h2>
+      <p class="hint">Yutuqlar, sertifikatlar yoki o'zingiz haqingizda — bo'lsa yozing. Bo'lmasa, darhol tayyorlang.</p>
+      <textarea class="big" data-key="extra" style="min-height:90px;" placeholder="Masalan: IELTS 6.5, oyning eng yaxshi sotuvchisi bo'lganman"></textarea>
+      <div id="opts-wizard-slot"></div>
+    </div>
+
+    <div class="status" id="w-status"></div>
+    <div class="nav-row">
+      <button type="button" class="btn btn-light back-btn" id="w-back" aria-label="Orqaga">←</button>
+      <button type="button" class="btn btn-dark next" id="w-next">Keyingi →</button>
+    </div>
+    <button type="button" class="skip" id="w-skip">O'tkazib yuborish</button>
+  </div>
+
+  <div class="box" id="free" hidden>
+    <textarea class="free" id="cv-text" maxlength="6000"
       placeholder="Masalan: men Dilnoza Karimova, 4 yil marketingda ishlayman. hozir korzinkada smm menejerman, oldin artelda 2 yil kontent qilganman. instagram, meta ads, canva bilan ishlayman. tdiu bitirganman. ingliz tili ielts 6.5. tel 90 123 45 67"></textarea>
     <div class="chips">
       <span class="chip" id="c-name">Ism</span>
@@ -60,31 +199,29 @@ details.more[open] summary::before { content: "− "; }
       <span class="chip" id="c-edu">O'qish</span>
       <span class="chip" id="c-contact">Telefon / email</span>
     </div>
+    <div class="field" style="margin:14px 0 0;"><label for="target-job" style="font-size:13px;font-weight:700;">Qaysi lavozimga? <span style="color:var(--muted);font-weight:600;">(ixtiyoriy)</span></label><input class="input" type="text" id="target-job" placeholder="Masalan: SMM menejer"></div>
+    <div id="opts-free-slot"></div>
+    <div class="status" id="f-status"></div>
+    <button class="btn btn-dark go" id="generate-btn" type="button">Rezyumeni tayyorlash →</button>
+  </div>
 
-    <details class="more">
-      <summary>Qo'shimcha (ixtiyoriy)</summary>
-      <div class="opts">
-        <div class="opt field" style="margin:0;"><label>Qaysi lavozimga?</label><input type="text" id="target-job" placeholder="Masalan: SMM menejer"></div>
-        <div class="opt">
-          <label>Rezyume tili</label>
-          <div class="seg" id="lang-seg">
-            <button type="button" class="sel" data-lang="auto">Avto</button>
-            <button type="button" data-lang="uz">O'zb</button>
-            <button type="button" data-lang="ru">Рус</button>
-            <button type="button" data-lang="en">Eng</button>
-          </div>
-        </div>
-        <label class="check"><input type="checkbox" id="enrich-chk"> Kam yozdim — AI kengaytirib yozsin</label>
-        <div class="opt"><label for="photo-input">Rasm</label><input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" style="font-size:13px;"></div>
+  <div class="opts" id="opts">
+    <div class="opt">
+      <label>Rezyume tili</label>
+      <div class="seg" id="lang-seg">
+        <button type="button" class="sel" data-lang="auto">Avto</button>
+        <button type="button" data-lang="uz">O'zb</button>
+        <button type="button" data-lang="ru">Рус</button>
+        <button type="button" data-lang="en">Eng</button>
       </div>
-    </details>
-
-    <button class="btn btn-dark go" id="generate-btn" type="button"><span id="btn-text">Rezyumeni tayyorlash</span> →</button>
-    <div class="status" id="status"></div>
-    <div class="meta">
-      <span>{% if quota.tier == "pro" %}Pro: <b>{{ quota.remaining }}</b> ta rezyume qoldi{% else %}Bepul: <b>{{ quota.remaining }} / {{ quota.limit }}</b> ta rezyume qoldi{% endif %}</span>
-      <a href="/cv/namuna/">Natija qanday bo'lishini ko'rish</a>
     </div>
+    <div class="opt"><label for="photo-input">Rasm <span style="color:var(--muted);font-weight:600;">(ixtiyoriy)</span></label><input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" style="font-size:13px;max-width:100%;"></div>
+    <label class="check"><input type="checkbox" id="enrich-chk"> Kam yozdim — AI kengaytirib yozsin</label>
+  </div>
+
+  <div class="meta">
+    <span>{% if quota.tier == "pro" %}Pro: <b>{{ quota.remaining }}</b> ta rezyume qoldi{% else %}Bepul: <b>{{ quota.remaining }} / {{ quota.limit }}</b> ta rezyume qoldi{% endif %}</span>
+    <a href="/cv/namuna/">Natija qanday bo'lishini ko'rish</a>
   </div>
   {% else %}
   <div class="limit">
@@ -102,7 +239,7 @@ details.more[open] summary::before { content: "− "; }
   <div class="overlay-in">
     <div class="spinner dark"></div>
     <h3>Rezyume yozilmoqda…</h3>
-    <p id="overlay-step">Matningiz o'qilmoqda</p>
+    <p id="overlay-step">Javoblaringiz o'qilmoqda</p>
   </div>
 </div>
 {% endblock %}
@@ -112,9 +249,163 @@ details.more[open] summary::before { content: "− "; }
 {% block extra_js %}
 <script>
 (function () {
+  var wizard = document.getElementById('wizard');
+  if (!wizard) return;
+
+  var DRAFT_KEY = 'tr_builder_draft_v1';
+  var lang = 'auto', mode = 'wizard', step = 0;
+  var steps = Array.prototype.slice.call(wizard.querySelectorAll('.q'));
+  var fields = {};
+  wizard.querySelectorAll('[data-key]').forEach(function (el) { fields[el.dataset.key] = el; });
   var ta = document.getElementById('cv-text');
-  if (!ta) return;
-  var lang = 'auto';
+  var opts = document.getElementById('opts');
+
+  // ── Qoralama (sahifa yangilansa javoblar yo'qolmasin) ──
+  function saveDraft() {
+    try {
+      var data = { mode: mode, step: step, free: ta.value, answers: {} };
+      Object.keys(fields).forEach(function (k) { data.answers[k] = fields[k].value; });
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+    } catch (e) {}
+  }
+  function loadDraft() {
+    try {
+      var data = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+      if (!data) return;
+      Object.keys(data.answers || {}).forEach(function (k) { if (fields[k] && data.answers[k]) fields[k].value = data.answers[k]; });
+      if (data.free) ta.value = data.free;
+      step = Math.min(Math.max(0, data.step || 0), steps.length - 1);
+      if (data.mode === 'free') setMode('free');
+    } catch (e) {}
+  }
+  function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
+
+  // ── Rejimlar ──
+  function setMode(m) {
+    mode = m;
+    document.querySelectorAll('.modes button').forEach(function (b) { b.classList.toggle('sel', b.dataset.mode === m); });
+    wizard.hidden = m !== 'wizard';
+    document.getElementById('free').hidden = m !== 'free';
+    document.getElementById(m === 'free' ? 'opts-free-slot' : 'opts-wizard-slot').appendChild(opts);
+    opts.hidden = m === 'wizard' && step !== steps.length - 1;
+    if (m === 'free' && !ta.value.trim()) ta.value = composeText();
+    saveDraft();
+  }
+  document.querySelectorAll('.modes button').forEach(function (b) {
+    b.addEventListener('click', function () { setMode(b.dataset.mode); });
+  });
+
+  // ── Tayyor javob tugmalari ──
+  wizard.querySelectorAll('.picks').forEach(function (group) {
+    var target = fields[group.dataset.target];
+    group.querySelectorAll('.pick').forEach(function (btn) {
+      var text = btn.dataset.text || btn.textContent.trim();
+      btn.addEventListener('click', function () {
+        var how = group.dataset.mode;
+        if (how === 'set') {
+          target.value = text;
+          group.querySelectorAll('.pick').forEach(function (b) { b.classList.toggle('on', b === btn); });
+        } else if (how === 'append') {
+          if (target.value.indexOf(text) === -1) target.value = (target.value.trim() + ' ' + text).trim();
+          btn.classList.add('on');
+        } else {
+          var items = target.value.split(/\s*,\s*/).filter(Boolean);
+          var i = items.indexOf(text);
+          if (i === -1) items.push(text); else items.splice(i, 1);
+          target.value = items.join(', ');
+          btn.classList.toggle('on', i === -1);
+        }
+        saveDraft();
+      });
+    });
+  });
+  function syncPicks() {
+    wizard.querySelectorAll('.picks').forEach(function (group) {
+      var value = fields[group.dataset.target].value;
+      group.querySelectorAll('.pick').forEach(function (btn) {
+        var text = btn.dataset.text || btn.textContent.trim();
+        var on = group.dataset.mode === 'set' ? value === text : value.indexOf(text) !== -1;
+        btn.classList.toggle('on', on);
+      });
+    });
+  }
+
+  // ── Qadamlar ──
+  var nextBtn = document.getElementById('w-next'), backBtn = document.getElementById('w-back'), skipBtn = document.getElementById('w-skip');
+  function render() {
+    steps.forEach(function (s, i) { s.hidden = i !== step; });
+    var last = step === steps.length - 1;
+    document.getElementById('prog-fill').style.width = ((step + 1) / steps.length * 100) + '%';
+    document.getElementById('prog-text').textContent = (step + 1) + ' / ' + steps.length;
+    nextBtn.textContent = last ? 'Rezyumeni tayyorlash →' : 'Keyingi →';
+    backBtn.style.display = step === 0 ? 'none' : '';
+    skipBtn.hidden = last;
+    opts.hidden = mode === 'wizard' && !last;
+    if (last) {
+      // Javoblar qisqa bo'lsa AI kengaytirishni o'zi yoqamiz — foydalanuvchi o'chirib qo'yishi mumkin
+      var chk = document.getElementById('enrich-chk');
+      if (!chk.dataset.touched) chk.checked = composeText().length < 260;
+    }
+    syncPicks();
+    var first = steps[step].querySelector('input, textarea');
+    if (first && window.matchMedia('(min-width: 700px)').matches) first.focus();
+    saveDraft();
+  }
+  function go(delta) {
+    step = Math.min(Math.max(0, step + delta), steps.length - 1);
+    render();
+    wizard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  nextBtn.addEventListener('click', function () { if (step === steps.length - 1) submitWizard(); else go(1); });
+  backBtn.addEventListener('click', function () { go(-1); });
+  skipBtn.addEventListener('click', function () { go(1); });
+  wizard.querySelectorAll('input.big').forEach(function (el) {
+    el.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); nextBtn.click(); } });
+  });
+  wizard.addEventListener('input', function () { syncPicks(); saveDraft(); });
+  document.getElementById('enrich-chk').addEventListener('change', function () { this.dataset.touched = '1'; });
+
+  function composeText() {
+    var v = function (k) { return (fields[k].value || '').trim(); };
+    var lines = [];
+    if (v('name')) lines.push('Ism: ' + v('name'));
+    if (v('job')) lines.push('Qaysi lavozimga: ' + v('job'));
+    if (v('phone')) lines.push('Telefon: ' + v('phone'));
+    if (v('email')) lines.push('Email: ' + v('email'));
+    if (v('city')) lines.push('Shahar: ' + v('city'));
+    if (v('exp')) lines.push('Ish tajribasi: ' + v('exp'));
+    if (v('edu')) lines.push("Ta'lim: " + v('edu'));
+    if (v('skills')) lines.push('Ko\'nikmalar va tillar: ' + v('skills'));
+    if (v('extra')) lines.push('Qo\'shimcha: ' + v('extra'));
+    return lines.join('\n');
+  }
+
+  function submitWizard() {
+    var text = composeText();
+    if (text.length < 20 || !(fields.exp.value.trim() || fields.skills.value.trim() || fields.edu.value.trim())) {
+      showError('w-status', "Kamida bittasini yozing: ish tajribasi, o'qish yoki nimalarni bilishingiz.");
+      step = steps.findIndex(function (s) { return s.dataset.step === 'exp'; });
+      render();
+      return;
+    }
+    generate(text, fields.job.value.trim(), 'w-status', nextBtn);
+  }
+
+  // ── Erkin matn rejimi ──
+  var checks = {
+    'c-name': /[A-Za-zА-Яа-яЎўҚқҒғҲҳ'ʻ]{2,}\s+[A-Za-zА-Яа-яЎўҚқҒғҲҳ'ʻ]{2,}(ov|ova|ev|eva|iy|yev|yeva|zoda|ovich|ovna)\b|\bmen\s+[A-Za-zА-Яа-я]{3,}|^Ism:/im,
+    'c-exp': /(ishla|work|работ|kompaniya|company|menejer|developer|dasturchi|operator|buxgalter|o'qituvchi|sotuvchi|\d+\s*yil)/i,
+    'c-skills': /(bilaman|bilan ishla|python|excel|1c|figma|canva|photoshop|sql|java|meta ads|autocad|skill|навык|word|ko'nikma)/i,
+    'c-edu': /(universit|kollej|litsey|institut|akademi|maktab|school|texnikum|университет|bitir|tatu|tdiu|o'qiganman|ta'lim)/i,
+    'c-contact': /(\d[\d\s\-()]{7,}\d|[\w.+-]+@[\w.-]+\.[a-z]{2,})/i
+  };
+  function checkFree() { Object.keys(checks).forEach(function (id) { document.getElementById(id).classList.toggle('ok', checks[id].test(ta.value)); }); }
+  ta.addEventListener('input', function () { checkFree(); saveDraft(); });
+  document.getElementById('generate-btn').addEventListener('click', function () {
+    var text = ta.value.trim();
+    if (text.length < 20) { showError('f-status', "Bir-ikki gap bo'lsa ham yozing: ismingiz, nima ish qilgansiz, nimalarni bilasiz."); ta.focus(); return; }
+    generate(text, document.getElementById('target-job').value.trim(), 'f-status', this);
+  });
 
   document.querySelectorAll('#lang-seg button').forEach(function (el) {
     el.addEventListener('click', function () {
@@ -123,39 +414,28 @@ details.more[open] summary::before { content: "− "; }
     });
   });
 
-  var checks = {
-    'c-name': /[A-Za-zА-Яа-яЎўҚқҒғҲҳ'ʻ]{2,}\s+[A-Za-zА-Яа-яЎўҚқҒғҲҳ'ʻ]{2,}(ov|ova|ev|eva|iy|yev|yeva|zoda|ovich|ovna)\b|\bmen\s+[A-Za-zА-Яа-я]{3,}/i,
-    'c-exp': /(ishla|work|работ|kompaniya|company|menejer|developer|dasturchi|operator|buxgalter|o'qituvchi|sotuvchi|\d+\s*yil)/i,
-    'c-skills': /(bilaman|bilan ishla|python|excel|1c|figma|canva|photoshop|sql|java|meta ads|autocad|skill|навык|word)/i,
-    'c-edu': /(universit|kollej|litsey|institut|akademi|maktab|school|texnikum|университет|bitir|tatu|tdiu|o'qiganman|ta'lim)/i,
-    'c-contact': /(\d[\d\s\-()]{7,}\d|[\w.+-]+@[\w.-]+\.[a-z]{2,})/i
-  };
-  ta.addEventListener('input', function () {
-    Object.keys(checks).forEach(function (id) { document.getElementById(id).classList.toggle('ok', checks[id].test(ta.value)); });
-  });
-
-  var btn = document.getElementById('generate-btn'), status = document.getElementById('status');
+  // ── Yuborish ──
   var overlay = document.getElementById('overlay'), stepEl = document.getElementById('overlay-step');
-  var stepTexts = ["Matningiz o'qilmoqda", "Tajriba bo'limlarga ajratilmoqda", "Jumlalar professional qilinmoqda", "ATS qoidalari tekshirilmoqda", "Shablonga joylanmoqda"];
+  var stepTexts = ["Javoblaringiz o'qilmoqda", "Tajriba bo'limlarga ajratilmoqda", "Jumlalar professional qilinmoqda", "ATS qoidalari tekshirilmoqda", "Shablonga joylanmoqda"];
 
-  function showError(msg, limit) {
+  function showError(id, msg, limit) {
     overlay.classList.remove('show');
+    var status = document.getElementById(id);
     status.className = 'status show error';
-    status.innerHTML = '⚠️ ' + msg + (limit ? ' <a href="/pricing/" style="text-decoration:underline;margin-left:6px;">Narxlar</a>' : '');
-    btn.disabled = false;
+    status.innerHTML = '';
+    status.appendChild(document.createTextNode('⚠️ ' + msg));
+    if (limit) { var a = document.createElement('a'); a.href = '/pricing/'; a.textContent = 'Narxlar'; a.style.cssText = 'text-decoration:underline;margin-left:6px;'; status.appendChild(a); }
   }
 
-  btn.addEventListener('click', function () {
-    var text = ta.value.trim();
-    if (text.length < 20) { showError("Bir-ikki gap bo'lsa ham yozing: ismingiz, nima ish qilgansiz, nimalarni bilasiz."); ta.focus(); return; }
-
-    btn.disabled = true; status.className = 'status';
+  function generate(text, targetJob, statusId, btn) {
+    document.getElementById(statusId).className = 'status';
+    btn.disabled = true;
     overlay.classList.add('show');
     var i = 0, timer = setInterval(function () { i = Math.min(i + 1, stepTexts.length - 1); stepEl.textContent = stepTexts[i]; }, 3500);
 
     var body = new FormData();
     body.append('text', text);
-    body.append('target_job', document.getElementById('target-job').value.trim());
+    body.append('target_job', targetJob);
     body.append('language', lang);
     body.append('enrich', document.getElementById('enrich-chk').checked ? '1' : '0');
     var photo = document.getElementById('photo-input').files[0];
@@ -166,11 +446,17 @@ details.more[open] summary::before { content: "− "; }
       .then(function (r) { return r.json(); })
       .then(function (d) {
         clearInterval(timer);
-        if (d.redirect_url) { stepEl.textContent = 'Tayyor!'; window.location.href = d.redirect_url; return; }
-        showError(d.error || 'Xatolik', d.limit_reached);
+        if (d.redirect_url) { clearDraft(); stepEl.textContent = 'Tayyor!'; window.location.href = d.redirect_url; return; }
+        btn.disabled = false;
+        showError(statusId, d.error || 'Xatolik', d.limit_reached);
       })
-      .catch(function () { clearInterval(timer); showError("Internet yoki server bilan bog'lanishda xatolik. Qayta urinib ko'ring."); });
-  });
+      .catch(function () { clearInterval(timer); btn.disabled = false; showError(statusId, "Internet yoki server bilan bog'lanishda xatolik. Qayta urinib ko'ring."); });
+  }
+
+  loadDraft();
+  render();
+  if (mode === 'free') setMode('free'); else document.getElementById('opts-wizard-slot').appendChild(opts);
+  checkFree();
 })();
 </script>
 {% endblock %}

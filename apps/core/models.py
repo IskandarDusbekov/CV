@@ -159,6 +159,8 @@ class ActivityLog(models.Model):
         ("unblocked", "Blokdan chiqarildi"),
         ("credits_changed", "Kreditlari o'zgartirildi"),
         ("pro_granted", "Pro berildi"),
+        ("staff_granted", "Panelga ruxsat berildi"),
+        ("staff_removed", "Panel ruxsati olindi"),
         ("limit_reached", "Limitga yetdi"),
     ]
 

@@ -43,7 +43,13 @@ def example(request):
 
 def builder(request):
     initial = resolve_template_name(request.GET.get("template", DEFAULT_TEMPLATE))
+    profile = getattr(request.user, "profile", None) if request.user.is_authenticated else None
     return render(request, "cv/builder.html", {
+        # Telegram orqali kirganlarda ism va raqam allaqachon bor — qayta yozdirmaymiz
+        "prefill": {
+            "name": request.user.get_full_name() if request.user.is_authenticated else "",
+            "phone": getattr(profile, "phone", "") or "",
+        },
         "initial_template": initial,
         "quota": quotas.generate_quota(request),
         "pro_plan": _active_plans(PricingPlan.SCOPE_ACCOUNT).first(),
@@ -62,8 +68,68 @@ def preview(request, cv_id):
         "tailor_quota": quotas.tailor_quota(request, cv),
         "unlock_target": cv.root,
         "is_staff_view": request.user.is_staff and not _is_owner(request.user, cv),
+        "missing_details": _missing_details(request, cv),
     })
     return render(request, "cv/preview.html", context)
+
+
+# AI yozolmaydigan, lekin har kimda bor oddiy ma'lumotlar — yetishmasa preview'da so'raymiz
+DETAIL_FIELDS = [
+    {"name": "full_name", "label": "Ism va familiya", "type": "text", "placeholder": "Dilnoza Karimova", "autocomplete": "name"},
+    {"name": "job_title", "label": "Qaysi lavozimga?", "type": "text", "placeholder": "SMM menejer", "autocomplete": "organization-title"},
+    {"name": "phone", "label": "Telefon", "type": "tel", "placeholder": "+998 90 123 45 67", "autocomplete": "tel"},
+    {"name": "email", "label": "Email", "type": "email", "placeholder": "ism@gmail.com", "autocomplete": "email"},
+    {"name": "location", "label": "Shahar", "type": "text", "placeholder": "Toshkent", "autocomplete": "address-level2"},
+]
+_DETAILS_SKIPPED_KEY = "details_skipped"
+
+
+def _missing_details(request, cv):
+    if not (_can_access_private_cv(request, cv)) or str(cv.public_id) in request.session.get(_DETAILS_SKIPPED_KEY, []):
+        return []
+    data = cv.cv_json if isinstance(cv.cv_json, dict) else {}
+    profile = getattr(request.user, "profile", None) if request.user.is_authenticated else None
+    missing = []
+    for field in DETAIL_FIELDS:
+        if str(data.get(field["name"]) or "").strip():
+            continue
+        value = ""
+        if field["name"] == "phone" and profile and profile.phone:
+            value = profile.phone  # Telegram orqali tasdiqlangan raqam — bitta bosishda saqlanadi
+        elif field["name"] == "full_name" and request.user.is_authenticated:
+            value = request.user.get_full_name()
+        missing.append({**field, "value": value})
+    return missing
+
+
+@require_POST
+def save_details(request, cv_id):
+    """Preview'dagi «yetishmayotgan ma'lumotlar» formasi: AI'siz, to'g'ridan-to'g'ri rezyumega yoziladi."""
+    cv = _private_cv(request, cv_id, staff_ok=False)
+    if request.POST.get("action") == "skip":
+        skipped = request.session.get(_DETAILS_SKIPPED_KEY, [])
+        request.session[_DETAILS_SKIPPED_KEY] = (skipped + [str(cv.public_id)])[-50:]
+        return redirect("cv_preview", cv_id=cv.public_id)
+
+    updates = {}
+    for field in DETAIL_FIELDS:
+        value = re.sub(r"\s+", " ", request.POST.get(field["name"], "")).strip()[:120]
+        if value:
+            updates[field["name"]] = value
+    if updates:
+        # Kontaktlar asl rezyume va uning moslashtirilgan versiyalarida bir xil bo'lishi kerak
+        root = cv.root
+        family = [root, *CV.objects.filter(parent=root)]
+        for item in family:
+            data = dict(item.cv_json) if isinstance(item.cv_json, dict) else {}
+            for key, value in updates.items():
+                if key == "job_title" and item.pk != cv.pk and data.get(key):
+                    continue  # moslashtirilgan versiyaning lavozim nomini buzmaymiz
+                data[key] = value
+            item.cv_json = data
+            item.save(update_fields=["cv_json", "updated_at"])
+        messages.success(request, "Saqlandi — rezyumega qo'shildi.")
+    return redirect("cv_preview", cv_id=cv.public_id)
 
 
 @require_POST

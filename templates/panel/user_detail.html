@@ -95,6 +95,23 @@
         </form>
         {% endif %}
       </div>
+      {% if request.user.is_superuser and not u.is_superuser %}
+      <div class="row">
+        <label>Panelga kirish</label>
+        {% if u.is_staff %}
+        <p class="small" style="margin-bottom:8px;">✅ Admin: Telegram orqali kirib, «⚡ Panel» dan to'lovlar, foydalanuvchilar va rezyumelarni boshqaradi. Sozlamalar va narxlar faqat sizda.</p>
+        <form method="post" action="{% url 'panel:user_action' u.pk %}">{% csrf_token %}
+          <input type="hidden" name="action" value="remove_staff">
+          <button class="btn btn-light btn-sm" data-confirm="Panelga ruxsat olib tashlansinmi?">Ruxsatni olib tashlash</button>
+        </form>
+        {% else %}
+        <form method="post" action="{% url 'panel:user_action' u.pk %}">{% csrf_token %}
+          <input type="hidden" name="action" value="make_staff">
+          <button class="btn btn-sm" data-confirm="Bu foydalanuvchi panelga kira oladi: to'lovlarni tasdiqlash, bloklash, kredit berish. Davom etasizmi?">🛡 Panelga ruxsat berish</button>
+        </form>
+        {% endif %}
+      </div>
+      {% endif %}
       <div class="row">
         <label>Bloklash</label>
         {% if profile.is_blocked %}
