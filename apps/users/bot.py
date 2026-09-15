@@ -66,6 +66,26 @@ def send_message(chat_id: int, text: str, reply_markup: dict | None = None) -> d
     return _post("sendMessage", **payload)
 
 
+def send_document(chat_id: int, content: bytes, filename: str, caption: str = "") -> bool:
+    """Faylni chatga yuboradi (Mini App ichida yuklab bo'lmaganda ishlatiladi)."""
+    if not BOT_TOKEN:
+        return False
+    try:
+        r = requests.post(
+            f"{BASE_URL}/sendDocument",
+            data={"chat_id": chat_id, "caption": caption[:1000]},
+            files={"document": (filename, content)},
+            timeout=60,
+        )
+        ok = bool(r.json().get("ok"))
+        if not ok:
+            logger.warning("Telegram sendDocument failed: %s", r.text[:300])
+        return ok
+    except Exception as exc:
+        logger.error("Telegram sendDocument error: %s", exc)
+        return False
+
+
 def _site_url(path: str = "") -> str:
     return getattr(settings, "SITE_URL", "").rstrip("/") + path
 

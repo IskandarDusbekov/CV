@@ -137,10 +137,14 @@ def telegram_webapp_auth(request):
     if tg_user.get("username") and tg_user["username"] != profile.telegram_username:
         UserProfile.objects.filter(pk=profile.pk).update(telegram_username=tg_user["username"][:100])
     if request.user.is_authenticated and request.user.pk == user.pk:
+        request.session["in_telegram"] = True
         return JsonResponse({"status": "ok", "redirect": next_url})
 
     request.session[_SESSION_NEXT_KEY] = next_url
-    return JsonResponse({"status": "ok", "redirect": _finish_login(request, user)})
+    redirect_url = _finish_login(request, user)
+    # Sahifalar Telegram ichida ekanini bilsin: yuklab olish Mini App usuli bilan ishlaydi
+    request.session["in_telegram"] = True
+    return JsonResponse({"status": "ok", "redirect": redirect_url})
 
 
 @require_POST

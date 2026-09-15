@@ -269,6 +269,53 @@
     if (document.fonts) document.fonts.ready.then(fitAll);
   })();
 </script>
+{% if request.session.in_telegram %}
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+  // Telegram Mini App ichida oddiy yuklab olish ishlamaydi: downloadFile yoki faylni chatga yuborish
+  (function () {
+    var tg = window.Telegram && window.Telegram.WebApp;
+    if (!tg || !tg.initData) return;
+    tg.ready();
+    var csrf = (document.cookie.match(/(?:^|; )csrftoken=([^;]+)/) || [])[1] || '';
+
+    function post(url) {
+      return fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRFToken': decodeURIComponent(csrf) } })
+        .then(function (r) { return r.json().catch(function () { return { error: 'Xatolik' }; }); })
+        .catch(function () { return { error: "Internet bilan muammo. Qayta urinib ko'ring." }; });
+    }
+    function busy(a, on) { a.classList.toggle('is-disabled', on); a.style.opacity = on ? '.6' : ''; }
+
+    function sendToChat(a, id, fmt) {
+      busy(a, true);
+      post('/cv/download/' + id + '/' + fmt + '/telegram/').then(function (d) {
+        busy(a, false);
+        if (d.ok) tg.showAlert("✅ Fayl Telegram chatingizga yuborildi. Botdagi xabarni oching.");
+        else tg.showAlert(d.error || 'Xatolik');
+      });
+    }
+
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest('a[data-dl]');
+      if (!a) return;
+      e.preventDefault();
+      var parts = a.dataset.dl.split(':'), id = parts[0], fmt = parts[1];
+      if (a.dataset.dlChat !== undefined || !tg.downloadFile || !tg.isVersionAtLeast('8.0')) { sendToChat(a, id, fmt); return; }
+      busy(a, true);
+      post('/cv/download/' + id + '/' + fmt + '/link/').then(function (d) {
+        busy(a, false);
+        if (!d.url) { tg.showAlert(d.error || 'Xatolik'); return; }
+        try {
+          tg.downloadFile({ url: d.url, file_name: d.file_name }, function (accepted) {
+            if (accepted === false) return;
+          });
+        } catch (err) { sendToChat(a, id, fmt); }
+      });
+    });
+    document.documentElement.classList.add('in-telegram');
+  })();
+</script>
+{% endif %}
 {% block extra_js %}{% endblock %}
 </body>
 </html>

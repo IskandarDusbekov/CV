@@ -213,6 +213,61 @@ class CreditUnlockTests(TestCase):
         self.assertContains(self.client.get(reverse("cv_preview", args=[self.cv.public_id])), "Admin ko")
 
 
+@mock.patch("apps.cv.views.render_cv_to_pdf", return_value=b"%PDF-1.7")
+class TelegramAppDownloadTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="tg")
+        UserProfile.objects.filter(user=self.user).update(telegram_id=4242)
+        self.client.force_login(self.user)
+        self.cv = CV.objects.create(user=self.user, raw_input_text="x", cv_json=DEMO_CV_JSON, is_unlocked=True)
+
+    def _link(self, fmt="pdf", cv=None):
+        return self.client.post(reverse("download_link", args=[(cv or self.cv).public_id, fmt]))
+
+    def test_signed_link_downloads_without_session(self, _):
+        data = self._link().json()
+        self.assertTrue(data["file_name"].endswith(".pdf"))
+        anon = self.client_class()
+        r = anon.get(data["url"].replace("http://testserver", ""))
+        self.assertEqual(r["Content-Type"], "application/pdf")
+        self.assertIn("attachment", r["Content-Disposition"])
+        self.assertEqual(r["Access-Control-Allow-Origin"], "https://web.telegram.org")
+        docx = anon.get(self._link("docx").json()["url"].replace("http://testserver", ""))
+        self.assertIn("wordprocessingml", docx["Content-Type"])
+
+    def test_tampered_or_expired_link_rejected(self, _):
+        url = self._link().json()["url"].replace("http://testserver", "")
+        self.assertEqual(self.client_class().get(url[:-3] + "abc/").status_code, 410)
+        with mock.patch("apps.cv.views._DL_MAX_AGE", -1):
+            self.assertEqual(self.client_class().get(url).status_code, 410)
+
+    def test_locked_or_foreign_cv_gets_no_link(self, _):
+        locked = CV.objects.create(user=self.user, raw_input_text="x", cv_json=DEMO_CV_JSON)
+        self.assertEqual(self._link(cv=locked).status_code, 403)
+        foreign = CV.objects.create(user=User.objects.create_user(username="z"), raw_input_text="x", cv_json=DEMO_CV_JSON, is_unlocked=True)
+        self.assertEqual(self._link(cv=foreign).status_code, 404)
+        self.client.logout()
+        self.assertEqual(self._link().status_code, 401)
+
+    @mock.patch("apps.users.bot.send_document", return_value=True)
+    def test_send_to_telegram_chat(self, send, _):
+        r = self.client.post(reverse("send_to_telegram", args=[self.cv.public_id, "pdf"]))
+        self.assertEqual(r.json(), {"ok": True})
+        chat_id, content, filename = send.call_args.args[:3]
+        self.assertEqual((chat_id, content), (4242, b"%PDF-1.7"))
+        self.assertTrue(filename.endswith(".pdf"))
+
+    def test_telegram_script_only_inside_mini_app(self, _):
+        preview = reverse("cv_preview", args=[self.cv.public_id])
+        self.assertNotContains(self.client.get(preview), "telegram-web-app.js")
+        session = self.client.session
+        session["in_telegram"] = True
+        session.save()
+        r = self.client.get(preview)
+        self.assertContains(r, "telegram-web-app.js")
+        self.assertContains(r, f'data-dl="{self.cv.public_id}:docx"')
+
+
 class MissingDetailsTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="d", first_name="Dilnoza", last_name="Karimova")

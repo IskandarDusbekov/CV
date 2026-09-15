@@ -18,6 +18,9 @@ urlpatterns = [
     path('download/<uuid:cv_id>/', views.download_pdf, name='download_pdf'),
     path('download/<uuid:cv_id>/inline/', views.download_pdf, {'inline': True}, name='view_pdf'),
     path('download/<uuid:cv_id>/docx/', views.download_docx, name='download_docx'),
+    path('download/<uuid:cv_id>/<str:fmt>/link/', views.download_link, name='download_link'),
+    path('download/<uuid:cv_id>/<str:fmt>/telegram/', views.send_to_telegram, name='send_to_telegram'),
+    path('dl/<str:token>/', views.signed_download, name='signed_download'),
     path('photo/<uuid:cv_id>/upload/', views.upload_photo, name='upload_cv_photo'),
     path('photo/<uuid:cv_id>/remove/', views.remove_photo, name='remove_cv_photo'),
 ]

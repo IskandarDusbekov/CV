@@ -5,6 +5,8 @@ from urllib.parse import quote
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.core import signing
 from django.db.models import F
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -33,6 +35,7 @@ from .services import (
 )
 
 logger = logging.getLogger("apps.cv")
+User = get_user_model()
 
 
 def example(request):
@@ -249,6 +252,99 @@ def download_docx(request, cv_id):
     )
 
 
+# ─── Telegram Mini App ichida yuklab olish ────────────────────────────────────
+# Telegram ichki brauzeri `Content-Disposition: attachment` faylni saqlay olmaydi. Shuning uchun:
+#  1) Telegram.WebApp.downloadFile — cookie'siz ishlaydigan, 10 daqiqalik imzolangan havola bilan;
+#  2) eski Telegram versiyalarida — faylni bot orqali chatga yuborish.
+
+_DL_SALT = "cv-download-link"
+_DL_MAX_AGE = 10 * 60
+_DL_TYPES = {
+    "pdf": "application/pdf",
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
+
+
+def _build_file(cv, user, fmt):
+    if fmt == "docx":
+        from .docx_export import render_cv_to_docx
+
+        return render_cv_to_docx(cv, user)
+    return render_cv_to_pdf(cv, user, company_branding=_get_company_branding(user))
+
+
+def _owned_downloadable(request, cv_id, fmt):
+    if fmt not in _DL_TYPES:
+        raise Http404
+    if not request.user.is_authenticated:
+        return None, JsonResponse({"error": "Avval kiring."}, status=401)
+    cv = _private_cv(request, cv_id)
+    if not user_can_download_pdf(request.user, cv):
+        return None, JsonResponse({"error": "Yuklab olish uchun rezyumeni kredit yoki Pro bilan oching."}, status=403)
+    return cv, None
+
+
+@require_POST
+def download_link(request, cv_id, fmt):
+    """Mini App uchun: `Telegram.WebApp.downloadFile` ga beriladigan qisqa muddatli havola."""
+    cv, error = _owned_downloadable(request, cv_id, fmt)
+    if error:
+        return error
+    token = signing.TimestampSigner(salt=_DL_SALT).sign(f"{cv.public_id}:{fmt}:{request.user.pk}")
+    return JsonResponse({
+        "url": request.build_absolute_uri(reverse("signed_download", args=[token])),
+        "file_name": _filename(cv, fmt),
+    })
+
+
+def signed_download(request, token):
+    try:
+        value = signing.TimestampSigner(salt=_DL_SALT).unsign(token, max_age=_DL_MAX_AGE)
+        public_id, fmt, user_id = value.split(":")
+    except (signing.BadSignature, ValueError):
+        return HttpResponse("Havola eskirgan. Saytda yuklab olish tugmasini qayta bosing.", status=410,
+                            content_type="text/plain; charset=utf-8")
+    cv = get_object_or_404(CV.objects.select_related("parent", "user"), public_id=public_id)
+    user = get_object_or_404(User.objects.select_related("profile"), pk=user_id, is_active=True)
+    profile = getattr(user, "profile", None)
+    allowed = (cv.user_id == user.pk or user.is_staff) and not (profile and profile.is_blocked)
+    if fmt not in _DL_TYPES or not allowed or not user_can_download_pdf(user, cv):
+        raise Http404
+    try:
+        content = _build_file(cv, user, fmt)
+    except PdfRenderError as exc:
+        logger.error("PDF render failed for CV %s: %s", cv.public_id, exc, extra={"request": request})
+        return HttpResponse("Faylni tayyorlashda xatolik. Qayta urinib ko'ring.", status=500, content_type="text/plain; charset=utf-8")
+    log_activity(request, f"download_{fmt}", user=user, cv=str(cv.public_id), via="telegram_app")
+    response = _file_response(content, _DL_TYPES[fmt], _filename(cv, fmt), "attachment")
+    # web.telegram.org faylni o'z sahifasidan yuklaydi
+    response["Access-Control-Allow-Origin"] = "https://web.telegram.org"
+    return response
+
+
+@require_POST
+def send_to_telegram(request, cv_id, fmt):
+    """Faylni bot orqali foydalanuvchining Telegram chatiga yuboradi."""
+    cv, error = _owned_downloadable(request, cv_id, fmt)
+    if error:
+        return error
+    chat_id = getattr(getattr(request.user, "profile", None), "telegram_id", None)
+    if not chat_id:
+        return JsonResponse({"error": "Hisobingiz Telegram'ga bog'lanmagan. Botga /start yozing."}, status=400)
+    try:
+        content = _build_file(cv, request.user, fmt)
+    except PdfRenderError as exc:
+        logger.error("PDF render failed for CV %s: %s", cv.public_id, exc, extra={"request": request})
+        return JsonResponse({"error": "Faylni tayyorlashda xatolik. Qayta urinib ko'ring."}, status=500)
+
+    from apps.users.bot import send_document
+
+    if not send_document(chat_id, content, _filename(cv, fmt), caption=f"📄 {cv.cv_json.get('full_name', '')} — rezyume"):
+        return JsonResponse({"error": "Telegram'ga yuborib bo'lmadi. Botni bloklamaganingizni tekshiring."}, status=502)
+    log_activity(request, f"download_{fmt}", cv=str(cv.public_id), via="telegram_chat")
+    return JsonResponse({"ok": True})
+
+
 def templates_showcase(request):
     templates = [{**t, **demo_template_context(t["code"])} for t in template_choices()]
     return render(request, "cv/templates_showcase.html", {"templates": templates})
@@ -405,12 +501,12 @@ def _downloadable_cv(request, cv_id):
 def _filename(cv, ext):
     name = cv.cv_json.get("full_name", "") if isinstance(cv.cv_json, dict) else ""
     name = re.sub(r"[^\w\-]+", "_", name, flags=re.UNICODE).strip("_") or "resume"
-    return f"{name}_CV.{ext}"
+    return f"{name}_Rezyume.{ext}"
 
 
 def _file_response(content, content_type, filename, disposition):
     response = HttpResponse(content, content_type=content_type)
-    ascii_name = filename.encode("ascii", "ignore").decode() or f"CV.{filename.rsplit('.', 1)[-1]}"
+    ascii_name = filename.encode("ascii", "ignore").decode() or f"Rezyume.{filename.rsplit('.', 1)[-1]}"
     response["Content-Disposition"] = f"{disposition}; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(filename)}"
     response["Content-Length"] = len(content)
     return response

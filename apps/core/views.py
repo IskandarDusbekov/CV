@@ -65,6 +65,7 @@ def robots_txt(request):
         "Disallow: /users/",
         "Disallow: /cv/preview/",
         "Disallow: /cv/download/",
+        "Disallow: /cv/dl/",
         "Disallow: /cv/share/",
         "Allow: /",
     ]

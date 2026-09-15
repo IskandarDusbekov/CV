@@ -87,7 +87,7 @@
               </div>
               <div class="cv-actions">
                 <a href="/cv/preview/{{ cv.public_id }}/" class="btn btn-light btn-sm">Ochish</a>
-                {% if item.unlocked or is_pro %}<a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark btn-sm">PDF</a><a href="/cv/download/{{ cv.public_id }}/docx/" class="btn btn-dark btn-sm">Word</a>{% endif %}
+                {% if item.unlocked or is_pro %}<a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark btn-sm" data-dl="{{ cv.public_id }}:pdf">PDF</a><a href="/cv/download/{{ cv.public_id }}/docx/" class="btn btn-dark btn-sm" data-dl="{{ cv.public_id }}:docx">Word</a>{% endif %}
               </div>
             </div>
           </article>

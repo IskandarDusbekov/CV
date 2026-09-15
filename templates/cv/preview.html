@@ -97,6 +97,8 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
 .det-row { display: flex; gap: 8px; margin-top: 4px; }
 .det-row .btn { flex: 1; }
 .m-bar { display: none; }
+.tg-only { display: none !important; }
+.in-telegram .dl-btn.tg-only { display: flex !important; }
 .rail > * { scroll-margin-top: 84px; }
 
 @media (max-width: 1060px) {
@@ -192,15 +194,20 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
           <div class="box-h"><h2>Yuklab olish</h2></div>
           <div class="dl">
             {% if can_download_pdf %}
-              <a href="/cv/download/{{ cv.public_id }}/" class="dl-btn" data-loading>
+              <a href="/cv/download/{{ cv.public_id }}/" class="dl-btn" data-loading data-dl="{{ cv.public_id }}:pdf">
                 <span class="ic" style="background:#e5484d;">PDF</span>
                 <span><b>PDF yuklab olish</b><small>Toza, chop etishga tayyor</small></span>
                 <span class="end">↓</span>
               </a>
-              <a href="/cv/download/{{ cv.public_id }}/docx/" class="dl-btn">
+              <a href="/cv/download/{{ cv.public_id }}/docx/" class="dl-btn" data-dl="{{ cv.public_id }}:docx">
                 <span class="ic" style="background:#2b579a;">DOC</span>
                 <span><b>Word yuklab olish</b><small>Tahrirlanadigan .docx</small></span>
                 <span class="end">↓</span>
+              </a>
+              <a href="#" class="dl-btn tg-only" data-dl="{{ cv.public_id }}:pdf" data-dl-chat>
+                <span class="ic" style="background:#229ed9;">TG</span>
+                <span><b>Telegram chatga yuborish</b><small>PDF bot xabarida keladi</small></span>
+                <span class="end">➤</span>
               </a>
             {% else %}
               <a href="{% if request.user.is_authenticated %}#unlock{% else %}{{ login_url }}{% endif %}" class="dl-btn locked">
@@ -317,7 +324,7 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
 <div class="m-bar">
   <a href="#tailor" class="btn btn-light">🎯 Moslashtirish</a>
   {% if can_download_pdf %}
-  <a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark">⬇ PDF</a>
+  <a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark" data-dl="{{ cv.public_id }}:pdf">⬇ PDF</a>
   {% else %}
   <a href="{% if request.user.is_authenticated %}#unlock{% else %}{{ login_url }}{% endif %}" class="btn btn-dark">⬇ Yuklab olish</a>
   {% endif %}
