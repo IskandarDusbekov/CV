@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% load mycv %}
+{% block title %}{{ cv_data.full_name }} — CV · mycv.uz{% endblock %}
+
+{% block extra_style %}
+.pv { padding: 24px 0 0; }
+.pv-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.pv-top h1 { font-size: 26px; font-weight: 800; letter-spacing: -.03em; line-height: 1.15; }
+.pv-top p { margin-top: 2px; font-size: 14px; color: var(--muted); }
+.back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 13.5px; font-weight: 700; color: var(--muted); }
+.back:hover { color: var(--ink); }
+.pv-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 28px; align-items: start; }
+.stage { padding: 28px; border-radius: 24px; background: var(--bg-2); }
+.stage .paper-fit { max-width: 794px; margin: 0 auto; }
+.stage .paper-scaler { box-shadow: var(--shadow-lg); }
+.locked-ribbon { display: flex; align-items: center; justify-content: center; gap: 8px; max-width: 794px; margin: 0 auto 14px; padding: 10px 14px; border-radius: 12px; background: var(--ink); color: #fff; font-size: 13.5px; font-weight: 600; text-align: center; }
+.locked-ribbon b { color: var(--lime); }
+
+.rail { display: grid; gap: 14px; position: sticky; top: 84px; }
+.box { padding: 20px; background: #fff; border: 1px solid var(--line); border-radius: 20px; }
+.box-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; }
+.box-h h2 { font-size: 15px; font-weight: 800; }
+.dl { display: grid; gap: 8px; }
+.dl-btn { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: #fff; font: inherit; color: var(--ink); text-align: left; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.dl-btn:hover { border-color: var(--ink); box-shadow: var(--shadow-sm); }
+.dl-btn .ic { width: 34px; height: 40px; border-radius: 7px; display: grid; place-items: center; color: #fff; font-size: 10px; font-weight: 800; flex-shrink: 0; }
+.dl-btn b { display: block; font-size: 14.5px; }
+.dl-btn small { display: block; font-size: 12.5px; color: var(--muted); }
+.dl-btn .end { margin-left: auto; color: var(--muted-2); }
+.dl-btn.locked { background: var(--bg); cursor: default; }
+.dl-btn.locked:hover { border-color: var(--line); box-shadow: none; }
+.dl-btn.locked .ic { opacity: .45; }
+
+.unlock { position: relative; overflow: hidden; padding: 22px; border-radius: 20px; background: var(--ink); color: #fff; }
+.unlock::after { content: ""; position: absolute; right: -60px; top: -60px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(217,243,106,.35), transparent 70%); }
+.unlock > * { position: relative; z-index: 1; }
+.unlock h2 { font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
+.unlock .price { margin: 10px 0 4px; font-size: 36px; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
+.unlock .price span { font-size: 14px; font-weight: 600; letter-spacing: 0; color: #a1a3ab; }
+.unlock ul { margin: 14px 0 18px; padding: 0; list-style: none; display: grid; gap: 7px; }
+.unlock li { display: flex; gap: 9px; font-size: 14px; color: #e5e6ea; }
+.unlock li::before { content: "✓"; color: var(--lime); font-weight: 800; }
+.pay-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pay-row .btn { background: #fff; color: var(--ink); }
+.pay-row .btn:hover { background: var(--lime); }
+.unlock .alt { display: block; margin-top: 12px; font-size: 13px; color: #a1a3ab; text-align: center; }
+.unlock .alt a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+
+.switch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.sw { position: relative; padding: 0; border: 0; background: none; font: inherit; cursor: pointer; text-align: center; }
+.sw .paper-thumb { aspect-ratio: 794 / 1123; border-radius: 6px; outline: 1px solid var(--line); transition: transform .15s; }
+.sw:hover .paper-thumb { transform: translateY(-2px); }
+.sw.sel .paper-thumb { outline: 2.5px solid var(--ink); outline-offset: 2px; }
+.sw span { display: block; margin-top: 5px; font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sw u { position: absolute; top: 4px; right: 4px; padding: 1px 4px; border-radius: 4px; background: var(--ink); color: var(--lime); font-size: 8.5px; font-weight: 800; text-decoration: none; }
+
+.photo-row { display: flex; align-items: center; gap: 12px; }
+.avatar { width: 52px; height: 52px; border-radius: 14px; object-fit: cover; background: var(--bg); display: grid; place-items: center; color: var(--muted-2); flex-shrink: 0; }
+.share-input { display: flex; gap: 6px; margin-top: 10px; }
+.share-input input { flex: 1; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; font: inherit; font-size: 12.5px; background: var(--bg); }
+.muted-sm { font-size: 13px; color: var(--muted); }
+
+.report { max-width: 794px; margin: 0 auto 14px; padding: 20px; border-radius: 18px; background: #fff; border: 1px solid var(--line); }
+.report-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.report h2 { margin: 6px 0 2px; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
+.score { display: flex; align-items: baseline; gap: 6px; flex-shrink: 0; }
+.score .was { font-size: 18px; font-weight: 700; color: var(--muted-2); text-decoration: line-through; }
+.score .arr { color: var(--muted-2); }
+.score .now { font-size: 36px; font-weight: 800; letter-spacing: -.04em; color: var(--green); }
+.score small { font-size: 12px; color: var(--muted); }
+.kw { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; font-size: 13px; }
+.kw b { margin-right: 4px; }
+.k { padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.k.ok { background: var(--green-soft); color: var(--green); }
+.k.miss { background: var(--amber-soft); color: #92400e; }
+.changes { margin: 12px 0 0; padding-left: 18px; font-size: 13.5px; color: var(--ink-2); }
+.changes li { margin-bottom: 3px; }
+.plan-pick { display: grid; gap: 10px; margin-top: 14px; }
+.pp { padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,.14); }
+.pp.is-on { background: rgba(255,255,255,.07); border-color: var(--lime); }
+.pp-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; margin-bottom: 6px; }
+.pp-top span { font-weight: 800; color: var(--lime); white-space: nowrap; font-size: 14px; }
+a.pp { display: block; color: #fff; transition: border-color .15s, background .15s; }
+a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
+.pp-sub { font-size: 12.5px; color: #a1a3ab; }
+.bot-note { margin-top: 14px; font-size: 13px; line-height: 1.55; color: #c9cad0; }
+.staff-bar { max-width: 794px; margin: 0 auto 14px; padding: 10px 14px; border-radius: 12px; background: #fef3c7; color: #92400e; font-size: 13.5px; font-weight: 600; }
+.unlock .pp ul { margin: 0 0 12px; }
+.pay-row.ghost .btn, .ghost-btn { background: transparent !important; color: #fff !important; border: 1px solid rgba(255,255,255,.3) !important; }
+.pay-row.ghost .btn:hover, .ghost-btn:hover { background: #fff !important; color: var(--ink) !important; }
+.tailor textarea { margin-top: 10px; resize: vertical; font-size: 14px; }
+.sw u { background: var(--green); color: #fff; }
+
+@media (max-width: 1060px) {
+  .pv-grid { grid-template-columns: 1fr; }
+  .rail { position: static; order: -1; }
+  .stage { padding: 12px; border-radius: 16px; }
+  .switch-grid { grid-template-columns: repeat(5, 1fr); }
+}
+@media (max-width: 560px) { .switch-grid { grid-template-columns: repeat(4, 1fr); } }
+{% endblock %}
+
+{% block content %}
+<div class="pv">
+  <div class="wrap">
+    <div class="pv-top">
+      <div>
+        {% if request.user.is_authenticated %}<a href="/users/dashboard/" class="back">← Kabinet</a>{% else %}<a href="/cv/builder/" class="back">← Yangi CV</a>{% endif %}
+        <h1>{{ cv_data.full_name }}</h1>
+        <p>{{ cv_data.job_title }} · {{ template_label }} shabloni</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        {% if template_is_ats %}<span class="badge badge-free">ATS-friendly ✓</span>{% endif %}
+        {% if is_unlocked %}<span class="badge badge-free">✓ Ochilgan</span>{% else %}<span class="badge badge-muted">🔒 Yuklab olish yopiq</span>{% endif %}
+        <a href="/cv/builder/" class="btn btn-light btn-sm">+ Yangi CV</a>
+      </div>
+    </div>
+
+    <div class="pv-grid">
+      <div class="stage">
+        {% if is_staff_view %}<div class="staff-bar">🛡 Admin ko'rinishi: bu CV {{ cv.user.get_full_name|default:cv.user.username|default:"anonim foydalanuvchi" }}ga tegishli.</div>{% endif %}
+        {% if cv.is_tailored %}
+        {% with r=cv.tailor_report %}
+        <div class="report">
+          <div class="report-top">
+            <div>
+              <span class="eyebrow">Vakansiyaga moslashtirilgan</span>
+              <h2>{{ r.vacancy_title|default:"Vakansiya" }}{% if r.company %} · {{ r.company }}{% endif %}</h2>
+              <a href="/cv/preview/{{ cv.parent_id }}/" class="muted-sm" style="text-decoration:underline;">Asl CV'ni ko'rish</a>
+            </div>
+            {% if r.match_after is not None %}
+            <div class="score">
+              {% if r.match_before is not None %}<span class="was">{{ r.match_before }}%</span><span class="arr">→</span>{% endif %}
+              <span class="now">{{ r.match_after }}%</span>
+              <small>moslik</small>
+            </div>
+            {% endif %}
+          </div>
+          {% if r.matched_keywords %}<div class="kw"><b>Mos kalit so'zlar:</b>{% for k in r.matched_keywords %}<span class="k ok">{{ k }}</span>{% endfor %}</div>{% endif %}
+          {% if r.missing_keywords %}<div class="kw"><b>Sizda ko'rinmayotgan talablar:</b>{% for k in r.missing_keywords %}<span class="k miss">{{ k }}</span>{% endfor %}</div>
+          <p class="muted-sm" style="margin-top:6px;">Bular CV'ga qo'shilmadi. Agar haqiqatan bilsangiz, yangi CV matniga yozing.</p>{% endif %}
+          {% if r.changes %}<ul class="changes">{% for c in r.changes %}<li>{{ c }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+        {% endwith %}
+        {% endif %}
+        {% if not is_unlocked %}
+        <div class="locked-ribbon">👀 Bu to'liq ko'rinish. PDF va Word uchun CV'ni <b>1 kredit</b> bilan oching{% if credit_packs %} — {{ credit_packs.0.price|money }} so'mdan{% endif %}.</div>
+        {% endif %}
+        <div class="paper-fit" id="cv-output"><div class="paper-scaler">{% include template_partial %}</div></div>
+      </div>
+
+      <aside class="rail">
+        <div class="box">
+          <div class="box-h"><h2>Yuklab olish</h2></div>
+          <div class="dl">
+            {% if can_download_pdf %}
+              <a href="/cv/download/{{ cv.public_id }}/" class="dl-btn" data-loading>
+                <span class="ic" style="background:#e5484d;">PDF</span>
+                <span><b>PDF yuklab olish</b><small>Toza, chop etishga tayyor</small></span>
+                <span class="end">↓</span>
+              </a>
+              <a href="/cv/download/{{ cv.public_id }}/docx/" class="dl-btn">
+                <span class="ic" style="background:#2b579a;">DOC</span>
+                <span><b>Word yuklab olish</b><small>Tahrirlanadigan .docx</small></span>
+                <span class="end">↓</span>
+              </a>
+            {% else %}
+              <a href="{% if request.user.is_authenticated %}#unlock{% else %}{{ login_url }}{% endif %}" class="dl-btn locked">
+                <span class="ic" style="background:#e5484d;">PDF</span>
+                <span><b>PDF</b><small>{% if request.user.is_authenticated %}CV ochilgach{% else %}Avval kiring — Telegram, 2 bosish{% endif %}</small></span>
+                <span class="end">🔒</span>
+              </a>
+              <a href="{% if request.user.is_authenticated %}#unlock{% else %}{{ login_url }}{% endif %}" class="dl-btn locked">
+                <span class="ic" style="background:#2b579a;">DOC</span>
+                <span><b>Word (.docx)</b><small>{% if request.user.is_authenticated %}CV ochilgach{% else %}Avval kiring — Telegram, 2 bosish{% endif %}</small></span>
+                <span class="end">🔒</span>
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if not is_unlocked %}
+        <div class="unlock" id="unlock">
+          {% if request.user.is_authenticated and user_credits > 0 %}
+          <h2>Kredit bilan oching</h2>
+          <p style="margin:6px 0 14px;color:#a1a3ab;font-size:14px;">Balansingizda <b style="color:var(--lime);">{{ user_credits }} kredit</b> bor. 1 kredit = shu CV uchun PDF + Word, muddatsiz{% if site.tailor_per_unlocked_cv %} va {{ site.tailor_per_unlocked_cv }} ta moslashtirish{% endif %}.</p>
+          <form method="post" action="/cv/unlock/{{ cv.public_id }}/">
+            {% csrf_token %}
+            <button class="btn btn-block btn-lg" style="background:var(--lime);color:var(--ink);">🔓 1 kredit bilan ochish</button>
+          </form>
+          {% else %}
+          <h2>Yuklab olish uchun oching</h2>
+          <p style="margin:6px 0 4px;color:#a1a3ab;font-size:14px;">1 kredit = 1 CV: PDF + Word, 9 shablon, muddatsiz.</p>
+          <div class="plan-pick">
+            {% for pack in credit_packs %}
+            <a class="pp {% if pack.is_featured %}is-on{% endif %}" href="{% if request.user.is_authenticated %}https://t.me/{{ TELEGRAM_BOT_USERNAME }}?start=pay_{{ pack.code }}{% else %}{{ login_url }}{% endif %}" {% if request.user.is_authenticated %}target="_blank" rel="noopener"{% endif %}>
+              <div class="pp-top"><b>{{ pack.name }}</b><span>{{ pack.price|money }} so'm</span></div>
+              <div class="pp-sub">{% if pack.credits > 1 %}1 CV = {{ pack.price_per_credit|money }} so'm{% else %}bitta CV uchun{% endif %}{% if pack.is_featured %} · tavsiya{% endif %}</div>
+            </a>
+            {% endfor %}
+            {% if pro_plan %}
+            <a class="pp" href="{% if request.user.is_authenticated %}https://t.me/{{ TELEGRAM_BOT_USERNAME }}?start=pay_{{ pro_plan.code }}{% else %}{{ login_url }}{% endif %}" {% if request.user.is_authenticated %}target="_blank" rel="noopener"{% endif %}>
+              <div class="pp-top"><b>{{ pro_plan.name }} · {{ pro_plan.duration_days }} kun</b><span>{{ pro_plan.price|money }} so'm</span></div>
+              <div class="pp-sub">{{ pro_plan.max_cvs }} ta CV, {{ pro_plan.max_tailorings }} ta moslashtirish, hammasi ochiq</div>
+            </a>
+            {% endif %}
+          </div>
+          <div class="bot-note">
+            {% if request.user.is_authenticated %}
+            ✈️ To'lov Telegram botda: paketni tanlaysiz → kartaga o'tkazasiz → chekni yuborasiz. Tasdiqlangach kredit avtomatik qo'shiladi va shu yerda «Kredit bilan ochish» chiqadi.
+            {% else %}
+            Avval Telegram orqali kiring (2 bosish), so'ng paketni tanlaysiz.
+            {% endif %}
+            {% if site.payment_notice %}<br><i>{{ site.payment_notice }}</i>{% endif %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="box tailor">
+          <div class="box-h"><h2>🎯 Vakansiyaga moslashtirish</h2><span class="badge badge-muted">{{ tailor_quota.remaining }} / {{ tailor_quota.limit }}</span></div>
+          <p class="muted-sm">Ish e'lonini nusxalab qo'ying — AI CV'ni shu vakansiyaga moslab qayta yozadi. Asl CV o'zgarmaydi.</p>
+          {% if tailor_quota.allowed %}
+          <form method="post" action="/cv/tailor/{{ cv.public_id }}/" id="tailor-form">
+            {% csrf_token %}
+            <textarea name="job_description" class="input" rows="5" minlength="80" required placeholder="Vakansiya matni: talablar, vazifalar, kompaniya haqida…"></textarea>
+            <button class="btn btn-dark btn-block" style="margin-top:8px;" id="tailor-btn">Moslashtirish</button>
+          </form>
+          {% else %}
+          <p class="muted-sm" style="margin-top:8px;color:#92400e;">{{ tailor_quota.message }}</p>
+          {% endif %}
+        </div>
+
+        <div class="box">
+          <div class="box-h"><h2>Shablon</h2><span class="muted-sm">almashtirish bepul</span></div>
+          <form method="post" action="/cv/template/{{ cv.public_id }}/change/" class="switch-grid" id="tpl-form">
+            {% csrf_token %}
+            {% for t in template_choices %}
+            <button class="sw {% if t.selected %}sel{% endif %}" name="template_code" value="{{ t.code }}" title="{{ t.tagline }}">
+              <div class="paper-thumb"><div class="paper-scaler">{% include "cv/partials/cv_template_"|add:t.code|add:".html" with show_watermark=False company_branding=None %}</div></div>
+              {% if t.ats %}<u>ATS</u>{% endif %}
+              <span>{{ t.label }}</span>
+            </button>
+            {% endfor %}
+          </form>
+        </div>
+
+        <div class="box">
+          <div class="photo-row">
+            {% if cv.photo %}<img class="avatar" src="{{ cv.photo.url }}" alt="">{% else %}<div class="avatar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg></div>{% endif %}
+            <div style="flex:1;min-width:0;"><b style="font-size:14px;">Rasm</b><div class="muted-sm" id="photo-status">JPG, PNG · 5 MB gacha</div></div>
+            <label class="btn btn-light btn-sm" style="cursor:pointer;">{% if cv.photo %}Almashtirish{% else %}Yuklash{% endif %}<input type="file" accept="image/jpeg,image/png,image/webp" hidden onchange="uploadPhoto(this)"></label>
+            {% if cv.photo %}<button class="btn btn-ghost btn-sm" type="button" onclick="removePhoto()" aria-label="Rasmni o'chirish">✕</button>{% endif %}
+          </div>
+        </div>
+
+        {% if request.user.is_authenticated %}
+        <div class="box">
+          <div class="box-h"><h2>Ommaviy havola</h2>
+            {% if share_available %}
+            <form method="post" action="/cv/share/{{ cv.public_id }}/toggle/">{% csrf_token %}
+              {% if share_url %}<button class="btn btn-ghost btn-sm" name="action" value="disable">O'chirish</button>{% else %}<button class="btn btn-dark btn-sm" name="action" value="enable">Yoqish</button>{% endif %}
+            </form>
+            {% else %}<span class="badge badge-muted">🔒 CV ochilgach</span>{% endif %}
+          </div>
+          {% if share_url %}
+          <div class="share-input"><input id="share-link" readonly value="{{ share_url }}"><button class="btn btn-light btn-sm" type="button" onclick="copyShare(this)">Nusxa</button></div>
+          {% else %}
+          <p class="muted-sm">HR'ga fayl o'rniga havola yuboring — CV brauzerda ochiladi.</p>
+          {% endif %}
+        </div>
+        {% endif %}
+      </aside>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function csrf() { var el = document.querySelector('[name=csrfmiddlewaretoken]'); return el ? el.value : ''; }
+function uploadPhoto(input) {
+  var file = input.files[0]; if (!file) return;
+  var st = document.getElementById('photo-status');
+  if (file.size > 5 * 1024 * 1024) { st.textContent = "5 MB dan kichik bo'lsin"; return; }
+  st.textContent = 'Yuklanmoqda…';
+  var fd = new FormData(); fd.append('photo', file); fd.append('csrfmiddlewaretoken', csrf());
+  fetch('/cv/photo/{{ cv.public_id }}/upload/', { method: 'POST', body: fd, credentials: 'same-origin' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) { if (d.success) window.location.reload(); else st.textContent = d.error || 'Xatolik'; })
+    .catch(function () { st.textContent = 'Xatolik'; });
+}
+function removePhoto() {
+  if (!confirm("Rasmni o'chirasizmi?")) return;
+  var fd = new FormData(); fd.append('csrfmiddlewaretoken', csrf());
+  fetch('/cv/photo/{{ cv.public_id }}/remove/', { method: 'POST', body: fd, credentials: 'same-origin' }).then(function () { window.location.reload(); });
+}
+function copyShare(btn) {
+  var input = document.getElementById('share-link');
+  navigator.clipboard.writeText(input.value).then(function () { btn.textContent = '✓ Nusxalandi'; setTimeout(function () { btn.textContent = 'Nusxa'; }, 1600); });
+}
+var tf = document.getElementById('tailor-form');
+if (tf) tf.addEventListener('submit', function () {
+  var b = document.getElementById('tailor-btn'); b.disabled = true; b.innerHTML = '<span class="spinner"></span> AI moslashtirmoqda… ~20 soniya';
+});
+document.querySelectorAll('[data-loading]').forEach(function (a) {
+  a.addEventListener('click', function () {
+    var small = a.querySelector('small'); if (!small) return;
+    var old = small.textContent; small.textContent = 'Tayyorlanmoqda… bir necha soniya';
+    setTimeout(function () { small.textContent = old; }, 6000);
+  });
+});
+</script>
+{% endblock %}

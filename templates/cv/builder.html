@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}CV yaratish — mycv.uz{% endblock %}
+
+{% block extra_style %}
+.b { max-width: 820px; margin: 0 auto; padding: 36px 16px 0; }
+.b h1 { font-size: clamp(30px, 4.2vw, 48px); line-height: 1.03; font-weight: 800; letter-spacing: -.04em; }
+.b-sub { margin: 10px 0 22px; font-size: 17px; color: var(--muted); }
+.box { padding: 22px; background: #fff; border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow-sm); }
+textarea.big { width: 100%; min-height: 260px; padding: 18px; border: 0; border-radius: 16px; background: var(--bg); font: inherit; font-size: 17px; line-height: 1.65; color: var(--ink); resize: vertical; outline: none; }
+textarea.big:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
+.chip { padding: 5px 11px; border-radius: 999px; background: var(--bg); font-size: 13px; font-weight: 700; color: var(--muted-2); transition: background .2s, color .2s; }
+.chip.ok { background: var(--green-soft); color: var(--green); }
+.chip.ok::before { content: "✓ "; }
+.go { margin-top: 16px; width: 100%; min-height: 60px; font-size: 17px; border-radius: 16px; }
+.meta { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 12px; font-size: 13.5px; color: var(--muted); }
+.meta b { color: var(--ink); }
+.meta a { text-decoration: underline; text-underline-offset: 3px; }
+details.more { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+details.more summary { cursor: pointer; font-size: 14px; font-weight: 700; color: var(--muted); list-style: none; }
+details.more summary::before { content: "+ "; }
+details.more[open] summary::before { content: "− "; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.opt label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; }
+.seg { display: flex; padding: 4px; gap: 4px; border-radius: 12px; background: var(--bg); }
+.seg button { flex: 1; min-height: 36px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; }
+.seg button.sel { background: #fff; color: var(--ink); box-shadow: var(--shadow-sm); }
+.check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--ink); }
+.status { display: none; align-items: center; gap: 10px; margin-top: 12px; padding: 12px 14px; border-radius: 12px; font-size: 14.5px; font-weight: 600; }
+.status.show { display: flex; }
+.status.loading { background: var(--bg); } .status.error { background: var(--red-soft); color: #991b1b; }
+.limit { padding: 26px; border-radius: 24px; background: var(--ink); color: #fff; text-align: center; }
+.limit h2 { font-size: 24px; font-weight: 800; }
+.limit p { margin: 8px auto 18px; max-width: 460px; color: #a1a3ab; }
+.overlay { position: fixed; inset: 0; z-index: 100; display: none; place-items: center; background: rgba(245,243,238,.94); backdrop-filter: blur(4px); }
+.overlay.show { display: grid; }
+.overlay-in { text-align: center; max-width: 360px; padding: 20px; }
+.overlay .spinner { width: 44px; height: 44px; margin: 0 auto 18px; border-width: 4px; }
+.overlay h3 { font-size: 22px; font-weight: 800; }
+.overlay p { margin-top: 6px; color: var(--muted); min-height: 24px; }
+@media (max-width: 640px) { .opts { grid-template-columns: 1fr; } textarea.big { min-height: 220px; font-size: 16px; } }
+{% endblock %}
+
+{% block content %}
+<div class="b">
+  <span class="eyebrow">1 qadam · ~1 daqiqa</span>
+  <h1 style="margin-top:10px;">O'zingiz haqingizda <span class="serif">shunchaki</span> yozing</h1>
+  <p class="b-sub">Qanday gapirsangiz, shunday yozing. Tartib, imlo, format — hammasini AI o'zi qiladi.</p>
+
+  {% if quota.allowed %}
+  <div class="box">
+    {% csrf_token %}
+    <textarea class="big" id="cv-text" maxlength="6000" autofocus
+      placeholder="Masalan: men Dilnoza Karimova, 4 yil marketingda ishlayman. hozir korzinkada smm menejerman, oldin artelda 2 yil kontent qilganman. instagram, meta ads, canva bilan ishlayman. tdiu bitirganman. ingliz tili ielts 6.5. tel 90 123 45 67"></textarea>
+    <div class="chips">
+      <span class="chip" id="c-name">Ism</span>
+      <span class="chip" id="c-exp">Qayerda ishlagansiz</span>
+      <span class="chip" id="c-skills">Nimalarni bilasiz</span>
+      <span class="chip" id="c-edu">O'qish</span>
+      <span class="chip" id="c-contact">Telefon / email</span>
+    </div>
+
+    <details class="more">
+      <summary>Qo'shimcha (ixtiyoriy)</summary>
+      <div class="opts">
+        <div class="opt field" style="margin:0;"><label>Qaysi lavozimga?</label><input type="text" id="target-job" placeholder="Masalan: SMM menejer"></div>
+        <div class="opt">
+          <label>CV tili</label>
+          <div class="seg" id="lang-seg">
+            <button type="button" class="sel" data-lang="auto">Avto</button>
+            <button type="button" data-lang="uz">O'zb</button>
+            <button type="button" data-lang="ru">Рус</button>
+            <button type="button" data-lang="en">Eng</button>
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" id="enrich-chk"> Kam yozdim — AI kengaytirib yozsin</label>
+        <div class="opt"><label for="photo-input">Rasm</label><input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" style="font-size:13px;"></div>
+      </div>
+    </details>
+
+    <button class="btn btn-dark go" id="generate-btn" type="button"><span id="btn-text">CV'ni tayyorlash</span> →</button>
+    <div class="status" id="status"></div>
+    <div class="meta">
+      <span>{% if quota.tier == "pro" %}Pro: <b>{{ quota.remaining }}</b> ta CV qoldi{% else %}Bepul: <b>{{ quota.remaining }} / {{ quota.limit }}</b> ta CV qoldi{% endif %}</span>
+      <a href="/cv/namuna/">Natija qanday bo'lishini ko'rish</a>
+    </div>
+  </div>
+  {% else %}
+  <div class="limit">
+    <h2>Bepul limit tugadi</h2>
+    <p>{{ quota.message }}</p>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      {% if request.user.is_authenticated %}<a href="/users/dashboard/" class="btn btn-light">Mening CV'larim</a>{% else %}<a href="/users/login/?next=/users/dashboard/" class="btn btn-light">Kirish</a>{% endif %}
+      <a href="/pricing/" class="btn btn-accent">Pro — {{ pro_plan.max_cvs|default:30 }} ta CV</a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-in">
+    <div class="spinner dark"></div>
+    <h3>CV yozilmoqda…</h3>
+    <p id="overlay-step">Matningiz o'qilmoqda</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var ta = document.getElementById('cv-text');
+  if (!ta) return;
+  var lang = 'auto';
+
+  document.querySelectorAll('#lang-seg button').forEach(function (el) {
+    el.addEventListener('click', function () {
+      document.querySelectorAll('#lang-seg button').forEach(function (e) { e.classList.remove('sel'); });
+      el.classList.add('sel'); lang = el.dataset.lang;
+    });
+  });
+
+  var checks = {
+    'c-name': /[A-Za-zА-Яа-яЎўҚқҒғҲҳ'ʻ]{2,}\s+[A-Za-zА-Яа-яЎўҚқҒғҲҳ'ʻ]{2,}(ov|ova|ev|eva|iy|yev|yeva|zoda|ovich|ovna)\b|\bmen\s+[A-Za-zА-Яа-я]{3,}/i,
+    'c-exp': /(ishla|work|работ|kompaniya|company|menejer|developer|dasturchi|operator|buxgalter|o'qituvchi|sotuvchi|\d+\s*yil)/i,
+    'c-skills': /(bilaman|bilan ishla|python|excel|1c|figma|canva|photoshop|sql|java|meta ads|autocad|skill|навык|word)/i,
+    'c-edu': /(universit|kollej|litsey|institut|akademi|maktab|school|texnikum|университет|bitir|tatu|tdiu|o'qiganman|ta'lim)/i,
+    'c-contact': /(\d[\d\s\-()]{7,}\d|[\w.+-]+@[\w.-]+\.[a-z]{2,})/i
+  };
+  ta.addEventListener('input', function () {
+    Object.keys(checks).forEach(function (id) { document.getElementById(id).classList.toggle('ok', checks[id].test(ta.value)); });
+  });
+
+  var btn = document.getElementById('generate-btn'), status = document.getElementById('status');
+  var overlay = document.getElementById('overlay'), stepEl = document.getElementById('overlay-step');
+  var stepTexts = ["Matningiz o'qilmoqda", "Tajriba bo'limlarga ajratilmoqda", "Jumlalar professional qilinmoqda", "ATS qoidalari tekshirilmoqda", "Shablonga joylanmoqda"];
+
+  function showError(msg, limit) {
+    overlay.classList.remove('show');
+    status.className = 'status show error';
+    status.innerHTML = '⚠️ ' + msg + (limit ? ' <a href="/pricing/" style="text-decoration:underline;margin-left:6px;">Narxlar</a>' : '');
+    btn.disabled = false;
+  }
+
+  btn.addEventListener('click', function () {
+    var text = ta.value.trim();
+    if (text.length < 20) { showError("Bir-ikki gap bo'lsa ham yozing: ismingiz, nima ish qilgansiz, nimalarni bilasiz."); ta.focus(); return; }
+
+    btn.disabled = true; status.className = 'status';
+    overlay.classList.add('show');
+    var i = 0, timer = setInterval(function () { i = Math.min(i + 1, stepTexts.length - 1); stepEl.textContent = stepTexts[i]; }, 3500);
+
+    var body = new FormData();
+    body.append('text', text);
+    body.append('target_job', document.getElementById('target-job').value.trim());
+    body.append('language', lang);
+    body.append('enrich', document.getElementById('enrich-chk').checked ? '1' : '0');
+    var photo = document.getElementById('photo-input').files[0];
+    if (photo) body.append('photo', photo);
+    body.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+    fetch('/cv/generate/', { method: 'POST', body: body, credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        clearInterval(timer);
+        if (d.redirect_url) { stepEl.textContent = 'Tayyor!'; window.location.href = d.redirect_url; return; }
+        showError(d.error || 'Xatolik', d.limit_reached);
+      })
+      .catch(function () { clearInterval(timer); showError("Internet yoki server bilan bog'lanishda xatolik. Qayta urinib ko'ring."); });
+  });
+})();
+</script>
+{% endblock %}

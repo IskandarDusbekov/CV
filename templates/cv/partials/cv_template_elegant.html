@@ -1,0 +1,113 @@
+{% include "cv/partials/_paper_base.html" %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<style>
+  .cvt-elegant { --ink: #2b2520; --body: #544b43; --muted: #8c8177; --taupe: #8b6f4e; --cream: #f3ede3; --paper: #fffdf9; --line: #e6dccd; --side-w: 262px;
+    display: grid; grid-template-columns: var(--side-w) 1fr;
+    background: linear-gradient(90deg, var(--cream) 0 var(--side-w), var(--paper) var(--side-w));
+    font-family: "Nunito Sans", "Segoe UI", Arial, sans-serif; font-size: 12.3px; color: var(--body); }
+  .cvt-elegant .serif { font-family: "Cormorant Garamond", Georgia, serif; }
+  .cvt-elegant .el-side { padding: 48px 28px 56px 32px; }
+  .cvt-elegant .el-photo { width: 150px; height: 150px; margin: 0 auto 26px; border-radius: 50%; object-fit: cover; border: 6px solid var(--paper); box-shadow: 0 0 0 1px var(--line); }
+  .cvt-elegant .el-sh { margin: 26px 0 10px; font-family: "Cormorant Garamond", Georgia, serif; font-size: 19px; font-weight: 600; color: var(--ink); }
+  .cvt-elegant .el-sh:first-of-type { margin-top: 0; }
+  .cvt-elegant .el-sh::after { content: ""; display: block; width: 28px; height: 1px; margin-top: 5px; background: var(--taupe); }
+  .cvt-elegant .el-contact li { display: flex; gap: 9px; align-items: flex-start; margin-bottom: 9px; font-size: 11.6px; line-height: 1.4; color: var(--ink); }
+  .cvt-elegant .el-contact svg { margin-top: 2px; color: var(--taupe); }
+  .cvt-elegant .el-skills li { position: relative; padding-left: 15px; margin-bottom: 6px; color: var(--ink); }
+  .cvt-elegant .el-skills li::before { content: ""; position: absolute; left: 1px; top: 6px; width: 5px; height: 5px; border: 1px solid var(--taupe); transform: rotate(45deg); }
+  .cvt-elegant .el-edu { margin-bottom: 12px; }
+  .cvt-elegant .el-edu b { display: block; font-weight: 700; color: var(--ink); }
+  .cvt-elegant .el-edu span { display: block; font-size: 11.4px; color: var(--muted); }
+
+  .cvt-elegant .el-main { padding: 56px 46px 56px 42px; }
+  .cvt-elegant .el-name { font-family: "Cormorant Garamond", Georgia, serif; font-size: 50px; font-weight: 600; line-height: .95; color: var(--ink); letter-spacing: -.01em; }
+  .cvt-elegant .el-title { margin-top: 14px; font-size: 11px; font-weight: 700; letter-spacing: .32em; text-transform: uppercase; color: var(--taupe); }
+  .cvt-elegant .el-rule { width: 70px; height: 1px; margin: 22px 0 8px; background: var(--taupe); }
+  .cvt-elegant .el-sec { margin-top: 24px; }
+  .cvt-elegant .el-mh { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; font-family: "Cormorant Garamond", Georgia, serif; font-size: 23px; font-weight: 600; font-style: italic; color: var(--ink); }
+  .cvt-elegant .el-mh::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .cvt-elegant .el-summary { font-size: 13px; line-height: 1.8; }
+  .cvt-elegant .el-job { margin-bottom: 16px; }
+  .cvt-elegant .el-pos { font-size: 14px; font-weight: 800; color: var(--ink); }
+  .cvt-elegant .el-meta { display: flex; justify-content: space-between; gap: 12px; font-family: "Cormorant Garamond", Georgia, serif; font-size: 15px; font-style: italic; color: var(--taupe); }
+  .cvt-elegant .el-bullets { margin-top: 5px; }
+  .cvt-elegant .el-bullets li { position: relative; padding-left: 15px; margin-bottom: 4px; line-height: 1.65; }
+  .cvt-elegant .el-bullets li::before { content: ""; position: absolute; left: 2px; top: 8px; width: 4px; height: 4px; border-radius: 50%; background: var(--taupe); }
+  .cvt-elegant .el-proj { margin-bottom: 12px; }
+  .cvt-elegant .el-proj-d { margin-top: 2px; line-height: 1.65; }
+  .cvt-elegant .el-tech { margin-top: 3px; font-family: "Cormorant Garamond", Georgia, serif; font-size: 14px; font-style: italic; color: var(--taupe); }
+  .cvt-elegant .cvt-mark { color: var(--muted); padding-left: var(--side-w); }
+</style>
+{% if pdf_mode %}<style>html { background: linear-gradient(90deg, #f3ede3 0 262px, #fffdf9 262px); }</style>{% endif %}
+
+<div class="cvt cvt-elegant">
+  <aside class="el-side cvt-col">
+    {% if cv_data.photo_url %}<img class="el-photo" src="{{ cv_data.photo_url }}" alt="">{% endif %}
+
+    {% if cv_data.contact_items or cv_data.profile_links %}
+    <div class="el-sh cvt-keep">{{ cv_data.labels.contact }}</div>
+    <ul class="el-contact">
+      {% for item in cv_data.contact_items %}<li>{% include "cv/partials/_icon.html" with name=item.label %}<span>{{ item.value }}</span></li>{% endfor %}
+      {% for item in cv_data.profile_links %}<li>{% include "cv/partials/_icon.html" with name=item.label %}<span>{{ item.value }}</span></li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if cv_data.skills %}
+    <div class="el-sh cvt-keep">{{ cv_data.labels.skills }}</div>
+    <ul class="el-skills">{% for s in cv_data.skills %}<li>{{ s }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    {% if cv_data.languages %}
+    <div class="el-sh cvt-keep">{{ cv_data.labels.languages }}</div>
+    <ul class="el-skills">{% for l in cv_data.languages %}<li>{{ l }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    {% if cv_data.education %}
+    <div class="el-sh cvt-keep">{{ cv_data.labels.education }}</div>
+    {% for edu in cv_data.education %}
+    <div class="el-edu cvt-avoid"><b>{{ edu.institution }}</b>{% if edu.degree %}<span>{{ edu.degree }}</span>{% endif %}{% if edu.year %}<span>{{ edu.year }}</span>{% endif %}</div>
+    {% endfor %}
+    {% endif %}
+  </aside>
+
+  <main class="el-main cvt-col">
+    <div class="el-name">{{ cv_data.full_name }}</div>
+    <div class="el-title">{{ cv_data.job_title }}</div>
+    <div class="el-rule"></div>
+
+    {% if cv_data.summary %}
+    <section class="el-sec">
+      <div class="el-mh cvt-keep">{{ cv_data.labels.profile_summary }}</div>
+      <p class="el-summary">{{ cv_data.summary }}</p>
+    </section>
+    {% endif %}
+
+    {% if cv_data.experience %}
+    <section class="el-sec">
+      <div class="el-mh cvt-keep">{{ cv_data.labels.experience }}</div>
+      {% for exp in cv_data.experience %}
+      <div class="el-job cvt-avoid">
+        <div class="el-pos">{{ exp.position|default:cv_data.labels.position }}</div>
+        <div class="el-meta"><span>{{ exp.company }}</span>{% if exp.duration %}<span>{{ exp.duration }}</span>{% endif %}</div>
+        {% if exp.responsibilities %}<ul class="el-bullets">{% for r in exp.responsibilities %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if cv_data.projects %}
+    <section class="el-sec">
+      <div class="el-mh cvt-keep">{{ cv_data.labels.projects }}</div>
+      {% for p in cv_data.projects %}
+      <div class="el-proj cvt-avoid">
+        <div class="el-pos">{{ p.title|default:cv_data.labels.project }}</div>
+        {% if p.description %}<p class="el-proj-d">{{ p.description }}</p>{% endif %}
+        {% if p.technologies %}<div class="el-tech">{{ p.technologies|join:" · " }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+  </main>
+
+  {% if show_watermark %}<div class="cvt-mark">mycv.uz orqali yaratildi</div>{% elif company_branding %}<div class="cvt-mark">{{ company_branding.get_footer_display }}</div>{% endif %}
+</div>

@@ -1,0 +1,79 @@
+{% include "cv/partials/_paper_base.html" %}
+<style>
+  /* ATS Standart: bir ustun, ikonka/jadval yo'q, tizim shriftlari, standart bo'lim nomlari.
+     Matn DOM tartibida — PDF'dan nusxa olinganda ham to'g'ri ketma-ketlikda chiqadi. */
+  .cvt-ats { padding: 58px 64px 60px; background: #fff; font-family: Arial, "Helvetica Neue", Helvetica, sans-serif; font-size: 12.5px; line-height: 1.45; color: #111; }
+  .cvt-ats .at-name { font-size: 26px; font-weight: 700; text-align: center; }
+  .cvt-ats .at-title { margin-top: 3px; font-size: 13.5px; text-align: center; }
+  .cvt-ats .at-contact { margin-top: 6px; font-size: 11.5px; text-align: center; }
+  .cvt-ats .at-contact span + span::before { content: " | "; color: #555; }
+  .cvt-ats .at-sec { margin-top: 18px; }
+  .cvt-ats .at-h { margin-bottom: 7px; padding-bottom: 3px; border-bottom: 1.2px solid #111; font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .cvt-ats .at-item { margin-bottom: 10px; }
+  .cvt-ats .at-row { display: flex; justify-content: space-between; gap: 16px; }
+  .cvt-ats .at-row b { font-size: 12.8px; }
+  .cvt-ats .at-row span { white-space: nowrap; }
+  .cvt-ats .at-sub { font-style: italic; }
+  .cvt-ats ul.at-bul { margin-top: 3px; padding-left: 18px; list-style: disc; }
+  .cvt-ats ul.at-bul li { margin-bottom: 2px; }
+  .cvt-ats .cvt-mark { color: #777; }
+</style>
+{% if pdf_mode %}<style>@page { margin: 14mm 0; } @page :first { margin-top: 0; } .cvt-ats { min-height: 0; }</style>{% endif %}
+
+<div class="cvt cvt-ats">
+  <div class="at-name">{{ cv_data.full_name }}</div>
+  <div class="at-title">{{ cv_data.job_title }}</div>
+  <div class="at-contact">{% for item in cv_data.contact_items %}<span>{{ item.value }}</span>{% endfor %}{% for item in cv_data.profile_links %}<span>{{ item.value }}</span>{% endfor %}</div>
+
+  {% if cv_data.summary %}
+  <div class="at-sec"><div class="at-h cvt-keep">{{ cv_data.labels.profile_summary }}</div><p>{{ cv_data.summary }}</p></div>
+  {% endif %}
+
+  {% if cv_data.skills %}
+  <div class="at-sec cvt-avoid"><div class="at-h">{{ cv_data.labels.skills }}</div><p>{{ cv_data.skills|join:", " }}</p></div>
+  {% endif %}
+
+  {% if cv_data.experience %}
+  <div class="at-sec">
+    <div class="at-h cvt-keep">{{ cv_data.labels.experience }}</div>
+    {% for exp in cv_data.experience %}
+    <div class="at-item cvt-avoid">
+      <div class="at-row"><b>{{ exp.position|default:cv_data.labels.position }}</b>{% if exp.duration %}<span>{{ exp.duration }}</span>{% endif %}</div>
+      {% if exp.company %}<div class="at-sub">{{ exp.company }}</div>{% endif %}
+      {% if exp.responsibilities %}<ul class="at-bul">{% for r in exp.responsibilities %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if cv_data.projects %}
+  <div class="at-sec">
+    <div class="at-h cvt-keep">{{ cv_data.labels.projects }}</div>
+    {% for p in cv_data.projects %}
+    <div class="at-item cvt-avoid">
+      <b>{{ p.title|default:cv_data.labels.project }}</b>
+      {% if p.description %}<div>{{ p.description }}</div>{% endif %}
+      {% if p.technologies %}<div>{{ p.technologies|join:", " }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if cv_data.education %}
+  <div class="at-sec cvt-avoid">
+    <div class="at-h">{{ cv_data.labels.education }}</div>
+    {% for edu in cv_data.education %}
+    <div class="at-item">
+      <div class="at-row"><b>{{ edu.institution }}</b>{% if edu.year %}<span>{{ edu.year }}</span>{% endif %}</div>
+      {% if edu.degree %}<div class="at-sub">{{ edu.degree }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if cv_data.languages %}
+  <div class="at-sec cvt-avoid"><div class="at-h">{{ cv_data.labels.languages }}</div><p>{{ cv_data.languages|join:", " }}</p></div>
+  {% endif %}
+
+  {% if show_watermark %}<div class="cvt-mark">mycv.uz orqali yaratildi</div>{% elif company_branding %}<div class="cvt-mark">{{ company_branding.get_footer_display }}</div>{% endif %}
+</div>

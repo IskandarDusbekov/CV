@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ cv_data.full_name }} — CV{% endblock %}
+
+{% block extra_style %}
+.sh { padding: 24px 0 0; }
+.sh-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; max-width: 842px; margin: 0 auto 16px; }
+.sh-top h1 { font-size: 24px; font-weight: 800; letter-spacing: -.03em; }
+.sh-top p { font-size: 14px; color: var(--muted); }
+.sh-stage { max-width: 842px; margin: 0 auto; padding: 24px; border-radius: 24px; background: var(--bg-2); }
+.sh-stage .paper-scaler { box-shadow: var(--shadow-lg); }
+@media (max-width: 600px) { .sh-stage { padding: 8px; } }
+@media print {
+  .nav, .footer, .sh-top { display: none !important; }
+  .sh-stage { padding: 0; background: none; }
+  .paper-fit { height: auto !important; overflow: visible; }
+  .paper-fit > .paper-scaler { position: static; transform: none !important; box-shadow: none; }
+}
+{% endblock %}
+
+{% block content %}
+<div class="sh">
+  <div class="wrap">
+    <div class="sh-top">
+      <div><h1>{{ cv_data.full_name }}</h1><p>{{ cv_data.job_title }}</p></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-light btn-sm" onclick="window.print()">Chop etish</button>
+        <a href="/cv/builder/" class="btn btn-dark btn-sm">O'z CV'ingizni yarating</a>
+      </div>
+    </div>
+    <div class="sh-stage">
+      <div class="paper-fit"><div class="paper-scaler">{% include template_partial %}</div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

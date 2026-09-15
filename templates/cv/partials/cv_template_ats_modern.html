@@ -1,0 +1,90 @@
+{% include "cv/partials/_paper_base.html" %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+  /* ATS Zamonaviy: bir ustun va standart sarlavhalar (ATS uchun xavfsiz), lekin zamonaviy tipografiya
+     va yagona to'q ko'k aksent. Ikonka, jadval, ustun yo'q. */
+  .cvt-atsm { --accent: #1e3a8a; --muted: #4b5563; --line: #d1d5db;
+    padding: 54px 62px 60px; background: #fff; font-family: "Source Sans 3", Calibri, Arial, sans-serif; font-size: 13px; line-height: 1.5; color: #111827; }
+  .cvt-atsm .am-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; padding-bottom: 14px; border-bottom: 2.5px solid var(--accent); }
+  .cvt-atsm .am-name { font-size: 32px; font-weight: 700; line-height: 1.05; color: var(--accent); letter-spacing: -.01em; }
+  .cvt-atsm .am-title { margin-top: 4px; font-size: 15px; font-weight: 600; }
+  .cvt-atsm .am-photo { width: 84px; height: 84px; border-radius: 8px; object-fit: cover; }
+  .cvt-atsm .am-contact { margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .cvt-atsm .am-contact span + span::before { content: "  •  "; color: #9ca3af; }
+  .cvt-atsm .am-sec { margin-top: 20px; }
+  .cvt-atsm .am-h { margin-bottom: 8px; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  .cvt-atsm .am-h::after { content: ""; display: block; height: 1px; margin-top: 4px; background: var(--line); }
+  .cvt-atsm .am-item { margin-bottom: 12px; }
+  .cvt-atsm .am-row { display: flex; justify-content: space-between; gap: 16px; align-items: baseline; }
+  .cvt-atsm .am-row b { font-size: 14px; font-weight: 700; }
+  .cvt-atsm .am-row span { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .cvt-atsm .am-sub { font-weight: 600; color: var(--muted); }
+  .cvt-atsm ul.am-bul { margin-top: 4px; padding-left: 17px; list-style: disc; }
+  .cvt-atsm ul.am-bul li { margin-bottom: 2px; padding-left: 2px; }
+  .cvt-atsm ul.am-bul li::marker { color: var(--accent); }
+  .cvt-atsm .cvt-mark { color: #9ca3af; }
+</style>
+{% if pdf_mode %}<style>@page { margin: 14mm 0; } @page :first { margin-top: 0; } .cvt-atsm { min-height: 0; }</style>{% endif %}
+
+<div class="cvt cvt-atsm">
+  <div class="am-head">
+    <div>
+      <div class="am-name">{{ cv_data.full_name }}</div>
+      <div class="am-title">{{ cv_data.job_title }}</div>
+      <div class="am-contact">{% for item in cv_data.contact_items %}<span>{{ item.value }}</span>{% endfor %}{% for item in cv_data.profile_links %}<span>{{ item.value }}</span>{% endfor %}</div>
+    </div>
+    {% if cv_data.photo_url %}<img class="am-photo" src="{{ cv_data.photo_url }}" alt="">{% endif %}
+  </div>
+
+  {% if cv_data.summary %}
+  <div class="am-sec"><div class="am-h cvt-keep">{{ cv_data.labels.profile_summary }}</div><p>{{ cv_data.summary }}</p></div>
+  {% endif %}
+
+  {% if cv_data.experience %}
+  <div class="am-sec">
+    <div class="am-h cvt-keep">{{ cv_data.labels.experience }}</div>
+    {% for exp in cv_data.experience %}
+    <div class="am-item cvt-avoid">
+      <div class="am-row"><b>{{ exp.position|default:cv_data.labels.position }}</b>{% if exp.duration %}<span>{{ exp.duration }}</span>{% endif %}</div>
+      {% if exp.company %}<div class="am-sub">{{ exp.company }}</div>{% endif %}
+      {% if exp.responsibilities %}<ul class="am-bul">{% for r in exp.responsibilities %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if cv_data.skills %}
+  <div class="am-sec cvt-avoid"><div class="am-h">{{ cv_data.labels.skills }}</div><p>{{ cv_data.skills|join:" • " }}</p></div>
+  {% endif %}
+
+  {% if cv_data.projects %}
+  <div class="am-sec">
+    <div class="am-h cvt-keep">{{ cv_data.labels.projects }}</div>
+    {% for p in cv_data.projects %}
+    <div class="am-item cvt-avoid">
+      <div class="am-row"><b>{{ p.title|default:cv_data.labels.project }}</b></div>
+      {% if p.description %}<div>{{ p.description }}</div>{% endif %}
+      {% if p.technologies %}<div class="am-sub">{{ p.technologies|join:", " }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if cv_data.education %}
+  <div class="am-sec cvt-avoid">
+    <div class="am-h">{{ cv_data.labels.education }}</div>
+    {% for edu in cv_data.education %}
+    <div class="am-item">
+      <div class="am-row"><b>{{ edu.institution }}</b>{% if edu.year %}<span>{{ edu.year }}</span>{% endif %}</div>
+      {% if edu.degree %}<div class="am-sub">{{ edu.degree }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if cv_data.languages %}
+  <div class="am-sec cvt-avoid"><div class="am-h">{{ cv_data.labels.languages }}</div><p>{{ cv_data.languages|join:" • " }}</p></div>
+  {% endif %}
+
+  {% if show_watermark %}<div class="cvt-mark">mycv.uz orqali yaratildi</div>{% elif company_branding %}<div class="cvt-mark">{{ company_branding.get_footer_display }}</div>{% endif %}
+</div>

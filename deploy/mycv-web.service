@@ -1,0 +1,17 @@
+[Unit]
+Description=mycv.uz web (gunicorn)
+After=network.target postgresql.service
+
+[Service]
+User=mycv
+Group=www-data
+WorkingDirectory=/home/mycv/app
+EnvironmentFile=/home/mycv/app/.env
+RuntimeDirectory=mycv
+RuntimeDirectoryMode=0775
+ExecStart=/home/mycv/app/venv/bin/gunicorn -c deploy/gunicorn.conf.py config.wsgi
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

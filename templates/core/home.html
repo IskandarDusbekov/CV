@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% block title %}mycv.uz — Matn yozing, professional CV tayyor{% endblock %}
+
+{% block extra_style %}
+/* HERO */
+.hero { position: relative; padding: 56px 0 40px; overflow: hidden; }
+.hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 40px; align-items: center; }
+.hero h1 { font-size: clamp(40px, 5.6vw, 72px); line-height: .98; font-weight: 800; letter-spacing: -.045em; margin: 18px 0 22px; }
+.hero h1 .serif { font-size: 1.08em; letter-spacing: -.02em; }
+.hero h1 mark { background: linear-gradient(transparent 62%, var(--lime) 62% 92%, transparent 92%); color: inherit; padding: 0 .04em; }
+.hero-sub { max-width: 520px; font-size: 18px; line-height: 1.6; color: var(--muted); }
+.hero-cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+.hero-trust { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 26px; font-size: 13.5px; font-weight: 600; color: var(--muted); }
+.hero-trust span { display: inline-flex; align-items: center; gap: 7px; }
+.hero-trust svg { color: var(--green); }
+
+.stack { position: relative; height: 560px; }
+.stack .paper-thumb { position: absolute; width: 330px; height: 467px; border-radius: 10px; box-shadow: var(--shadow-lg); border: 1px solid rgba(0,0,0,.06); transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+.stack .s1 { left: 50%; top: 40px; transform: translateX(-50%) rotate(0deg); z-index: 3; }
+.stack .s2 { left: 50%; top: 70px; transform: translateX(-104%) rotate(-8deg); z-index: 2; }
+.stack .s3 { left: 50%; top: 70px; transform: translateX(4%) rotate(8deg); z-index: 1; }
+.stack:hover .s2 { transform: translateX(-118%) rotate(-11deg); }
+.stack:hover .s3 { transform: translateX(18%) rotate(11deg); }
+.float-chip { position: absolute; z-index: 5; display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 14px; background: #fff;
+  box-shadow: var(--shadow); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.float-chip i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-style: normal; }
+.chip-a { left: 2%; top: 96px; } .chip-a i { background: var(--lime); }
+.chip-b { right: 0; bottom: 70px; } .chip-b i { background: var(--accent-soft); color: var(--accent); }
+
+/* SECTIONS */
+.section { padding: 72px 0; }
+.section-head { max-width: 680px; margin-bottom: 40px; }
+.section-head.center { margin-left: auto; margin-right: auto; text-align: center; }
+.section-head h2 { margin-top: 12px; font-size: clamp(30px, 3.6vw, 46px); line-height: 1.05; font-weight: 800; letter-spacing: -.035em; }
+.section-head p { margin-top: 14px; font-size: 17px; color: var(--muted); }
+
+/* BEFORE → AFTER */
+.demo { display: grid; grid-template-columns: 1fr 72px 1fr; align-items: center; gap: 12px; }
+.raw { padding: 26px; border-radius: var(--radius-lg); background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+.raw-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 12.5px; font-weight: 700; color: var(--muted-2); }
+.raw-text { min-height: 210px; font-size: 16px; line-height: 1.7; color: var(--ink-2); }
+.raw-text .caret { display: inline-block; width: 2px; height: 1.1em; margin-left: 1px; vertical-align: -3px; background: var(--ink); animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.arrow { width: 60px; height: 60px; margin: auto; border-radius: 50%; background: var(--ink); color: var(--lime); display: grid; place-items: center; }
+.demo .paper-thumb { height: 400px; border-radius: 14px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+
+/* STEPS */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.step { padding: 28px; border-radius: var(--radius-lg); background: #fff; border: 1px solid var(--line); }
+.step-n { font-family: var(--serif); font-style: italic; font-size: 56px; line-height: 1; color: var(--accent); }
+.step h3 { margin: 14px 0 8px; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+.step p { color: var(--muted); }
+
+/* TEMPLATES */
+.tpl-rail { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; }
+.tpl-card { display: block; }
+.tpl-card .paper-thumb { aspect-ratio: 794 / 1000; border-radius: 12px; border: 1px solid var(--line); box-shadow: var(--shadow-sm); transition: transform .25s, box-shadow .25s; }
+.tpl-card:hover .paper-thumb { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+.tpl-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+.tpl-meta b { font-size: 15px; }
+.tpl-more { display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 28px; border-radius: 12px; background: var(--ink); color: #fff; aspect-ratio: 794 / 1000; }
+.tpl-more h3 { font-size: 26px; line-height: 1.1; font-weight: 800; letter-spacing: -.03em; }
+.tpl-more p { color: #a1a3ab; font-size: 14.5px; }
+
+/* BENTO */
+.bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+.tile { padding: 26px; border-radius: var(--radius-lg); background: #fff; border: 1px solid var(--line); }
+.tile h3 { margin: 16px 0 6px; font-size: 19px; font-weight: 800; letter-spacing: -.02em; }
+.tile p { color: var(--muted); font-size: 14.5px; }
+.tile-ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--bg); }
+.t-wide { grid-column: span 3; } .t-third { grid-column: span 2; }
+.tile.tg { background: var(--tg); color: #fff; border-color: var(--tg); }
+.tile.tg p { color: rgba(255,255,255,.82); }
+.tile.tg .tile-ic { background: rgba(255,255,255,.18); }
+.tg-flow { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+.tg-flow span { padding: 7px 12px; border-radius: 999px; background: rgba(255,255,255,.16); font-size: 13px; font-weight: 700; }
+.langs { display: flex; gap: 8px; margin-top: 16px; }
+.langs span { padding: 6px 12px; border-radius: 10px; background: var(--bg); font-weight: 700; font-size: 13px; }
+.files { display: flex; gap: 10px; margin-top: 16px; }
+.file { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line); font-size: 13px; font-weight: 700; }
+.file i { width: 22px; height: 26px; border-radius: 4px; display: grid; place-items: center; font-style: normal; font-size: 8px; font-weight: 800; color: #fff; }
+
+/* FAQ */
+.faq { max-width: 820px; margin: 0 auto; }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 0; cursor: pointer; list-style: none; font-size: 17px; font-weight: 700; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font-size: 24px; font-weight: 400; color: var(--muted); transition: transform .2s; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { padding: 0 0 20px; color: var(--muted); max-width: 680px; }
+
+/* CTA */
+.cta { position: relative; overflow: hidden; padding: 64px 48px; border-radius: 28px; background: var(--ink); color: #fff; text-align: center; }
+.cta h2 { font-size: clamp(32px, 4.4vw, 56px); line-height: 1; font-weight: 800; letter-spacing: -.04em; }
+.cta p { margin: 16px auto 28px; max-width: 480px; color: #a1a3ab; font-size: 17px; }
+.cta::before { content: ""; position: absolute; width: 420px; height: 420px; left: -120px; bottom: -260px; border-radius: 50%; background: radial-gradient(circle, rgba(255,91,46,.45), transparent 70%); }
+.cta::after { content: ""; position: absolute; width: 380px; height: 380px; right: -100px; top: -220px; border-radius: 50%; background: radial-gradient(circle, rgba(217,243,106,.28), transparent 70%); }
+.cta > * { position: relative; }
+
+@media (max-width: 980px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .stack { height: 440px; }
+  .stack .paper-thumb { width: 260px; height: 368px; }
+  .chip-a { left: 0; top: 30px; } .chip-b { right: 0; bottom: 20px; }
+  .demo { grid-template-columns: 1fr; }
+  .arrow { transform: rotate(90deg); }
+  .steps { grid-template-columns: 1fr; }
+  .tpl-rail { grid-template-columns: repeat(2, 1fr); }
+  .bento { grid-template-columns: 1fr; }
+  .t-wide, .t-third { grid-column: auto; }
+}
+@media (max-width: 520px) {
+  .stack .s2, .stack .s3 { display: none; }
+  .cta { padding: 44px 22px; }
+}
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">AI CV builder · o'zbek, rus, ingliz</span>
+      <h1>Matn yozing —<br><span class="serif">professional</span> <mark>CV tayyor.</mark></h1>
+      <p class="hero-sub">O'zingiz haqingizda oddiy so'zlar bilan yozing. Sun'iy intellekt uni tartiblaydi, kuchli jumlalarga aylantiradi va chiroyli shablonga joylaydi.</p>
+      <div class="hero-cta">
+        <a href="/cv/namuna/" class="btn btn-dark btn-lg">
+          Bepul CV yaratish
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a href="/cv/templates/" class="btn btn-light btn-lg">Shablonlar</a>
+      </div>
+      <div class="hero-trust">
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>{{ FREE_CV_LIMIT }} ta CV bepul</span>
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>~60 soniyada</span>
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>ATS-friendly</span>
+      </div>
+    </div>
+
+    <div class="stack" aria-hidden="true">
+      {% for t in templates %}
+        {% if t.code == "modern" %}<div class="paper-thumb s1"><div class="paper-scaler">{% include t.template_partial with cv_data=t.cv_data show_watermark=False %}</div></div>{% endif %}
+        {% if t.code == "classic" %}<div class="paper-thumb s2"><div class="paper-scaler">{% include t.template_partial with cv_data=t.cv_data show_watermark=False %}</div></div>{% endif %}
+        {% if t.code == "dark" %}<div class="paper-thumb s3"><div class="paper-scaler">{% include t.template_partial with cv_data=t.cv_data show_watermark=False %}</div></div>{% endif %}
+      {% endfor %}
+      <div class="float-chip chip-a"><i>✦</i>AI yozib berdi</div>
+      <div class="float-chip chip-b"><i>↓</i>PDF · Word tayyor</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="qanday">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Qanday ishlaydi</span>
+      <h2>Chalkash matndan <span class="serif">tartibli</span> CV gacha</h2>
+      <p>Formalar to'ldirish, bo'limlarni qo'lda tuzish shart emas. Qanday gapirsangiz, shunday yozing.</p>
+    </div>
+
+    <div class="demo">
+      <div class="raw">
+        <div class="raw-top"><span>Siz yozasiz</span><span>🇺🇿 O'zbekcha</span></div>
+        <div class="raw-text" id="typer" data-text="Salom, men Sardor Nazarov. 6 yil backend dasturchiman, hozir Uzum Market da senior bo'lib ishlayman, undan oldin Click da 3 yil ishlaganman. Python, Django, FastAPI, PostgreSQL, Redis, Docker bilan ishlayman. TATU ni bitirganman. Rus tilini yaxshi bilaman, ingliz B2."></div>
+      </div>
+      <div class="arrow"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+      {% for t in templates %}{% if t.code == "classic" %}
+      <div class="paper-thumb"><div class="paper-scaler">{% include t.template_partial with cv_data=t.cv_data show_watermark=False %}</div></div>
+      {% endif %}{% endfor %}
+    </div>
+
+    <div class="steps" style="margin-top:16px;">
+      <div class="step"><div class="step-n">1</div><h3>Yozing</h3><p>Tajriba, ko'nikma, ta'lim — erkin matn. Xohlasangiz rasm qo'shing va CV tilini tanlang.</p></div>
+      <div class="step"><div class="step-n">2</div><h3>AI tartiblaydi</h3><p>Bo'limlarga ajratadi, vazifalarni natijaga yo'naltirilgan jumlalarga aylantiradi.</p></div>
+      <div class="step"><div class="step-n">3</div><h3>Shablon va yuklab olish</h3><p>9 ta dizayndan (2 tasi ATS uchun) birini tanlang, vakansiyaga moslang, PDF yoki Word yuklab oling.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="background:var(--bg-2);">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Shablonlar</span>
+      <h2>{{ templates|length }} ta dizayn — bitta ma'lumot</h2>
+      <p>Ekranda qanday ko'rsangiz, PDF'da ham aynan shunday chiqadi. Istalgan vaqtda almashtiring.</p>
+    </div>
+    <div class="tpl-rail">
+      {% for t in templates %}
+      <a href="/cv/template-preview/{{ t.code }}/" class="tpl-card">
+        <div class="paper-thumb"><div class="paper-scaler">{% include t.template_partial with cv_data=t.cv_data show_watermark=False %}</div></div>
+        <div class="tpl-meta"><b>{{ t.label }}</b>{% if t.ats %}<span class="badge badge-free">ATS ✓</span>{% endif %}</div>
+      </a>
+      {% endfor %}
+      <a href="/cv/namuna/" class="tpl-more">
+        <h3>O'zingizniki bilan ko'ring</h3>
+        <p>Barcha shablonlarni o'z ma'lumotlaringiz bilan bepul sinab ko'ring.</p>
+        <span class="btn btn-accent" style="align-self:flex-start;">Boshlash →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Imkoniyatlar</span>
+      <h2>Kerakli hamma narsa, <span class="serif">ortiqchasiz</span></h2>
+    </div>
+    <div class="bento">
+      <div class="tile tg t-wide">
+        <div class="tile-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.6 20c-.2 1.1-.9 1.4-1.8.9l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1 9.3-8.4c.4-.4-.1-.6-.6-.2L6 13.5l-5-1.6c-1.1-.3-1.1-1.1.2-1.6L20.5 2.9c.9-.3 1.7.2 1.4 1.4z"/></svg></div>
+        <h3>Parolsiz, kodsiz kirish</h3>
+        <p>Telegram botda Start bosing va raqamingizni yuboring — shu. SMS kod, parol yoki email kerak emas.</p>
+        <div class="tg-flow"><span>1 · Start</span><span>2 · 📱 Raqamni yuborish</span><span>3 · Saytga kirdingiz</span></div>
+      </div>
+      <div class="tile t-wide">
+        <div class="tile-ic">🎯</div>
+        <h3>Vakansiyaga moslashtirish</h3>
+        <p>Ish e'lonini nusxalab qo'ying — AI CV'ingizni aynan shu vakansiya talablariga moslab qayta yozadi va moslik balini ko'rsatadi. Yolg'on qo'shmaydi.</p>
+        <div class="langs"><span>Moslik 54% → 87%</span><span>+ kalit so'zlar</span></div>
+      </div>
+      <div class="tile t-third">
+        <div class="tile-ic">Aa</div>
+        <h3>3 ta til</h3>
+        <p>Bitta matndan o'zbek, rus yoki ingliz tilidagi CV.</p>
+        <div class="langs"><span>UZ</span><span>RU</span><span>EN</span></div>
+      </div>
+      <div class="tile t-third">
+        <div class="tile-ic">⤓</div>
+        <h3>PDF va Word</h3>
+        <p>PDF — yuborish uchun, Word — o'zingiz tahrirlash uchun.</p>
+        <div class="files"><span class="file"><i style="background:#e5484d;">PDF</i>CV.pdf</span><span class="file"><i style="background:#2b579a;">DOC</i>CV.docx</span></div>
+      </div>
+      <div class="tile t-third">
+        <div class="tile-ic">✓</div>
+        <h3>ATS-friendly</h3>
+        <p>Rezyumeni saralovchi dasturlar (ATS) to'g'ri o'qiydigan bir ustunli shablonlar.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="narxlar" style="padding-top:24px;">
+  <div class="wrap">
+    <div class="section-head center">
+      <span class="eyebrow">Narxlar</span>
+      <h2>Obunasiz. Kredit oling — kerakli CV'ni oching.</h2>
+      <p>1 kredit = 1 CV. Paketda olsangiz arzonroq, kreditning muddati yo'q.</p>
+    </div>
+    {% include "core/partials/_pricing_cards.html" %}
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head center"><h2>Ko'p so'raladigan savollar</h2></div>
+    <div class="faq">
+      <details open><summary>Nima bepul, nima pullik?</summary><p>{{ FREE_CV_LIMIT }} ta CV yaratish va {{ FREE_TAILOR_LIMIT }} ta vakansiyaga moslashtirish bepul — natijani to'liq ekranda ko'rasiz. PDF yoki Word yuklab olish uchun Telegram orqali kirib, CV'ni bir martalik to'lov yoki Pro bilan ochasiz.</p></details>
+      <details><summary>Kredit nima?</summary><p>1 kredit bitta CV'ni ochadi: 9 ta shablon, belgisiz PDF va Word — cheksiz yuklab olish, {{ site.tailor_per_unlocked_cv }} ta vakansiyaga moslashtirilgan versiya (ular ham ochiq). Kredit va ochilgan CV muddatsiz. Paketda olsangiz arzonroq: masalan, 3 ta CV bitta narxidan qimmat emas.</p></details>
+      <details><summary>Pro kimlar uchun?</summary><p>Ko'p vakansiyaga topshiradiganlar va HR agentliklar uchun: 30 kun ichida 30 ta CV va 50 ta moslashtirish, hammasi ochiq. Avtomatik yangilanmaydi.</p></details>
+      <details><summary>ATS-friendly nima degani?</summary><p>Katta kompaniyalar rezyumelarni avval dastur (ATS) bilan saralaydi. Ustunli, ikonkali dizaynlarni u noto'g'ri o'qiydi. ATS shablonlarimiz bir ustunli, standart sarlavhali — dastur ham, HR ham to'g'ri o'qiydi.</p></details>
+      <details><summary>Qanday to'lash mumkin?</summary><p>Hozircha Telegram bot orqali: paketni tanlaysiz, kartaga o'tkazasiz va chek skrinshotini yuborasiz. Tekshirilgach kredit avtomatik qo'shiladi. Click va Payme tez orada ulanadi.</p></details>
+      <details><summary>Ma'lumotlarim xavfsizmi?</summary><p>CV faqat sizga ko'rinadi. Ommaviy havolani o'zingiz yoqmaguningizcha hech kim ko'ra olmaydi.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="wrap">
+    <div class="cta">
+      <h2>Keyingi ishingiz<br><span class="serif">bitta CV</span> narida.</h2>
+      <p>Hoziroq boshlang — birinchi variant bir daqiqada tayyor bo'ladi.</p>
+      <a href="/cv/namuna/" class="btn btn-accent btn-lg">Bepul CV yaratish</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var el = document.getElementById('typer');
+  if (!el) return;
+  var text = el.dataset.text, i = 0, started = false;
+  function tick() {
+    el.innerHTML = text.slice(0, i).replace(/&/g, '&amp;').replace(/</g, '&lt;') + '<span class="caret"></span>';
+    if (i < text.length) { i += 1; setTimeout(tick, 18 + Math.random() * 30); }
+  }
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { i = text.length; tick(); return; }
+  var io = new IntersectionObserver(function (entries) {
+    if (entries[0].isIntersecting && !started) { started = true; tick(); io.disconnect(); }
+  });
+  io.observe(el);
+})();
+</script>
+{% endblock %}

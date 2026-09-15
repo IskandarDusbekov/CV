@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="{{ cv_data.cv_language|default:'uz' }}">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ cv_data.full_name }} — CV</title>
+  <style>
+    @page { size: A4; margin: 0; }
+    html, body { margin: 0; padding: 0; }
+    body { width: 794px; }
+  </style>
+</head>
+<body>
+  {% include template_partial %}
+</body>
+</html>

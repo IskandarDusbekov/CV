@@ -1,0 +1,90 @@
+{% load mycv %}
+{% if site.payment_notice %}<p class="price-notice">✈️ {{ site.payment_notice }}</p>{% endif %}
+<div class="price-grid">
+  <article class="price-card">
+    <div class="price-head">
+      <h3>Bepul</h3>
+      <p>Natijani ko'rish uchun</p>
+    </div>
+    <div class="price-amount">0 <span>so'm</span></div>
+    <ul class="price-list">
+      <li><b>{{ FREE_CV_LIMIT }} ta</b> CV yaratish</li>
+      <li><b>{{ FREE_TAILOR_LIMIT }} ta</b> vakansiyaga moslashtirish</li>
+      <li>9 ta shablonda ekranda ko'rish</li>
+      <li class="off">PDF va Word yuklab olish yo'q</li>
+    </ul>
+    <a href="/cv/namuna/" class="btn btn-light btn-block">Bepul boshlash</a>
+  </article>
+
+  <article class="price-card is-featured">
+    <span class="price-flag">Kreditlar · obunasiz</span>
+    <div class="price-head">
+      <h3>Kredit paketlari</h3>
+      <p>1 kredit = 1 CV ochiladi, muddatsiz</p>
+    </div>
+    <div class="packs">
+      {% for pack in credit_packs %}
+      <div class="pack {% if pack.is_featured %}is-best{% endif %}">
+        <div><b>{{ pack.name }}</b>{% if pack.credits > 1 %}<small>1 CV = {{ pack.price_per_credit|money }} so'm</small>{% endif %}</div>
+        <span>{{ pack.price|money }} so'm</span>
+      </div>
+      {% empty %}
+      <div class="pack"><b>Tez orada</b></div>
+      {% endfor %}
+    </div>
+    <ul class="price-list">
+      <li><b>PDF + Word</b> — cheksiz yuklab olish</li>
+      <li>9 ta shablon, belgisiz</li>
+      <li>Har bir CV uchun <b>{{ site.tailor_per_unlocked_cv }} ta</b> moslashtirish</li>
+    </ul>
+    <a href="/users/payments/" class="btn btn-accent btn-block">Kredit sotib olish</a>
+  </article>
+
+  <article class="price-card is-dark">
+    <div class="price-head">
+      <h3>{{ pro_plan.name|default:"Pro" }}</h3>
+      <p>Ko'p vakansiyaga topshiruvchilar va HR uchun</p>
+    </div>
+    <div class="price-amount">{{ pro_plan.price|default:49900|money }} <span>so'm / {{ pro_plan.duration_days|default:30 }} kun</span></div>
+    <ul class="price-list">
+      <li><b>{{ pro_plan.max_cvs|default:30 }} ta</b> CV yaratish</li>
+      <li><b>{{ pro_plan.max_tailorings|default:50 }} ta</b> vakansiyaga moslashtirish</li>
+      <li>Barcha CV'lar ochiq: PDF + Word</li>
+      <li>Kompaniya brendingi</li>
+      <li>Avtomatik yangilanmaydi</li>
+    </ul>
+    <a href="/users/payments/" class="btn btn-block pay-btn">Pro olish</a>
+  </article>
+</div>
+
+<style>
+  .price-notice { margin: 0 auto 18px; max-width: 640px; padding: 10px 14px; border-radius: 12px; background: #e0f2fe; color: #075985; font-size: 14px; font-weight: 600; text-align: center; }
+  .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }
+  .price-card { position: relative; display: flex; flex-direction: column; gap: 18px; padding: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); }
+  .price-card.is-featured { border: 2px solid var(--ink); box-shadow: var(--shadow); }
+  .price-card.is-dark { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .price-flag { position: absolute; top: -12px; left: 28px; padding: 4px 10px; border-radius: 999px; background: var(--lime); color: var(--ink); font-size: 12px; font-weight: 800; }
+  .price-head h3 { font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+  .price-head p { margin-top: 2px; font-size: 14px; color: var(--muted); }
+  .is-dark .price-head p { color: #a1a3ab; }
+  .price-amount { font-size: 42px; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
+  .price-amount span { font-size: 15px; font-weight: 600; letter-spacing: 0; color: var(--muted); }
+  .is-dark .price-amount span { color: #a1a3ab; }
+  .packs { display: grid; gap: 8px; }
+  .pack { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: var(--bg); }
+  .pack b { font-size: 15px; } .pack small { display: block; font-size: 12px; color: var(--muted); }
+  .pack span { font-weight: 800; white-space: nowrap; }
+  .pack.is-best { background: var(--lime); }
+  .pack.is-best small { color: var(--ink-2); }
+  .price-list { flex: 1; margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; align-content: start; }
+  .price-list li { position: relative; padding-left: 26px; font-size: 14.5px; }
+  .price-list li::before { content: ""; position: absolute; left: 0; top: 3px; width: 17px; height: 17px; border-radius: 50%;
+    background: var(--green-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2315803d' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/10px no-repeat; }
+  .is-dark .price-list li::before { background-color: rgba(217,243,106,.18);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d9f36a' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); }
+  .price-list li.off { color: var(--muted-2); }
+  .price-list li.off::before { background: var(--bg-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238e9098' stroke-width='3.5' stroke-linecap='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E") center/10px no-repeat; }
+  .pay-btn { background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.18); }
+  .pay-btn:hover { background: #fff; color: var(--ink); }
+  @media (max-width: 900px) { .price-grid { grid-template-columns: 1fr; } }
+</style>

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ template_label }} shabloni — mycv.uz{% endblock %}
+
+{% block extra_style %}
+.tp { padding: 28px 0 0; }
+.tp-grid { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 28px; align-items: start; }
+.tp-side { position: sticky; top: 84px; display: grid; gap: 16px; }
+.tp-side h1 { margin-top: 8px; font-size: 34px; font-weight: 800; letter-spacing: -.035em; line-height: 1.05; }
+.tp-side > div > p { margin-top: 8px; color: var(--muted); font-size: 14.5px; }
+.tp-list { display: grid; gap: 4px; padding: 8px; background: #fff; border: 1px solid var(--line); border-radius: 18px; }
+.tp-list a { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 11px; font-size: 14px; font-weight: 700; color: var(--muted); }
+.tp-list a:hover { background: var(--bg); color: var(--ink); }
+.tp-list a.on { background: var(--ink); color: #fff; }
+.tp-stage { padding: 28px; border-radius: 24px; background: var(--bg-2); }
+.tp-stage .paper-fit { max-width: 794px; margin: 0 auto; }
+.tp-stage .paper-scaler { box-shadow: var(--shadow-lg); }
+@media (max-width: 900px) { .tp-grid { grid-template-columns: 1fr; } .tp-side { position: static; } .tp-list { display: flex; overflow-x: auto; } .tp-list a { white-space: nowrap; } .tp-stage { padding: 10px; } }
+{% endblock %}
+
+{% block content %}
+<div class="tp">
+  <div class="wrap tp-grid">
+    <aside class="tp-side">
+      <div>
+        <a href="/cv/templates/" class="btn btn-ghost btn-sm" style="padding-left:0;">← Barcha shablonlar</a>
+        <h1>{{ template_label }}</h1>
+        <p>{{ tagline }}</p>
+        <div style="margin-top:10px;">{% if is_ats_template %}<span class="badge badge-free">ATS-friendly ✓</span>{% else %}<span class="badge badge-muted">Dizaynli shablon</span>{% endif %}</div>
+      </div>
+      <a href="/cv/builder/?template={{ template_key }}" class="btn btn-dark btn-lg btn-block">Shu shablon bilan yaratish</a>
+      <nav class="tp-list">
+        {% for t in all_templates %}
+        <a href="/cv/template-preview/{{ t.code }}/" class="{% if t.selected %}on{% endif %}">{{ t.label }}{% if t.ats %}<span class="badge badge-free" style="font-size:10px;">ATS</span>{% endif %}</a>
+        {% endfor %}
+      </nav>
+      <p class="help">Namuna ma'lumotlar bilan ko'rsatilmoqda.</p>
+    </aside>
+    <div class="tp-stage">
+      <div class="paper-fit"><div class="paper-scaler">{% include template_partial %}</div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

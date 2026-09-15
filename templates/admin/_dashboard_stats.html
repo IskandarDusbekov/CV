@@ -1,0 +1,74 @@
+{% load mycv %}
+<style>
+  .mc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .mc-card { display: block; padding: 14px 16px; border-radius: 12px; background: #fff; border: 1px solid #e5e7eb; color: #111827 !important; text-decoration: none !important; }
+  .mc-card:hover { border-color: #111827; }
+  .mc-card small { display: block; color: #6b7280; font-size: 12px; }
+  .mc-card b { display: block; margin-top: 2px; font-size: 24px; line-height: 1.2; }
+  .mc-card span { font-size: 12px; color: #6b7280; }
+  .mc-card.alert { background: #fff7ed; border-color: #fdba74; }
+  .mc-card.alert b { color: #c2410c; }
+  .mc-row { display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; margin-bottom: 18px; }
+  .mc-box { padding: 16px; border-radius: 12px; background: #fff; border: 1px solid #e5e7eb; }
+  .mc-box h3 { margin: 0 0 12px; font-size: 15px; font-weight: 700; }
+  .mc-chart { display: flex; align-items: flex-end; gap: 6px; height: 140px; }
+  .mc-bar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; height: 100%; justify-content: flex-end; }
+  .mc-bar i { display: block; width: 45%; border-radius: 3px 3px 0 0; min-height: 2px; }
+  .mc-bar em { font-style: normal; font-size: 9px; color: #9ca3af; }
+  .mc-bars { display: flex; gap: 2px; align-items: flex-end; height: 120px; width: 100%; justify-content: center; }
+  .mc-list { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+  .mc-list li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
+  .mc-list li:last-child { border-bottom: 0; }
+  .mc-list small { color: #9ca3af; white-space: nowrap; }
+  @media (max-width: 900px) { .mc-row { grid-template-columns: 1fr; } }
+</style>
+
+<div class="mc-grid">
+  <a class="mc-card {% if payments_pending %}alert{% endif %}" href="{% url 'admin:users_paymentrequest_changelist' %}?status__exact=pending">
+    <small>💳 Tekshirilishi kerak</small><b>{{ payments_pending }}</b><span>to'lov cheki</span></a>
+  <a class="mc-card" href="{% url 'admin:users_paymentrequest_changelist' %}?status__exact=approved">
+    <small>💰 Tushum (shu oy)</small><b>{{ revenue_month|money }}</b><span>jami: {{ revenue_total|money }} so'm</span></a>
+  <a class="mc-card" href="{% url 'admin:users_userprofile_changelist' %}">
+    <small>👤 Foydalanuvchilar</small><b>{{ users_total }}</b><span>bugun +{{ users_today }} · onlayn {{ users_online }} · blok {{ users_blocked }}</span></a>
+  <a class="mc-card" href="{% url 'admin:cv_cv_changelist' %}">
+    <small>📄 CV lar</small><b>{{ cvs_total }}</b><span>bugun +{{ cvs_today }} · ochilgan {{ cvs_unlocked }}</span></a>
+  <a class="mc-card" href="{% url 'admin:cv_aiusage_changelist' %}">
+    <small>✨ AI xarajati (shu oy)</small><b>${{ ai_cost_month|floatformat:3 }}</b><span>≈ {{ ai_cost_month_uzs|money }} so'm · jami ${{ ai_cost_total|floatformat:2 }}</span></a>
+  <a class="mc-card" href="{% url 'admin:cv_aiusage_changelist' %}">
+    <small>✨ AI so'rovlari (bugun)</small><b>{{ ai_today }}</b><span>xato: {{ ai_failed_today }} · ${{ ai_cost_today|floatformat:4 }}</span></a>
+  <a class="mc-card {% if errors_open %}alert{% endif %}" href="{% url 'admin:core_errorlog_changelist' %}?is_resolved__exact=0">
+    <small>🐞 Hal qilinmagan xatolar</small><b>{{ errors_open }}</b><span>server va AI xatolari</span></a>
+  <a class="mc-card {% if messages_new %}alert{% endif %}" href="{% url 'admin:core_contactmessage_changelist' %}?is_resolved__exact=0">
+    <small>✉️ Yangi murojaatlar</small><b>{{ messages_new }}</b><span>aloqa sahifasidan</span></a>
+</div>
+
+<div class="mc-row">
+  <div class="mc-box">
+    <h3>So'nggi 14 kun: <span style="color:#111827;">■ CV</span> · <span style="color:#22c55e;">■ yangi foydalanuvchi</span></h3>
+    <div class="mc-chart">
+      {% for d in chart %}
+      <div class="mc-bar" title="{{ d.label }}: {{ d.cvs }} CV, {{ d.users }} foydalanuvchi">
+        <div class="mc-bars"><i style="height:{{ d.cv_h }}%;background:#111827;"></i><i style="height:{{ d.user_h }}%;background:#22c55e;"></i></div>
+        <em>{{ d.label }}</em>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="mc-box">
+    <h3>🐞 So'nggi xatolar</h3>
+    <ul class="mc-list">
+      {% for e in recent_errors %}
+      <li><a href="{% url 'admin:core_errorlog_change' e.pk %}">{{ e.message|truncatechars:60 }}</a><small>{{ e.created_at|date:"d.m H:i" }}</small></li>
+      {% empty %}<li>Xatolar yo'q 🎉</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div class="mc-box" style="margin-bottom:18px;">
+  <h3>🕓 So'nggi faollik <a href="{% url 'admin:core_activitylog_changelist' %}" style="font-size:12px;font-weight:400;">hammasi →</a></h3>
+  <ul class="mc-list">
+    {% for a in recent_activity %}
+    <li><span><b>{{ a.user.get_full_name|default:a.user.username|default:"anonim" }}</b> — {{ a.get_action_display }}{% if a.meta.plan %} ({{ a.meta.plan }}){% endif %}</span><small>{{ a.ip|default:"" }} · {{ a.created_at|date:"d.m H:i" }}</small></li>
+    {% empty %}<li>Hozircha faollik yo'q</li>{% endfor %}
+  </ul>
+</div>

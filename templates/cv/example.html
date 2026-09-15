@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Namuna CV — mycv.uz{% endblock %}
+
+{% block extra_style %}
+.ex { padding: 28px 0 0; }
+.ex-head { max-width: 760px; margin-bottom: 22px; }
+.ex-head h1 { margin-top: 10px; font-size: clamp(32px, 4.4vw, 52px); line-height: 1.02; font-weight: 800; letter-spacing: -.04em; }
+.ex-head p { margin-top: 10px; font-size: 17px; color: var(--muted); }
+.ex-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 28px; align-items: start; }
+.stage { padding: 26px; border-radius: 24px; background: var(--bg-2); }
+.stage .paper-fit { max-width: 794px; margin: 0 auto; }
+.stage .paper-scaler { box-shadow: var(--shadow-lg); }
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 14px; margin-bottom: 4px; scrollbar-width: thin; }
+.tabs button { flex-shrink: 0; min-height: 36px; padding: 0 13px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.tabs button em { font-style: normal; font-size: 10px; margin-left: 4px; color: var(--green); }
+.tabs button.on em { color: var(--lime); }
+.rail { position: sticky; top: 84px; display: grid; gap: 14px; }
+.card-in { padding: 22px; }
+.from { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-2); }
+.raw { margin-top: 10px; padding: 14px 16px; border-radius: 14px; background: var(--bg); font-size: 14.5px; line-height: 1.6; color: var(--ink-2); font-style: italic; }
+.down { display: grid; place-items: center; height: 36px; color: var(--muted-2); font-size: 20px; }
+.result { display: flex; gap: 10px; align-items: center; font-weight: 700; }
+.result i { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--lime); font-style: normal; }
+.go { padding: 22px; border-radius: 20px; background: var(--ink); color: #fff; }
+.go h2 { font-size: 22px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+.go p { margin: 8px 0 16px; color: #a1a3ab; font-size: 14.5px; }
+.go .q { margin-top: 12px; text-align: center; font-size: 13px; color: #a1a3ab; }
+.go .q b { color: var(--lime); }
+.steps3 { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.steps3 li { display: flex; gap: 10px; align-items: center; font-size: 14px; font-weight: 600; }
+.steps3 li span { width: 24px; height: 24px; flex-shrink: 0; border-radius: 8px; display: grid; place-items: center; background: var(--bg); font-size: 12px; font-weight: 800; }
+@media (max-width: 1000px) { .ex-grid { grid-template-columns: 1fr; } .rail { position: static; } .stage { padding: 10px; } }
+{% endblock %}
+
+{% block content %}
+<div class="ex">
+  <div class="wrap">
+    <div class="ex-head">
+      <span class="eyebrow">Tayyor namuna</span>
+      <h1>Mana shunday CV <span class="serif">sizniki</span> ham bo'ladi</h1>
+      <p>Bu CV pastdagi bitta chalkash matndan AI tomonidan yozilgan. Dizaynni almashtirib ko'ring.</p>
+    </div>
+
+    <div class="ex-grid">
+      <div class="stage">
+        <div class="tabs" id="tabs">
+          {% for t in templates %}
+          <button type="button" class="{% if t.selected %}on{% endif %}" data-code="{{ t.code }}">{{ t.label }}{% if t.ats %}<em>ATS</em>{% endif %}</button>
+          {% endfor %}
+        </div>
+        {% for t in templates %}
+        <div class="paper-fit" data-paper="{{ t.code }}" {% if not t.selected %}hidden{% endif %}><div class="paper-scaler">{% include t.template_partial with cv_data=t.cv_data show_watermark=False %}</div></div>
+        {% endfor %}
+      </div>
+
+      <aside class="rail">
+        <div class="card card-in">
+          <div class="from">Foydalanuvchi yozgani</div>
+          <div class="raw">“salom men sardor nazarov 6 yil backend dasturchiman hozir uzum marketda seniorman oldin clickda 3 yil ishlaganman python django fastapi postgres redis docker bilaman tatuni bitirganman rus tili yaxshi ingliz b2”</div>
+          <div class="down">↓</div>
+          <div class="result"><i>✦</i>AI ~15 soniyada yonidagi CV'ni yozdi</div>
+        </div>
+
+        <div class="go">
+          <h2>O'zingiznikini yarating</h2>
+          <p>Xuddi shunday yozing: kimsiz, qayerda ishlagansiz, nimalarni bilasiz. Tartib va imlo muhim emas.</p>
+          <a href="/cv/builder/" class="btn btn-accent btn-lg btn-block">O'z CV'imni yaratish →</a>
+          <div class="q">{% if quota.tier == "pro" %}Pro: <b>{{ quota.remaining }}</b> ta CV qoldi{% elif quota.allowed %}Bepul: <b>{{ quota.remaining }} ta</b> CV yaratish qoldi{% else %}Bepul limit tugagan — <a href="/pricing/" style="color:#fff;text-decoration:underline;">Pro</a>{% endif %}</div>
+        </div>
+
+        <div class="card card-in">
+          <ol class="steps3">
+            <li><span>1</span>Matn yozasiz — ro'yxatdan o'tmasdan</li>
+            <li><span>2</span>AI CV tuzadi, ekranda ko'rasiz</li>
+            <li><span>3</span>Yoqsa — Telegram orqali kirib, yuklab olasiz</li>
+          </ol>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('#tabs button').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('#tabs button').forEach(function (b) { b.classList.toggle('on', b === btn); });
+    document.querySelectorAll('[data-paper]').forEach(function (p) { p.hidden = p.dataset.paper !== btn.dataset.code; });
+    window.fitPapers && window.fitPapers();
+  });
+});
+</script>
+{% endblock %}

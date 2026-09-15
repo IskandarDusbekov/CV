@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load mycv %}
+{% block title %}Narxlar — mycv.uz{% endblock %}
+
+{% block extra_style %}
+.p-hero { padding: 64px 0 40px; text-align: center; }
+.p-hero h1 { margin-top: 14px; font-size: clamp(36px, 5vw, 64px); line-height: 1; font-weight: 800; letter-spacing: -.045em; }
+.p-hero p { max-width: 560px; margin: 16px auto 0; font-size: 18px; color: var(--muted); }
+.compare { margin-top: 64px; overflow-x: auto; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); }
+.compare table { width: 100%; min-width: 620px; border-collapse: collapse; font-size: 14.5px; }
+.compare th, .compare td { padding: 14px 20px; text-align: center; border-bottom: 1px solid var(--line); }
+.compare th:first-child, .compare td:first-child { text-align: left; }
+.compare thead th { font-size: 15px; font-weight: 800; background: var(--bg); }
+.compare tr:last-child td { border-bottom: 0; }
+.yes { color: var(--green); font-weight: 800; } .no { color: var(--muted-2); }
+.why { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px; }
+.why div { padding: 24px; border-radius: var(--radius-lg); background: var(--bg-2); }
+.why h3 { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+.why p { color: var(--muted); font-size: 14.5px; }
+@media (max-width: 860px) { .why { grid-template-columns: 1fr; } }
+{% endblock %}
+
+{% block content %}
+<section class="p-hero">
+  <div class="wrap">
+    <span class="eyebrow">Narxlar</span>
+    <h1>Qancha CV kerak bo'lsa —<br><span class="serif">shuncha</span> to'lang.</h1>
+    <p>Obuna shart emas: kredit oling, har bir kredit bitta CV'ni ochadi. Ko'p vakansiyaga topshirsangiz — Pro.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    {% include "core/partials/_pricing_cards.html" %}
+
+    <div class="compare">
+      <table>
+        <thead><tr><th>Imkoniyat</th><th>Bepul</th><th>Kredit (1 kredit = 1 CV)</th><th>Pro</th></tr></thead>
+        <tbody>
+          <tr><td>AI bilan CV yaratish</td><td>{{ FREE_CV_LIMIT }} ta</td><td>bepul limitdan</td><td>{{ pro_plan.max_cvs|default:30 }} ta / davr</td></tr>
+          <tr><td>Vakansiyaga moslashtirish</td><td>{{ FREE_TAILOR_LIMIT }} ta</td><td>{{ site.tailor_per_unlocked_cv }} ta har bir ochilgan CV uchun</td><td>{{ pro_plan.max_tailorings|default:50 }} ta / davr</td></tr>
+          <tr><td>9 ta shablonda ko'rish (2 tasi ATS)</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>PDF va Word yuklab olish</td><td class="no">—</td><td class="yes">✓ ochilgan CV lar</td><td class="yes">✓ hamma CV lar</td></tr>
+          <tr><td>Ommaviy havola</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>Kompaniya brendingi</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+          <tr><td>Amal qilish muddati</td><td>—</td><td>kredit va ochilgan CV — muddatsiz</td><td>{{ pro_plan.duration_days|default:30 }} kun, avtomatik yangilanmaydi</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="why">
+      <div><h3>Nega obunasiz?</h3><p>Ish qidirayotgan odamga odatda bitta yaxshi CV kerak. Oylik to'lov uchun eslatma kutish shart emas.</p></div>
+      <div><h3>Avval ko'ring, keyin to'lang</h3><p>CV tayyor bo'lgach 9 ta shablonda ko'rasiz. Faqat natija yoqsa ochasiz.</p></div>
+      <div><h3>Telegram orqali to'lov</h3><p>Botda paketni tanlaysiz, kartaga o'tkazasiz va chekni yuborasiz. Click va Payme tez orada.</p></div>
+    </div>
+  </div>
+</section>
+{% endblock %}

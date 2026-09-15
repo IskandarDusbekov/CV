@@ -1,0 +1,117 @@
+{% include "cv/partials/_paper_base.html" %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700;800&display=swap">
+<style>
+  .cvt-classic { --side: #1e2a44; --side-w: 268px; --ink: #1f2937; --muted: #5b6474; --accent: #3558c8; --line: #e3e7ee;
+    display: grid; grid-template-columns: var(--side-w) 1fr;
+    background: linear-gradient(90deg, var(--side) 0 var(--side-w), #fff var(--side-w));
+    font-family: "Source Sans 3", "Segoe UI", Arial, sans-serif; font-size: 13px; color: var(--ink); }
+  .cvt-classic .cl-side { padding: 44px 26px 48px 30px; color: #dfe6f3; }
+  .cvt-classic .cl-photo { width: 124px; height: 124px; border-radius: 50%; object-fit: cover; margin: 0 0 22px;
+    box-shadow: 0 0 0 5px rgba(255,255,255,.1); }
+  .cvt-classic .cl-name { font-size: 27px; line-height: 1.1; font-weight: 800; color: #fff; letter-spacing: -.01em; }
+  .cvt-classic .cl-title { margin-top: 8px; font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #9db7ff; }
+  .cvt-classic .cl-sh { margin: 30px 0 12px; padding-bottom: 7px; font-size: 11.5px; font-weight: 700; letter-spacing: .16em;
+    text-transform: uppercase; color: #fff; border-bottom: 1px solid rgba(255,255,255,.16); }
+  .cvt-classic .cl-contact li { display: flex; gap: 9px; align-items: flex-start; margin-bottom: 9px; font-size: 12px; line-height: 1.35; }
+  .cvt-classic .cl-contact svg { margin-top: 2px; color: #9db7ff; }
+  .cvt-classic .cl-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cvt-classic .cl-pill { padding: 3px 9px; border-radius: 4px; background: rgba(255,255,255,.09); font-size: 11.5px; color: #eef2fa; }
+  .cvt-classic .cl-list li { margin-bottom: 6px; font-size: 12px; }
+  .cvt-classic .cl-edu { margin-bottom: 12px; }
+  .cvt-classic .cl-edu b { display: block; font-size: 12.5px; color: #fff; }
+  .cvt-classic .cl-edu span { display: block; font-size: 11.5px; color: #aab5ca; }
+
+  .cvt-classic .cl-main { padding: 44px 42px 56px 38px; }
+  .cvt-classic .cl-sec { margin-bottom: 26px; }
+  .cvt-classic .cl-mh { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; font-size: 13px; font-weight: 800;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--side); }
+  .cvt-classic .cl-mh::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .cvt-classic .cl-summary { font-size: 13.5px; line-height: 1.65; color: #374151; }
+  .cvt-classic .cl-job { position: relative; padding: 0 0 16px 20px; border-left: 2px solid var(--line); }
+  .cvt-classic .cl-job:last-child { padding-bottom: 2px; }
+  .cvt-classic .cl-job::before { content: ""; position: absolute; left: -6px; top: 4px; width: 10px; height: 10px; border-radius: 50%;
+    background: #fff; border: 2px solid var(--side); }
+  .cvt-classic .cl-pos { font-size: 15px; font-weight: 700; color: #111827; line-height: 1.3; }
+  .cvt-classic .cl-meta { display: flex; justify-content: space-between; gap: 12px; margin: 2px 0 7px; font-size: 12.5px; }
+  .cvt-classic .cl-co { font-weight: 600; color: var(--accent); }
+  .cvt-classic .cl-date { color: var(--muted); white-space: nowrap; }
+  .cvt-classic .cl-bullets li { position: relative; padding-left: 14px; margin-bottom: 4px; line-height: 1.55; color: #374151; }
+  .cvt-classic .cl-bullets li::before { content: ""; position: absolute; left: 0; top: 8px; width: 6px; height: 2px; background: var(--accent); }
+  .cvt-classic .cl-proj { margin-bottom: 14px; }
+  .cvt-classic .cl-proj-t { font-size: 14px; font-weight: 700; color: #111827; }
+  .cvt-classic .cl-proj-d { margin: 2px 0 6px; line-height: 1.55; color: #374151; }
+  .cvt-classic .cl-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .cvt-classic .cl-tag { padding: 2px 8px; border-radius: 4px; background: #eef2fa; color: #2c3e6b; font-size: 11px; font-weight: 600; }
+  .cvt-classic .cvt-mark { color: var(--muted); padding-left: var(--side-w); }
+</style>
+{% if pdf_mode %}<style>html { background: linear-gradient(90deg, #1e2a44 0 268px, #fff 268px); }</style>{% endif %}
+
+<div class="cvt cvt-classic">
+  <aside class="cl-side cvt-col">
+    {% if cv_data.photo_url %}<img class="cl-photo" src="{{ cv_data.photo_url }}" alt="">{% endif %}
+    <div class="cl-name">{{ cv_data.full_name }}</div>
+    <div class="cl-title">{{ cv_data.job_title }}</div>
+
+    {% if cv_data.contact_items or cv_data.profile_links %}
+    <div class="cl-sh cvt-keep">{{ cv_data.labels.contact }}</div>
+    <ul class="cl-contact">
+      {% for item in cv_data.contact_items %}<li>{% include "cv/partials/_icon.html" with name=item.label %}<span>{{ item.value }}</span></li>{% endfor %}
+      {% for item in cv_data.profile_links %}<li>{% include "cv/partials/_icon.html" with name=item.label %}<span>{{ item.value }}</span></li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if cv_data.skills %}
+    <div class="cl-sh cvt-keep">{{ cv_data.labels.skills }}</div>
+    <div class="cl-pills">{% for s in cv_data.skills %}<span class="cl-pill">{{ s }}</span>{% endfor %}</div>
+    {% endif %}
+
+    {% if cv_data.languages %}
+    <div class="cl-sh cvt-keep">{{ cv_data.labels.languages }}</div>
+    <ul class="cl-list">{% for l in cv_data.languages %}<li>{{ l }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    {% if cv_data.education %}
+    <div class="cl-sh cvt-keep">{{ cv_data.labels.education }}</div>
+    {% for edu in cv_data.education %}
+    <div class="cl-edu cvt-avoid"><b>{{ edu.institution }}</b>{% if edu.degree %}<span>{{ edu.degree }}</span>{% endif %}{% if edu.year %}<span>{{ edu.year }}</span>{% endif %}</div>
+    {% endfor %}
+    {% endif %}
+  </aside>
+
+  <main class="cl-main cvt-col">
+    {% if cv_data.summary %}
+    <section class="cl-sec">
+      <div class="cl-mh cvt-keep">{{ cv_data.labels.profile_summary }}</div>
+      <p class="cl-summary">{{ cv_data.summary }}</p>
+    </section>
+    {% endif %}
+
+    {% if cv_data.experience %}
+    <section class="cl-sec">
+      <div class="cl-mh cvt-keep">{{ cv_data.labels.experience }}</div>
+      {% for exp in cv_data.experience %}
+      <div class="cl-job cvt-avoid">
+        <div class="cl-pos">{{ exp.position|default:cv_data.labels.position }}</div>
+        <div class="cl-meta"><span class="cl-co">{{ exp.company }}</span>{% if exp.duration %}<span class="cl-date">{{ exp.duration }}</span>{% endif %}</div>
+        {% if exp.responsibilities %}<ul class="cl-bullets">{% for r in exp.responsibilities %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if cv_data.projects %}
+    <section class="cl-sec">
+      <div class="cl-mh cvt-keep">{{ cv_data.labels.projects }}</div>
+      {% for p in cv_data.projects %}
+      <div class="cl-proj cvt-avoid">
+        <div class="cl-proj-t">{{ p.title|default:cv_data.labels.project }}</div>
+        {% if p.description %}<p class="cl-proj-d">{{ p.description }}</p>{% endif %}
+        {% if p.technologies %}<div class="cl-tags">{% for t in p.technologies %}<span class="cl-tag">{{ t }}</span>{% endfor %}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+  </main>
+
+  {% if show_watermark %}<div class="cvt-mark">mycv.uz orqali yaratildi</div>{% elif company_branding %}<div class="cvt-mark">{{ company_branding.get_footer_display }}</div>{% endif %}
+</div>

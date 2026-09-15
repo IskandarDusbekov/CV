@@ -1,0 +1,12 @@
+{% extends "admin/change_list.html" %}
+{% block result_list %}
+{% if ai_totals %}
+<div style="display:flex;gap:12px;flex-wrap:wrap;margin:0 0 16px;">
+  <div class="card" style="padding:14px 18px;min-width:160px;margin:0;"><small>So'rovlar (filtr bo'yicha)</small><div style="font-size:22px;font-weight:800;">{{ ai_totals.n }}</div></div>
+  <div class="card" style="padding:14px 18px;min-width:160px;margin:0;"><small>Umumiy xarajat</small><div style="font-size:22px;font-weight:800;">${{ ai_totals.cost|floatformat:4 }}</div><small>≈ {{ ai_totals.cost_uzs }} so'm</small></div>
+  <div class="card" style="padding:14px 18px;min-width:160px;margin:0;"><small>Tokenlar (kirish / chiqish)</small><div style="font-size:18px;font-weight:800;">{{ ai_totals.prompt|default:0 }} / {{ ai_totals.completion|default:0 }}</div></div>
+  <div class="card" style="padding:14px 18px;min-width:160px;margin:0;"><small>Xatolik bilan tugagan</small><div style="font-size:22px;font-weight:800;color:#b91c1c;">{{ ai_totals.failed }}</div></div>
+</div>
+{% endif %}
+{{ block.super }}
+{% endblock %}

@@ -1,0 +1,122 @@
+{% include "cv/partials/_paper_base.html" %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<style>
+  .cvt-creative { --ink: #1e1b2e; --body: #4a4560; --muted: #7c7792; --violet: #6d28d9; --pink: #db2777; --soft: #f7f2ff; --line: #ece4f8; --side-w: 256px;
+    display: grid; grid-template-columns: var(--side-w) 1fr; grid-template-rows: auto 1fr;
+    background: linear-gradient(90deg, var(--soft) 0 var(--side-w), #fff var(--side-w));
+    font-family: "Montserrat", "Segoe UI", Arial, sans-serif; font-size: 12.3px; color: var(--body); }
+  .cvt-creative .cr-head { grid-column: 1 / -1; position: relative; overflow: hidden; display: flex; align-items: center; gap: 26px;
+    padding: 36px 44px; color: #fff; background: linear-gradient(120deg, #5b21b6 0%, #7c3aed 45%, #db2777 100%); }
+  .cvt-creative .cr-head::after { content: ""; position: absolute; right: -70px; top: -90px; width: 260px; height: 260px; border-radius: 50%;
+    background: rgba(255,255,255,.09); }
+  .cvt-creative .cr-head::before { content: ""; position: absolute; right: 120px; bottom: -110px; width: 180px; height: 180px; border-radius: 50%;
+    border: 26px solid rgba(255,255,255,.07); }
+  .cvt-creative .cr-photo { position: relative; z-index: 1; width: 118px; height: 118px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,.85); }
+  .cvt-creative .cr-mono { position: relative; z-index: 1; width: 104px; height: 104px; border-radius: 30px; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.16); font-size: 42px; font-weight: 800; }
+  .cvt-creative .cr-id { position: relative; z-index: 1; }
+  .cvt-creative .cr-name { font-size: 34px; font-weight: 800; line-height: 1.05; letter-spacing: -.02em; }
+  .cvt-creative .cr-title { margin-top: 7px; font-size: 14px; font-weight: 500; color: rgba(255,255,255,.88); }
+  .cvt-creative .cr-contacts { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 16px; }
+  .cvt-creative .cr-contacts span { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px;
+    background: rgba(255,255,255,.16); font-size: 11px; font-weight: 600; }
+
+  .cvt-creative .cr-side { padding: 28px 26px 48px 30px; }
+  .cvt-creative .cr-main { padding: 28px 44px 48px 36px; }
+  .cvt-creative .cr-sec { margin-bottom: 22px; }
+  .cvt-creative .cr-sh { margin-bottom: 14px; font-size: 13px; font-weight: 800; color: var(--ink); }
+  .cvt-creative .cr-sh::after { content: ""; display: block; width: 34px; height: 4px; margin-top: 6px; border-radius: 4px; background: linear-gradient(90deg, var(--violet), var(--pink)); }
+  .cvt-creative .cr-summary { font-size: 13px; line-height: 1.7; }
+  .cvt-creative .cr-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cvt-creative .cr-chip { padding: 5px 11px; border-radius: 999px; background: #fff; border: 1px solid #e2d4fb; font-size: 11px; font-weight: 700; color: var(--violet); }
+  .cvt-creative .cr-lang li { margin-bottom: 8px; font-weight: 600; color: var(--ink); }
+  .cvt-creative .cr-edu { margin-bottom: 14px; padding-left: 12px; border-left: 3px solid #e2d4fb; }
+  .cvt-creative .cr-edu b { display: block; font-size: 12.5px; color: var(--ink); }
+  .cvt-creative .cr-edu span { display: block; font-size: 11.5px; color: var(--muted); }
+  .cvt-creative .cr-job { position: relative; margin-bottom: 18px; padding-left: 18px; }
+  .cvt-creative .cr-job::before { content: ""; position: absolute; left: 0; top: 3px; bottom: 3px; width: 3px; border-radius: 3px; background: linear-gradient(180deg, var(--violet), var(--pink)); }
+  .cvt-creative .cr-job-top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .cvt-creative .cr-pos { font-size: 14.5px; font-weight: 800; color: var(--ink); line-height: 1.3; }
+  .cvt-creative .cr-date { font-size: 11px; font-weight: 700; color: var(--pink); white-space: nowrap; }
+  .cvt-creative .cr-co { margin-top: 1px; font-size: 12px; font-weight: 700; color: var(--violet); }
+  .cvt-creative .cr-bullets { margin-top: 7px; }
+  .cvt-creative .cr-bullets li { position: relative; padding-left: 14px; margin-bottom: 5px; line-height: 1.6; }
+  .cvt-creative .cr-bullets li::before { content: "›"; position: absolute; left: 0; top: -1px; font-weight: 800; color: var(--pink); }
+  .cvt-creative .cr-proj { margin-bottom: 10px; padding: 12px 16px; border-radius: 14px; background: var(--soft); }
+  .cvt-creative .cr-proj-t { font-size: 13.5px; font-weight: 800; color: var(--ink); }
+  .cvt-creative .cr-proj-d { margin: 3px 0 8px; line-height: 1.6; }
+  .cvt-creative .cvt-mark { color: var(--muted); padding-left: var(--side-w); }
+</style>
+{% if pdf_mode %}<style>html { background: linear-gradient(90deg, #f7f2ff 0 256px, #fff 256px); }</style>{% endif %}
+
+<div class="cvt cvt-creative">
+  <header class="cr-head">
+    {% if cv_data.photo_url %}<img class="cr-photo" src="{{ cv_data.photo_url }}" alt="">{% else %}<div class="cr-mono">{{ cv_data.full_name|slice:":1"|upper }}</div>{% endif %}
+    <div class="cr-id">
+      <div class="cr-name">{{ cv_data.full_name }}</div>
+      <div class="cr-title">{{ cv_data.job_title }}</div>
+      <div class="cr-contacts">
+        {% for item in cv_data.contact_items %}<span>{% include "cv/partials/_icon.html" with name=item.label size=11 %}{{ item.value }}</span>{% endfor %}
+        {% for item in cv_data.profile_links %}<span>{% include "cv/partials/_icon.html" with name=item.label size=11 %}{{ item.value }}</span>{% endfor %}
+      </div>
+    </div>
+  </header>
+
+  <aside class="cr-side cvt-col">
+    {% if cv_data.skills %}
+    <section class="cr-sec">
+      <div class="cr-sh cvt-keep">{{ cv_data.labels.skills }}</div>
+      <div class="cr-chips">{% for s in cv_data.skills %}<span class="cr-chip">{{ s }}</span>{% endfor %}</div>
+    </section>
+    {% endif %}
+    {% if cv_data.languages %}
+    <section class="cr-sec">
+      <div class="cr-sh cvt-keep">{{ cv_data.labels.languages }}</div>
+      <ul class="cr-lang">{% for l in cv_data.languages %}<li>{{ l }}</li>{% endfor %}</ul>
+    </section>
+    {% endif %}
+    {% if cv_data.education %}
+    <section class="cr-sec">
+      <div class="cr-sh cvt-keep">{{ cv_data.labels.education }}</div>
+      {% for edu in cv_data.education %}
+      <div class="cr-edu cvt-avoid"><b>{{ edu.institution }}</b>{% if edu.degree %}<span>{{ edu.degree }}</span>{% endif %}{% if edu.year %}<span>{{ edu.year }}</span>{% endif %}</div>
+      {% endfor %}
+    </section>
+    {% endif %}
+  </aside>
+
+  <main class="cr-main cvt-col">
+    {% if cv_data.summary %}
+    <section class="cr-sec">
+      <div class="cr-sh cvt-keep">{{ cv_data.labels.profile_summary }}</div>
+      <p class="cr-summary">{{ cv_data.summary }}</p>
+    </section>
+    {% endif %}
+    {% if cv_data.experience %}
+    <section class="cr-sec">
+      <div class="cr-sh cvt-keep">{{ cv_data.labels.experience }}</div>
+      {% for exp in cv_data.experience %}
+      <div class="cr-job cvt-avoid">
+        <div class="cr-job-top"><div class="cr-pos">{{ exp.position|default:cv_data.labels.position }}</div>{% if exp.duration %}<span class="cr-date">{{ exp.duration }}</span>{% endif %}</div>
+        {% if exp.company %}<div class="cr-co">{{ exp.company }}</div>{% endif %}
+        {% if exp.responsibilities %}<ul class="cr-bullets">{% for r in exp.responsibilities %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+    {% if cv_data.projects %}
+    <section class="cr-sec">
+      <div class="cr-sh cvt-keep">{{ cv_data.labels.projects }}</div>
+      {% for p in cv_data.projects %}
+      <div class="cr-proj cvt-avoid">
+        <div class="cr-proj-t">{{ p.title|default:cv_data.labels.project }}</div>
+        {% if p.description %}<p class="cr-proj-d">{{ p.description }}</p>{% endif %}
+        {% if p.technologies %}<div class="cr-chips">{% for t in p.technologies %}<span class="cr-chip">{{ t }}</span>{% endfor %}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+  </main>
+
+  {% if show_watermark %}<div class="cvt-mark">mycv.uz orqali yaratildi</div>{% elif company_branding %}<div class="cvt-mark">{{ company_branding.get_footer_display }}</div>{% endif %}
+</div>

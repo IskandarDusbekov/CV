@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Kompaniya brendingi — mycv.uz{% endblock %}
+
+{% block extra_style %}
+.narrow { max-width: 640px; margin: 0 auto; padding: 32px 16px 0; }
+.narrow h1 { margin: 8px 0 6px; font-size: 32px; font-weight: 800; letter-spacing: -.03em; }
+.narrow > p { color: var(--muted); margin-bottom: 22px; }
+.form-card { padding: 28px; }
+.footer-preview { margin-bottom: 22px; padding: 16px; border-radius: 14px; background: var(--bg); text-align: center; }
+.footer-preview div { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.footer-preview small { display: block; margin-top: 4px; font-size: 12px; color: var(--muted-2); }
+.logo-preview { height: 36px; margin-top: 8px; border-radius: 6px; }
+{% endblock %}
+
+{% block content %}
+<div class="narrow">
+  <a href="/users/dashboard/" class="btn btn-ghost btn-sm" style="padding-left:0;">← Kabinet</a>
+  <h1>Kompaniya brendingi</h1>
+  <p>Pro tarifda CV pastida mycv.uz o'rniga kompaniyangiz nomi chiqadi — HR agentliklar uchun.</p>
+
+  <div class="card form-card">
+    <div class="footer-preview">
+      <div id="preview-text">{% if branding.name %}{{ branding.get_footer_display }}{% else %}Kompaniya nomi · Tavsif{% endif %}</div>
+      <small>CV pastida shunday ko'rinadi</small>
+    </div>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="field"><label>Kompaniya nomi *</label><input type="text" name="name" value="{{ branding.name }}" placeholder="HR Solutions Uzbekistan" required oninput="updatePreview()"></div>
+      <div class="field"><label>Qisqa tavsif</label><input type="text" name="tagline" value="{{ branding.tagline }}" placeholder="Professional recruiting agency" oninput="updatePreview()"></div>
+      <div class="field"><label>Veb-sayt</label><input type="url" name="website" value="{{ branding.website }}" placeholder="https://hrcompany.uz"></div>
+      <div class="field"><label>Maxsus footer matn</label><input type="text" name="footer_text" value="{{ branding.footer_text }}" placeholder="Ixtiyoriy"><span class="help">Bo'sh qoldirsangiz nom va tavsifdan avtomatik yig'iladi.</span></div>
+      <div class="field"><label>Logo</label><input type="file" name="logo" accept="image/*">{% if branding.logo %}<img src="{{ branding.logo.url }}" alt="Logo" class="logo-preview">{% endif %}</div>
+      <div style="display:flex;gap:10px;"><button type="submit" class="btn btn-dark">Saqlash</button><a href="/users/dashboard/" class="btn btn-light">Bekor qilish</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updatePreview() {
+  var parts = ['name', 'tagline'].map(function (n) { return document.querySelector('[name="' + n + '"]').value.trim(); }).filter(Boolean);
+  document.getElementById('preview-text').textContent = parts.join('  ·  ') || 'Kompaniya nomi · Tavsif';
+}
+</script>
+{% endblock %}

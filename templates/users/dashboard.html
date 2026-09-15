@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load mycv %}
+{% block title %}Kabinet — mycv.uz{% endblock %}
+
+{% block extra_style %}
+.dash { padding: 32px 0 0; }
+.dash-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+.dash-top h1 { margin-top: 10px; font-size: 38px; line-height: 1; font-weight: 800; letter-spacing: -.04em; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+.stat { padding: 18px 20px; background: #fff; border: 1px solid var(--line); border-radius: 18px; }
+.stat small { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.stat b { display: block; margin-top: 4px; font-size: 26px; font-weight: 800; letter-spacing: -.03em; }
+.stat span { font-size: 13px; color: var(--muted-2); }
+.stat.dark { background: var(--ink); color: #fff; border-color: var(--ink); }
+.stat.dark small, .stat.dark span { color: #a1a3ab; }
+.dash-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
+.sec-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.sec-h h2 { font-size: 18px; font-weight: 800; }
+.cv-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+.cv-item { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; transition: box-shadow .2s, transform .2s; }
+.cv-item:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+.cv-item .paper-thumb { aspect-ratio: 794 / 620; border-bottom: 1px solid var(--line); }
+.cv-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.cv-body h3 { font-size: 15px; font-weight: 800; line-height: 1.25; }
+.cv-body p { font-size: 13px; color: var(--muted); }
+.cv-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.cv-actions { display: flex; gap: 6px; margin-top: auto; }
+.cv-actions .btn { flex: 1; }
+.new-cv { display: grid; place-items: center; min-height: 280px; border: 1.5px dashed var(--line-2); border-radius: 18px; color: var(--muted); font-weight: 700; text-align: center; }
+.new-cv:hover { border-color: var(--ink); color: var(--ink); }
+.new-cv i { display: grid; place-items: center; width: 44px; height: 44px; margin: 0 auto 10px; border-radius: 12px; background: var(--ink); color: var(--lime); font-style: normal; font-size: 22px; }
+.aside { display: grid; gap: 14px; }
+.box { padding: 20px; background: #fff; border: 1px solid var(--line); border-radius: 18px; }
+.box h3 { font-size: 15px; font-weight: 800; margin-bottom: 10px; }
+.me { display: flex; align-items: center; gap: 12px; }
+.me-av { width: 46px; height: 46px; border-radius: 14px; background: var(--ink); color: var(--lime); display: grid; place-items: center; font-weight: 800; font-size: 18px; }
+.me b { display: block; font-size: 15px; } .me span { font-size: 13px; color: var(--muted); }
+.txn { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
+.txn:first-of-type { border-top: 0; }
+.txn small { display: block; color: var(--muted-2); font-size: 12px; }
+.pro-box { padding: 20px; border-radius: 18px; background: var(--ink); color: #fff; }
+.pro-box h3 { font-size: 17px; font-weight: 800; }
+.pro-box p { margin: 6px 0 14px; font-size: 13.5px; color: #a1a3ab; }
+@media (max-width: 960px) { .dash-grid { grid-template-columns: 1fr; } .stats { grid-template-columns: 1fr 1fr; } }
+{% endblock %}
+
+{% block content %}
+<div class="dash">
+  <div class="wrap">
+    <div class="dash-top">
+      <div>
+        <span class="eyebrow">Kabinet</span>
+        <h1>Salom, {{ request.user.first_name|default:"do'st" }} 👋</h1>
+      </div>
+      <a href="/cv/builder/" class="btn btn-dark">+ Yangi CV</a>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><small>CV yaratish</small><b>{{ quota.remaining }} <span style="font-size:15px;">/ {{ quota.limit }}</span></b><span>{% if quota.tier == "pro" %}Pro davrida qoldi{% else %}bepul qoldi{% endif %}</span></div>
+      <div class="stat"><small>Kreditlar</small><b>{{ profile.credits }}</b><span>ochilgan CV: {{ unlocked_count }} · <a href="/users/payments/" style="text-decoration:underline;">sotib olish</a></span></div>
+      <div class="stat {% if is_pro %}dark{% endif %}"><small>Tarif</small><b>{% if is_pro %}Pro{% else %}Bepul{% endif %}</b><span>{% if is_pro and profile.premium_until %}{{ profile.premium_until|date:"d.m.Y" }} gacha{% elif is_pro %}faol{% else %}obunasiz{% endif %}</span></div>
+    </div>
+
+    <div class="dash-grid">
+      <section>
+        <div class="sec-h"><h2>Mening CV'larim</h2></div>
+        <div class="cv-list">
+          {% for item in items %}
+          {% with cv=item.cv %}
+          <article class="cv-item">
+            <a href="/cv/preview/{{ cv.public_id }}/" class="paper-thumb" aria-label="Ochish">
+              <div class="paper-scaler">{% include item.template_partial with cv_data=item.cv_data show_watermark=False company_branding=None %}</div>
+            </a>
+            <div class="cv-body">
+              <div>
+                <h3>{{ item.cv_data.full_name }}</h3>
+                <p>{{ item.cv_data.job_title }}</p>
+              </div>
+              <div class="cv-tags">
+                <span class="badge badge-muted">{{ item.template_label }}</span>
+                {% if cv.is_tailored %}<span class="badge badge-accent">🎯 {{ cv.tailor_report.vacancy_title|default:"Vakansiya"|truncatechars:22 }}</span>{% endif %}
+                {% if item.unlocked or is_pro %}<span class="badge badge-free">✓ Ochiq</span>{% endif %}
+                <span class="badge badge-muted">{{ cv.created_at|date:"d.m.Y" }}</span>
+              </div>
+              <div class="cv-actions">
+                <a href="/cv/preview/{{ cv.public_id }}/" class="btn btn-light btn-sm">Ochish</a>
+                {% if item.unlocked or is_pro %}<a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark btn-sm">PDF</a><a href="/cv/download/{{ cv.public_id }}/docx/" class="btn btn-dark btn-sm">Word</a>{% endif %}
+              </div>
+            </div>
+          </article>
+          {% endwith %}
+          {% endfor %}
+          <a href="/cv/builder/" class="new-cv"><div><i>+</i>Yangi CV yaratish<br><span style="font-weight:500;font-size:13px;">~1 daqiqa</span></div></a>
+        </div>
+      </section>
+
+      <aside class="aside">
+        <div class="box">
+          <div class="me">
+            <div class="me-av">{{ request.user.first_name|default:request.user.username|first|upper }}</div>
+            <div><b>{{ request.user.get_full_name|default:request.user.username }}</b><span>{{ profile.phone|default:"" }}{% if profile.telegram_username %} · @{{ profile.telegram_username }}{% endif %}</span></div>
+          </div>
+        </div>
+
+        {% if is_pro %}
+        <div class="box"><h3>Kompaniya brendingi</h3><p class="help" style="margin:0 0 12px;">CV pastida kompaniyangiz nomi.</p><a href="/users/branding/" class="btn btn-light btn-sm btn-block">Sozlash</a></div>
+        {% elif pro_plan %}
+        <div class="pro-box">
+          <h3>Ko'p CV kerakmi?</h3>
+          <p>Pro: {{ pro_plan.duration_days }} kunda {{ pro_plan.max_cvs }} ta CV, {{ pro_plan.max_tailorings }} ta moslashtirish, hammasi PDF + Word — {{ pro_plan.price|money }} so'm.</p>
+          <a href="/pricing/" class="btn btn-accent btn-sm btn-block">Pro haqida</a>
+        </div>
+        {% endif %}
+
+        <div class="box">
+          <h3>To'lovlar</h3>
+          {% for req in payment_requests %}
+          <div class="txn">
+            <div>{{ req.plan.name }}<small>#{{ req.pk }} · {{ req.created_at|date:"d.m.Y H:i" }}</small></div>
+            <div style="text-align:right;"><b>{{ req.amount|money }}</b><small>{{ req.get_status_display }}</small></div>
+          </div>
+          {% empty %}
+          <p class="help" style="margin:0;">Hozircha to'lovlar yo'q.</p>
+          {% endfor %}
+          <a href="/users/payments/" class="btn btn-light btn-sm btn-block" style="margin-top:12px;">💳 Kredit sotib olish</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+{% endblock %}

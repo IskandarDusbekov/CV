@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ page.title }} — {{ site.site_name }}{% endblock %}
+
+{% block extra_style %}
+.pg { max-width: 760px; margin: 0 auto; padding: 56px 16px 0; }
+.pg h1 { margin-top: 12px; font-size: clamp(34px, 5vw, 56px); line-height: 1.02; font-weight: 800; letter-spacing: -.04em; }
+.pg .sub { margin-top: 12px; font-size: 19px; color: var(--muted); }
+.pg .body { margin-top: 32px; font-size: 17px; line-height: 1.8; color: var(--ink-2); }
+.pg .body p { margin-bottom: 18px; }
+.pg-cta { margin-top: 36px; padding: 26px; border-radius: 22px; background: var(--ink); color: #fff; display: flex; justify-content: space-between; gap: 16px; align-items: center; flex-wrap: wrap; }
+.pg-cta b { font-size: 20px; }
+{% endblock %}
+
+{% block content %}
+<article class="pg">
+  <span class="eyebrow">{{ site.site_name }}</span>
+  <h1>{{ page.title }}</h1>
+  {% if page.subtitle %}<p class="sub">{{ page.subtitle }}</p>{% endif %}
+  <div class="body">{{ page.body|linebreaks }}</div>
+  <div class="pg-cta">
+    <b>Birinchi CV'ingizni hoziroq yarating</b>
+    <div style="display:flex;gap:8px;"><a href="/cv/namuna/" class="btn btn-accent">Bepul boshlash</a><a href="/aloqa/" class="btn" style="background:rgba(255,255,255,.12);color:#fff;">Aloqa</a></div>
+  </div>
+</article>
+{% endblock %}
