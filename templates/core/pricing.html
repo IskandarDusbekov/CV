@@ -13,11 +13,11 @@
 .compare thead th { font-size: 15px; font-weight: 800; background: var(--bg); }
 .compare tr:last-child td { border-bottom: 0; }
 .yes { color: var(--green); font-weight: 800; } .no { color: var(--muted-2); }
-.why { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px; }
+.why { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 48px; }
 .why div { padding: 24px; border-radius: var(--radius-lg); background: var(--bg-2); }
 .why h3 { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
 .why p { color: var(--muted); font-size: 14.5px; }
-@media (max-width: 860px) { .why { grid-template-columns: 1fr; } }
+@media (max-width: 860px) { .why { grid-template-columns: minmax(0, 1fr); } }
 {% endblock %}
 
 {% block content %}

@@ -42,7 +42,7 @@ textarea.free:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff
 .chip.ok::before { content: "✓ "; }
 .go { margin-top: 16px; width: 100%; min-height: 58px; font-size: 17px; border-radius: 16px; }
 
-.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.opts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
 .opt label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; }
 .seg { display: flex; padding: 4px; gap: 4px; border-radius: 12px; background: var(--bg); }
 .seg button { flex: 1; min-height: 36px; border: 0; border-radius: 9px; background: transparent; font: inherit; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; }
@@ -70,7 +70,7 @@ textarea.free:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff
   .b-sub { font-size: 15px; margin-bottom: 14px; }
   .box { padding: 16px; border-radius: 20px; }
   .q h2 { font-size: 20px; }
-  .opts { grid-template-columns: 1fr; }
+  .opts { grid-template-columns: minmax(0, 1fr); }
   textarea.free { min-height: 220px; font-size: 16px; }
   .q input.big, .q textarea.big { font-size: 16px; }
 }

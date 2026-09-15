@@ -15,7 +15,7 @@
 .form { padding: 28px; }
 .form textarea { min-height: 150px; resize: vertical; }
 .hp { position: absolute; left: -9999px; }
-@media (max-width: 860px) { .ct-grid { grid-template-columns: 1fr; } }
+@media (max-width: 860px) { .ct-grid { grid-template-columns: minmax(0, 1fr); } }
 {% endblock %}
 
 {% block content %}

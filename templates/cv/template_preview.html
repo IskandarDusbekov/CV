@@ -14,7 +14,7 @@
 .tp-stage { padding: 28px; border-radius: 24px; background: var(--bg-2); }
 .tp-stage .paper-fit { max-width: 794px; margin: 0 auto; }
 .tp-stage .paper-scaler { box-shadow: var(--shadow-lg); }
-@media (max-width: 900px) { .tp-grid { grid-template-columns: 1fr; } .tp-side { position: static; } .tp-list { display: flex; overflow-x: auto; } .tp-list a { white-space: nowrap; } .tp-stage { padding: 10px; } }
+@media (max-width: 900px) { .tp-grid { grid-template-columns: minmax(0, 1fr); } .tp-side { position: static; } .tp-list { display: flex; overflow-x: auto; } .tp-list a { white-space: nowrap; } .tp-stage { padding: 10px; } }
 {% endblock %}
 
 {% block content %}

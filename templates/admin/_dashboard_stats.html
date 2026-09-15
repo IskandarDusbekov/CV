@@ -20,7 +20,7 @@
   .mc-list li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
   .mc-list li:last-child { border-bottom: 0; }
   .mc-list small { color: #9ca3af; white-space: nowrap; }
-  @media (max-width: 900px) { .mc-row { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) { .mc-row { grid-template-columns: minmax(0, 1fr); } }
 </style>
 
 <div class="mc-grid">

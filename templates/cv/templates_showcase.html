@@ -8,7 +8,7 @@
 .filters { display: flex; gap: 6px; margin-top: 24px; }
 .filters button { min-height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
 .filters button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
-.sc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px 22px; }
+.sc-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 22px; }
 .sc-card .frame { position: relative; display: block; padding: 18px 18px 0; border-radius: 20px; background: var(--bg-2); overflow: hidden; }
 .sc-card .paper-thumb { aspect-ratio: 794 / 900; border-radius: 8px 8px 0 0; box-shadow: var(--shadow); transition: transform .3s; }
 .sc-card:hover .paper-thumb { transform: translateY(-8px); }
@@ -17,8 +17,8 @@
 .sc-info { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-top: 14px; }
 .sc-info h3 { font-size: 17px; font-weight: 800; }
 .sc-info p { font-size: 13.5px; color: var(--muted); }
-@media (max-width: 960px) { .sc-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 600px) { .sc-grid { grid-template-columns: 1fr; } .sc-card .hover { opacity: 1; } }
+@media (max-width: 960px) { .sc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .sc-grid { grid-template-columns: minmax(0, 1fr); } .sc-card .hover { opacity: 1; } }
 {% endblock %}
 
 {% block content %}

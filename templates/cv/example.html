@@ -15,6 +15,7 @@
 .tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
 .tabs button em { font-style: normal; font-size: 10px; margin-left: 4px; color: var(--green); }
 .tabs button.on em { color: var(--lime); }
+.ex-grid > *, .rail > * { min-width: 0; }
 .rail { position: sticky; top: 84px; display: grid; gap: 14px; }
 .card-in { padding: 22px; }
 .from { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-2); }
@@ -30,7 +31,7 @@
 .steps3 { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .steps3 li { display: flex; gap: 10px; align-items: center; font-size: 14px; font-weight: 600; }
 .steps3 li span { width: 24px; height: 24px; flex-shrink: 0; border-radius: 8px; display: grid; place-items: center; background: var(--bg); font-size: 12px; font-weight: 800; }
-@media (max-width: 1000px) { .ex-grid { grid-template-columns: 1fr; } .rail { position: static; } .stage { padding: 10px; } }
+@media (max-width: 1000px) { .ex-grid { grid-template-columns: minmax(0, 1fr); } .rail { position: static; } .stage { padding: 10px; } }
 {% endblock %}
 
 {% block content %}

@@ -3,7 +3,7 @@
 
 {% block extra_style %}
 .auth { min-height: calc(100vh - 68px); display: grid; place-items: center; padding: 40px 16px 60px; }
-.auth-card { width: 100%; max-width: 920px; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: 26px; box-shadow: var(--shadow); }
+.auth-card { width: 100%; max-width: 920px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: 26px; box-shadow: var(--shadow); }
 .auth-main { padding: 44px 40px; }
 .auth-main h1 { margin: 14px 0 10px; font-size: 36px; line-height: 1.05; font-weight: 800; letter-spacing: -.035em; }
 .auth-main > p { color: var(--muted); }
@@ -27,7 +27,7 @@
 .dev summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--muted); }
 .dev form { display: flex; gap: 8px; margin-top: 10px; }
 @media (max-width: 800px) {
-  .auth-card { grid-template-columns: 1fr; }
+  .auth-card { grid-template-columns: minmax(0, 1fr); }
   .auth-side { display: none; }
   .auth-main { padding: 32px 22px; }
 }
