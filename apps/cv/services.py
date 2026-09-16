@@ -115,8 +115,55 @@ TEMPLATE_META = {
         "ats": False,
         "tagline": "Iliq krem ranglar va nafis serif sarlavhalar",
     },
+    "simple": {
+        "label": "Oddiy",
+        "ats": True,
+        "tagline": "Tushunarli va tartibli — sotuv, xizmat va ishchi kasblar uchun",
+    },
+    "teal": {
+        "label": "Yashil panel",
+        "ats": False,
+        "tagline": "Yashil yon panel va ko'nikma chiziqlari, zamonaviy ko'rinish",
+    },
+    "bold": {
+        "label": "Yorqin",
+        "ats": False,
+        "tagline": "To'q ko'k sarlavha va apelsin aksent — esda qoladigan dizayn",
+    },
 }
 SUPPORTED_TEMPLATES = set(TEMPLATE_META)
+
+# Panelda o'zgartirilmagan bo'lsa shu shablonlar Pro hisoblanadi
+DEFAULT_PRO_TEMPLATES = {"modern", "executive", "creative", "dark", "elegant", "teal", "bold"}
+
+
+def template_settings():
+    """Paneldagi «Shablonlar» sozlamalari (Bepul/Pro, tartib, ko'rinish) — 60 soniya keshda."""
+    from django.core.cache import cache
+
+    data = cache.get("template_settings")
+    if data is None:
+        try:
+            from .models import TemplateSetting
+
+            data = {t.code: (t.is_pro, t.is_active, t.sort_order) for t in TemplateSetting.objects.all()}
+        except Exception:  # migratsiyadan oldin
+            data = {}
+        cache.set("template_settings", data, 60)
+    return data
+
+
+def template_is_pro(code):
+    code = resolve_template_name(code)
+    setting = template_settings().get(code)
+    return setting[0] if setting else code in DEFAULT_PRO_TEMPLATES
+
+
+def ordered_templates(include_hidden=False):
+    settings_map = template_settings()
+    order = list(TEMPLATE_META)
+    codes = [c for c in order if include_hidden or settings_map.get(c, (None, True, 0))[1]]
+    return sorted(codes, key=lambda c: (settings_map.get(c, (None, True, order.index(c)))[2], order.index(c)))
 
 
 def _clean_text(value):
@@ -313,12 +360,63 @@ def cv_is_unlocked(cv, user):
     return user_has_pro(user)
 
 
+PDF_FULL = "full"                  # kredit yoki Pro bilan ochilgan
+PDF_FREE = "free"                  # bepul PDF shu rezyumega ishlatilgan
+PDF_FREE_AVAILABLE = "free_available"
+PDF_PRO_TEMPLATE = "pro_template"  # Pro shablon — bepul PDF unga tegishli emas
+PDF_NO_FREE = "no_free"            # bepul PDF boshqa rezyumega ishlatilgan
+PDF_LOGIN = "login"
+
+
+def free_pdf_left(user):
+    if not getattr(user, "is_authenticated", False):
+        return 0
+    from apps.core.models import SiteSettings
+
+    profile = getattr(user, "profile", None)
+    return max(0, SiteSettings.load().free_pdf_downloads - (profile.free_pdf_used if profile else 0))
+
+
+def pdf_access(user, cv):
+    if not getattr(user, "is_authenticated", False):
+        return PDF_LOGIN
+    if cv_is_unlocked(cv, user) or getattr(user, "is_staff", False):  # adminlar tekshirish uchun hammasini yuklaydi
+        return PDF_FULL
+    if template_is_pro(getattr(cv, "selected_template", "")):
+        return PDF_PRO_TEMPLATE
+    if getattr(cv, "free_pdf", False):
+        return PDF_FREE
+    return PDF_FREE_AVAILABLE if free_pdf_left(user) > 0 else PDF_NO_FREE
+
+
 def user_can_download_pdf(user, cv):
-    return getattr(user, "is_authenticated", False) and cv_is_unlocked(cv, user)
+    return pdf_access(user, cv) in (PDF_FULL, PDF_FREE)
+
+
+def claim_pdf_access(user, cv):
+    """PDF yuklashga ruxsat. Kerak bo'lsa foydalanuvchining bepul PDF'ini shu rezyumega ishlatadi (atomar)."""
+    from django.db.models import F
+
+    from apps.core.models import SiteSettings
+    from apps.users.models import UserProfile
+
+    state = pdf_access(user, cv)
+    if state in (PDF_FULL, PDF_FREE):
+        return True
+    if state != PDF_FREE_AVAILABLE:
+        return False
+    limit = SiteSettings.load().free_pdf_downloads
+    claimed = UserProfile.objects.filter(user=user, free_pdf_used__lt=limit).update(free_pdf_used=F("free_pdf_used") + 1)
+    if not claimed:
+        return False
+    cv.free_pdf = True
+    cv.save(update_fields=["free_pdf", "updated_at"])
+    user.profile.free_pdf_used += 1
+    return True
 
 
 def user_can_download_docx(user, cv):
-    return getattr(user, "is_authenticated", False) and cv_is_unlocked(cv, user)
+    return getattr(user, "is_authenticated", False) and (cv_is_unlocked(cv, user) or getattr(user, "is_staff", False))
 
 
 def user_can_share_cv(user, cv=None):
@@ -326,15 +424,19 @@ def user_can_share_cv(user, cv=None):
 
 
 def template_choices(selected_template=None):
+    codes = ordered_templates()
+    if selected_template in TEMPLATE_META and selected_template not in codes:
+        codes.append(selected_template)
     return [
         {
             "code": code,
-            "label": meta["label"],
-            "tagline": meta["tagline"],
-            "ats": meta["ats"],
+            "label": TEMPLATE_META[code]["label"],
+            "tagline": TEMPLATE_META[code]["tagline"],
+            "ats": TEMPLATE_META[code]["ats"],
+            "pro": template_is_pro(code),
             "selected": code == selected_template,
         }
-        for code, meta in TEMPLATE_META.items()
+        for code in codes
     ]
 
 
@@ -348,14 +450,20 @@ def build_cv_context(cv, user=None):
         except Exception:
             normalized["photo_url"] = ""
 
+    from apps.core.models import SiteSettings
+
     unlocked = cv_is_unlocked(cv, user)
     is_pro = user_has_pro(user)
+    free_pdf = bool(getattr(cv, "free_pdf", False))
     return {
         "cv": cv,
         "cv_data": normalized,
         "is_pro": is_pro,
         "is_unlocked": unlocked,
-        "show_watermark": not unlocked,
+        "show_watermark": not unlocked and (SiteSettings.load().free_pdf_watermark or not free_pdf),
+        "pdf_access": pdf_access(user, cv),
+        "free_pdf_left": free_pdf_left(user),
+        "template_is_pro": template_is_pro(template_key),
         "company_branding": None,
         "template_key": template_key,
         "template_partial": f"cv/partials/cv_template_{template_key}.html",

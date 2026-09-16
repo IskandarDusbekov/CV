@@ -99,6 +99,18 @@
     </div>
   </div>
   <div class="fs">
+    <h3>🎁 Bepul qism va do'st taklifi</h3>
+    <div class="fs-grid">
+      {% include "panel/_field.html" with field=form.free_pdf_downloads %}
+      {% include "panel/_field.html" with field=form.free_pdf_watermark %}
+      {% include "panel/_field.html" with field=form.referral_enabled %}
+      {% include "panel/_field.html" with field=form.referral_inviter_credits %}
+      {% include "panel/_field.html" with field=form.referral_invitee_credits %}
+      {% include "panel/_field.html" with field=form.referral_daily_limit %}
+    </div>
+    <p class="muted small" style="margin-top:10px;">Shablonlarning Bepul/Pro holati — <a class="link" href="{% url 'panel:templates' %}">Shablonlar</a>, aksiyalar — <a class="link" href="{% url 'panel:promos' %}">Aksiyalar</a>, Google sozlamalari — <a class="link" href="{% url 'panel:seo' %}">SEO</a> bo'limida.</p>
+  </div>
+  <div class="fs">
     <h3>✨ AI</h3>
     <div class="fs-grid">
       {% include "panel/_field.html" with field=form.ai_model %}

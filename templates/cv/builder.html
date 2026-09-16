@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Rezyume yaratish — {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
+{% block title %}Rezyume yaratish onlayn — bepul, savol-javob bilan | {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
+{% block meta_description %}Oddiy savollarga javob bering — AI 1 daqiqada professional rezyume yozadi. Tajribasiz bo'lsangiz ham. O'zbek, rus va ingliz tillarida, PDF va Word.{% endblock %}
 
 {% block extra_style %}
 .b { max-width: 720px; margin: 0 auto; padding: 28px 16px 0; }
@@ -7,6 +8,12 @@
 .b-sub { margin: 8px 0 18px; font-size: 16px; color: var(--muted); }
 .box { padding: 22px; background: #fff; border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow-sm); }
 
+.samples-strip { margin-bottom: 14px; padding: 14px 16px; border-radius: 18px; background: #fff; border: 1px dashed var(--line-2); }
+.ss-h { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; font-size: 14px; }
+.ss-h a { font-weight: 700; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.ss-row { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.ss-chip { flex-shrink: 0; padding: 8px 13px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); font-size: 13.5px; font-weight: 700; white-space: nowrap; }
+.ss-chip:hover { border-color: var(--ink); }
 .modes { display: flex; padding: 4px; gap: 4px; margin-bottom: 14px; border-radius: 14px; background: var(--bg-2, #ebe8e1); }
 .modes button { flex: 1; min-height: 42px; border: 0; border-radius: 11px; background: transparent; font: inherit; font-size: 14px; font-weight: 700; color: var(--muted); cursor: pointer; }
 .modes button.sel { background: #fff; color: var(--ink); box-shadow: var(--shadow-sm); }
@@ -82,8 +89,18 @@ textarea.free:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff
   <h1 style="margin-top:8px;">Rezyumeni <span class="serif">birga</span> tuzamiz</h1>
   <p class="b-sub">Oddiy savollarga javob bering — tartib, imlo va chiroyli jumlalarni AI o'zi qiladi.</p>
 
+  {% if samples %}
+  <div class="samples-strip">
+    <div class="ss-h"><b>⚡ Tezroq: tayyor namunadan boshlang</b><a href="/namunalar/">Hammasi →</a></div>
+    <div class="ss-row">
+      {% for s in samples %}<a href="{{ s.get_absolute_url }}" class="ss-chip">{{ s.profession }}</a>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   {% if quota.allowed %}
   {% csrf_token %}
+  <input type="hidden" id="initial-template" value="{{ initial_template }}">
   <div class="modes" role="tablist">
     <button type="button" class="sel" data-mode="wizard">🪄 Savol-javob</button>
     <button type="button" data-mode="free">✍️ O'zim yozaman</button>
@@ -437,6 +454,7 @@ textarea.free:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff
     body.append('text', text);
     body.append('target_job', targetJob);
     body.append('language', lang);
+    body.append('selected_template', document.getElementById('initial-template').value);
     body.append('enrich', document.getElementById('enrich-chk').checked ? '1' : '0');
     var photo = document.getElementById('photo-input').files[0];
     if (photo) body.append('photo', photo);

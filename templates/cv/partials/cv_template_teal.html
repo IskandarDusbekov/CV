@@ -1,0 +1,111 @@
+{% include "cv/partials/_paper_base.html" %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<style>
+  .cvt-teal { --side: #0f5257; --side-w: 262px; --ink: #16302f; --body: #3d4d4c; --muted: #6f7f7e; --accent: #14a38b; --line: #dfe9e7;
+    display: grid; grid-template-columns: var(--side-w) 1fr;
+    background: linear-gradient(90deg, var(--side) 0 var(--side-w), #fff var(--side-w));
+    font-family: "Nunito Sans", "Segoe UI", Arial, sans-serif; font-size: 12.8px; color: var(--body); }
+  .cvt-teal .te-side { padding: 42px 26px 48px 28px; color: #d6ebe8; }
+  .cvt-teal .te-photo { width: 150px; height: 150px; margin: 0 auto 20px; border-radius: 22px; object-fit: cover; border: 4px solid rgba(255,255,255,.18); }
+  .cvt-teal .te-mono { width: 96px; height: 96px; margin: 0 0 20px; border-radius: 24px; display: flex; align-items: center; justify-content: center;
+    background: var(--accent); color: #fff; font-size: 38px; font-weight: 800; }
+  .cvt-teal .te-sh { margin: 26px 0 10px; font-size: 11px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: #8fe0d2; }
+  .cvt-teal .te-contact li { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; }
+  .cvt-teal .te-contact svg { margin-top: 2px; color: #8fe0d2; }
+  .cvt-teal .te-skill { margin-bottom: 9px; font-size: 12px; }
+  .cvt-teal .te-bar { height: 4px; margin-top: 4px; border-radius: 4px; background: rgba(255,255,255,.14); overflow: hidden; }
+  .cvt-teal .te-bar i { display: block; height: 100%; width: 82%; border-radius: 4px; background: #8fe0d2; }
+  .cvt-teal .te-skill:nth-child(3n+2) .te-bar i { width: 70%; } .cvt-teal .te-skill:nth-child(3n) .te-bar i { width: 90%; }
+  .cvt-teal .te-list li { margin-bottom: 5px; font-size: 12px; }
+  .cvt-teal .te-edu { margin-bottom: 11px; }
+  .cvt-teal .te-edu b { display: block; color: #fff; font-size: 12.5px; }
+  .cvt-teal .te-edu span { display: block; font-size: 11.5px; color: #a9cfc9; }
+
+  .cvt-teal .te-main { padding: 46px 42px 56px 38px; }
+  .cvt-teal .te-name { font-size: 36px; font-weight: 800; line-height: 1.05; letter-spacing: -.02em; color: var(--ink); }
+  .cvt-teal .te-title { display: inline-block; margin-top: 10px; padding: 4px 12px; border-radius: 999px; background: #e3f5f1; color: #0d7d6b; font-size: 13px; font-weight: 700; }
+  .cvt-teal .te-summary { margin-top: 18px; font-size: 13.3px; line-height: 1.7; }
+  .cvt-teal .te-sec { margin-top: 26px; }
+  .cvt-teal .te-mh { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 15px; font-weight: 800; color: var(--ink); }
+  .cvt-teal .te-mh::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--accent); }
+  .cvt-teal .te-job { margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px dashed var(--line); }
+  .cvt-teal .te-job:last-child { border-bottom: 0; padding-bottom: 0; }
+  .cvt-teal .te-top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .cvt-teal .te-pos { font-size: 14.5px; font-weight: 800; color: var(--ink); }
+  .cvt-teal .te-date { font-size: 11.5px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .cvt-teal .te-co { margin-top: 1px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .cvt-teal .te-bullets { margin-top: 6px; }
+  .cvt-teal .te-bullets li { position: relative; padding-left: 16px; margin-bottom: 4px; line-height: 1.55; }
+  .cvt-teal .te-bullets li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 800; font-size: 11px; }
+  .cvt-teal .te-proj { margin-bottom: 12px; }
+  .cvt-teal .te-proj-t { font-weight: 800; color: var(--ink); }
+  .cvt-teal .te-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+  .cvt-teal .te-tag { padding: 2px 8px; border-radius: 6px; background: #eef7f5; color: #0d7d6b; font-size: 11px; font-weight: 700; }
+  .cvt-teal .cvt-mark { color: var(--muted); padding-left: var(--side-w); }
+</style>
+{% if pdf_mode %}<style>html { background: linear-gradient(90deg, #0f5257 0 262px, #fff 262px); }</style>{% endif %}
+
+<div class="cvt cvt-teal">
+  <aside class="te-side cvt-col">
+    {% if cv_data.photo_url %}<img class="te-photo" src="{{ cv_data.photo_url }}" alt="">{% else %}<div class="te-mono">{{ cv_data.full_name|first|upper }}</div>{% endif %}
+
+    {% if cv_data.contact_items or cv_data.profile_links %}
+    <div class="te-sh cvt-keep" style="margin-top:0;">{{ cv_data.labels.contact }}</div>
+    <ul class="te-contact">
+      {% for item in cv_data.contact_items %}<li>{% include "cv/partials/_icon.html" with name=item.label %}<span>{{ item.value }}</span></li>{% endfor %}
+      {% for item in cv_data.profile_links %}<li>{% include "cv/partials/_icon.html" with name=item.label %}<span>{{ item.value }}</span></li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if cv_data.skills %}
+    <div class="te-sh cvt-keep">{{ cv_data.labels.skills }}</div>
+    <div>{% for s in cv_data.skills %}<div class="te-skill cvt-avoid">{{ s }}<div class="te-bar"><i></i></div></div>{% endfor %}</div>
+    {% endif %}
+
+    {% if cv_data.languages %}
+    <div class="te-sh cvt-keep">{{ cv_data.labels.languages }}</div>
+    <ul class="te-list">{% for l in cv_data.languages %}<li>{{ l }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    {% if cv_data.education %}
+    <div class="te-sh cvt-keep">{{ cv_data.labels.education }}</div>
+    {% for edu in cv_data.education %}
+    <div class="te-edu cvt-avoid"><b>{{ edu.institution }}</b>{% if edu.degree %}<span>{{ edu.degree }}</span>{% endif %}{% if edu.year %}<span>{{ edu.year }}</span>{% endif %}</div>
+    {% endfor %}
+    {% endif %}
+  </aside>
+
+  <main class="te-main cvt-col">
+    <div class="te-name">{{ cv_data.full_name }}</div>
+    <div class="te-title">{{ cv_data.job_title }}</div>
+    {% if cv_data.summary %}<p class="te-summary">{{ cv_data.summary }}</p>{% endif %}
+
+    {% if cv_data.experience %}
+    <section class="te-sec">
+      <div class="te-mh cvt-keep">{{ cv_data.labels.experience }}</div>
+      {% for exp in cv_data.experience %}
+      <div class="te-job cvt-avoid">
+        <div class="te-top"><div class="te-pos">{{ exp.position|default:cv_data.labels.position }}</div>{% if exp.duration %}<div class="te-date">{{ exp.duration }}</div>{% endif %}</div>
+        {% if exp.company %}<div class="te-co">{{ exp.company }}</div>{% endif %}
+        {% if exp.responsibilities %}<ul class="te-bullets">{% for r in exp.responsibilities %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if cv_data.projects %}
+    <section class="te-sec">
+      <div class="te-mh cvt-keep">{{ cv_data.labels.projects }}</div>
+      {% for p in cv_data.projects %}
+      <div class="te-proj cvt-avoid">
+        <div class="te-proj-t">{{ p.title|default:cv_data.labels.project }}</div>
+        {% if p.description %}<div>{{ p.description }}</div>{% endif %}
+        {% if p.technologies %}<div class="te-tags">{% for t in p.technologies %}<span class="te-tag">{{ t }}</span>{% endfor %}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+  </main>
+
+  {% if show_watermark %}<div class="cvt-mark">{{ site.site_name|default:'tezrezyume.uz' }} orqali yaratildi</div>{% elif company_branding %}<div class="cvt-mark">{{ company_branding.get_footer_display }}</div>{% endif %}
+</div>

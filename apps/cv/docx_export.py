@@ -56,6 +56,12 @@ THEMES = {
     "elegant": Theme("sidebar", "Calibri", "Georgia", "2B2520", "6B6158", "8B6F4E", "E6DCCD",
                      side_bg="F3EDE3", side_text="2B2520", side_muted="6B6158", side_accent="8B6F4E",
                      uppercase_headings=False),
+    "simple": Theme("single_center", "Arial", "Arial", "1A1A1A", "6B6B6B", "2F5D8A", "CFCFCF", name_color="1A1A1A"),
+    "teal": Theme("sidebar", "Calibri", "Calibri", "16302F", "6F7F7E", "14A38B", "DFE9E7",
+                  side_bg="0F5257", side_text="FFFFFF", side_muted="A9CFC9", side_accent="8FE0D2"),
+    "bold": Theme("banner", "Calibri", "Calibri", "14213D", "737B8C", "F77F00", "E6E8EE",
+                  side_bg="FFF4E8", side_text="14213D", side_muted="737B8C", side_accent="F77F00",
+                  banner_bg="14213D"),
 }
 
 

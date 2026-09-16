@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Rezyume namunalari — {{ items|length }}+ kasb uchun tayyor, bepul | {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
+{% block meta_description %}Sotuvchi, kassir, operator, buxgalter, o'qituvchi, dasturchi, haydovchi va tajribasiz talabalar uchun tayyor rezyume namunalari. Ismingizni yozing — 2 daqiqada o'zingizniki tayyor.{% endblock %}
+
+{% block extra_style %}
+.sm-hero { padding: 48px 0 26px; }
+.sm-hero h1 { margin-top: 12px; font-size: clamp(32px, 5vw, 56px); line-height: 1.02; font-weight: 800; letter-spacing: -.045em; }
+.sm-hero p { max-width: 620px; margin-top: 12px; font-size: 17px; color: var(--muted); }
+.cats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 20px; }
+.cats button { min-height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.cats button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.sm-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px 18px; }
+.sm-card { display: block; }
+.sm-card .frame { display: block; padding: 14px 14px 0; border-radius: 18px; background: var(--bg-2); overflow: hidden; }
+.sm-card .paper-thumb { aspect-ratio: 794 / 900; border-radius: 8px 8px 0 0; box-shadow: var(--shadow); transition: transform .3s; }
+.sm-card:hover .paper-thumb { transform: translateY(-6px); }
+.sm-card h2 { margin-top: 12px; font-size: 16px; font-weight: 800; line-height: 1.25; }
+.sm-card p { font-size: 13px; color: var(--muted); }
+.how { margin-top: 56px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.how div { padding: 20px; border-radius: 18px; background: #fff; border: 1px solid var(--line); }
+.how b { display: block; margin-bottom: 4px; font-size: 16px; }
+.how span { color: var(--muted); font-size: 14.5px; }
+@media (max-width: 1000px) { .sm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 720px) { .sm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; } .how { grid-template-columns: minmax(0, 1fr); } .sm-card .frame { padding: 10px 10px 0; } }
+{% endblock %}
+
+{% block content %}
+<section class="sm-hero">
+  <div class="wrap">
+    <span class="eyebrow">Tayyor namunalar</span>
+    <h1>Rezyume namunalari — <span class="serif">kasbingizni</span> tanlang</h1>
+    <p>Har bir namuna tajribali HR maslahati bilan yozilgan. Namunani oching, ismingiz va ish joylaringizni yozing — rezyume tayyor. AI kerak emas, bepul.</p>
+    {% if categories %}
+    <div class="cats" id="cats">
+      <button class="on" data-c="">Barchasi · {{ items|length }}</button>
+      {% for c in categories %}<button data-c="{{ c }}">{{ c }}</button>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sm-grid">
+      {% for it in items %}
+      <a class="sm-card" href="{{ it.sample.get_absolute_url }}" data-c="{{ it.sample.category }}">
+        <div class="frame"><div class="paper-thumb"><div class="paper-scaler">{% include it.template_partial with cv_data=it.cv_data show_watermark=False company_branding=None %}</div></div></div>
+        <h2>{{ it.sample.profession }} rezyume namunasi</h2>
+        <p>{{ it.sample.category }}{% if it.sample.uses %} · {{ it.sample.uses }} marta ishlatilgan{% endif %}</p>
+      </a>
+      {% endfor %}
+    </div>
+
+    <div class="how">
+      <div><b>1. Namunani tanlang</b><span>Kasbingizga eng yaqinini oching.</span></div>
+      <div><b>2. Ma'lumotingizni yozing</b><span>Ism, telefon, ish joylari — keraksizini o'chiring.</span></div>
+      <div><b>3. PDF yuklab oling</b><span>Birinchi PDF bepul. Shablonni istalgan payt almashtirasiz.</span></div>
+    </div>
+    <p style="margin-top:22px;text-align:center;"><a href="/cv/builder/" class="btn btn-light btn-lg">Kasbim yo'qmi? AI bilan noldan yaratish →</a></p>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var box = document.getElementById('cats');
+  if (!box) return;
+  box.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    box.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    document.querySelectorAll('.sm-card').forEach(function (card) { card.hidden = b.dataset.c && card.dataset.c !== b.dataset.c; });
+  });
+})();
+</script>
+{% endblock %}

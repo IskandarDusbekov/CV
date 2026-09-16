@@ -54,6 +54,34 @@ class SiteSettings(models.Model):
     ai_price_output_per_1m = models.DecimalField("Chiqish narxi, $ / 1M token", max_digits=10, decimal_places=4, default=Decimal("1.60"))
     usd_to_uzs = models.PositiveIntegerField("1 $ = so'm (hisobotlar uchun)", default=12700)
 
+    # Bepul qism
+    free_pdf_downloads = models.PositiveIntegerField(
+        "Bepul PDF soni (har bir foydalanuvchiga)", default=1,
+        help_text="Yangi foydalanuvchi shuncha rezyumeni bepul shablonda PDF qilib oladi. Word — faqat paket yoki Pro.")
+    free_pdf_watermark = models.BooleanField("Bepul PDF pastida sayt nomi", default=True,
+                                             help_text="«tezrezyume.uz orqali yaratildi» — bepul reklama")
+
+    # Taklif (referral)
+    referral_enabled = models.BooleanField("Do'st taklif qilish yoqilgan", default=True)
+    referral_inviter_credits = models.PositiveIntegerField("Taklif qilganga kredit", default=1)
+    referral_invitee_credits = models.PositiveIntegerField("Taklif bilan kelganga kredit", default=0)
+    referral_daily_limit = models.PositiveIntegerField("Bir kishiga kuniga maksimal taklif bonusi", default=10,
+                                                       help_text="Soxta akkauntlar bilan suiiste'mol qilinmasligi uchun")
+
+    # SEO
+    seo_default_title = models.CharField(
+        "Standart sarlavha (title)", max_length=70, blank=True,
+        default="Rezyume yaratish onlayn — bepul, 1 daqiqada | tezrezyume.uz")
+    seo_default_description = models.CharField(
+        "Standart tavsif (description)", max_length=170, blank=True,
+        default="O'zingiz haqingizda oddiy yozing — AI 1 daqiqada professional rezyume tayyorlaydi. Tayyor namunalar, "
+                "12 ta shablon, PDF va Word. O'zbek, rus, ingliz tillarida.")
+    google_site_verification = models.CharField("Google Search Console kodi", max_length=120, blank=True,
+                                                help_text="Faqat content=\"...\" ichidagi qiymat")
+    yandex_verification = models.CharField("Yandex Webmaster kodi", max_length=120, blank=True)
+    google_analytics_id = models.CharField("Google Analytics ID", max_length=30, blank=True, help_text="Masalan: G-XXXXXXX")
+    yandex_metrika_id = models.CharField("Yandex Metrika ID", max_length=20, blank=True, help_text="Faqat raqam")
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -149,6 +177,7 @@ class ActivityLog(models.Model):
         ("logout", "Chiqdi"),
         ("cv_create", "CV yaratdi"),
         ("cv_tailor", "Vakansiyaga moslashtirdi"),
+        ("cv_edit", "Rezyumeni tahrirladi"),
         ("cv_unlock", "CV ni kredit bilan ochdi"),
         ("cv_template", "Shablon almashtirdi"),
         ("download_pdf", "PDF yuklab oldi"),
@@ -164,6 +193,8 @@ class ActivityLog(models.Model):
         ("staff_granted", "Panelga ruxsat berildi"),
         ("staff_removed", "Panel ruxsati olindi"),
         ("limit_reached", "Limitga yetdi"),
+        ("referral", "Do'st taklif qildi"),
+        ("promo_bonus", "Aksiya bonusi oldi"),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="activity_logs")
@@ -299,3 +330,38 @@ class PageView(models.Model):
         ordering = ("-created_at",)
         verbose_name = "Sahifa ko'rish"
         verbose_name_plural = "Sahifa ko'rishlar"
+
+
+class SeoPage(models.Model):
+    """Istalgan sahifaning title/description ini kod yozmasdan o'zgartirish."""
+
+    path = models.CharField("Manzil", max_length=300, unique=True, help_text="Masalan: /  yoki  /qollanma/  yoki  /namunalar/sotuvchi/")
+    title = models.CharField("Sarlavha (title)", max_length=70, blank=True, help_text="Google'da ko'k yozuv, ~60 belgigacha")
+    description = models.CharField("Tavsif (description)", max_length=170, blank=True, help_text="Google'dagi kulrang matn, ~155 belgigacha")
+    noindex = models.BooleanField("Google'da ko'rsatmaslik", default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("path",)
+        verbose_name = "SEO sahifa"
+        verbose_name_plural = "SEO sahifalar"
+
+    def __str__(self):
+        return self.path
+
+    def save(self, *args, **kwargs):
+        self.path = "/" + self.path.strip().strip("/") + "/" if self.path.strip("/ ") else "/"
+        super().save(*args, **kwargs)
+        cache.delete("seo_pages")
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        cache.delete("seo_pages")
+
+    @classmethod
+    def lookup(cls, path):
+        pages = cache.get("seo_pages")
+        if pages is None:
+            pages = {p.path: p for p in cls.objects.all()}
+            cache.set("seo_pages", pages, 300)
+        return pages.get(path)

@@ -191,6 +191,11 @@ def _finish_login(request, user):
     request.session.pop(_SESSION_TOKEN_KEY, None)
     request.session.pop(_SESSION_NEXT_KEY, None)
     messages.success(request, f"Xush kelibsiz, {user.first_name or user.username}!")
+
+    from .growth import on_signed_in
+
+    for note in on_signed_in(request, user):
+        messages.success(request, note)
     return next_url
 
 
@@ -223,7 +228,22 @@ def dashboard(request):
         "payment_requests": PaymentRequest.objects.filter(user=request.user).select_related("plan")[:6],
         "pro_plan": _plans(PricingPlan.SCOPE_ACCOUNT).first(),
         "quota": generate_quota(request),
+        **_referral_stats(request),
     })
+
+
+def _referral_stats(request):
+    from django.db.models import Sum
+
+    from apps.cv.views import _referral_context
+
+    from .models import Referral
+
+    ctx = _referral_context(request)
+    if ctx:
+        made = Referral.objects.filter(inviter=request.user)
+        ctx.update(referral_count=made.count(), referral_credits=made.aggregate(s=Sum("inviter_credits"))["s"] or 0)
+    return ctx
 
 
 # ─── PAYMENTS (Telegram bot orqali) ───────────────────────────────────────────

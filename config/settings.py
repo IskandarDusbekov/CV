@@ -103,6 +103,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "apps.core.activity.BlockAndPresenceMiddleware",
     "apps.core.analytics.VisitTrackingMiddleware",
+    "apps.users.growth.ReferralCaptureMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "apps.core.middleware.TelegramFrameMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",

@@ -1,0 +1,43 @@
+{% extends "panel/base.html" %}
+{% load panel_tags %}
+{% block title %}Takliflar{% endblock %}
+{% block heading %}🤝 Do'st takliflari{% endblock %}
+{% block subheading %}<p>Havola orqali kelib ro'yxatdan o'tganlar. Bonus: taklif qilganga +{{ site.referral_inviter_credits }}{% if site.referral_invitee_credits %}, kelganga +{{ site.referral_invitee_credits }}{% endif %} kredit{% if not site.referral_enabled %} · <b style="color:var(--red);">hozir o'chirilgan</b>{% endif %}</p>{% endblock %}
+{% block actions %}{% if request.user.is_superuser %}<a href="{% url 'panel:settings' %}#site" class="btn btn-light">⚙️ Sozlash</a>{% endif %}{% endblock %}
+
+{% block content %}
+<div class="grid g-3" style="margin-bottom:14px;">
+  <div class="card kpi"><small>Jami takliflar</small><b>{{ total }}</b><span>bugun +{{ today }}</span></div>
+  <div class="card kpi"><small>Berilgan kredit</small><b>{{ credits }}</b><span>taklif qilganlarga</span></div>
+  <div class="card kpi"><small>Kuniga limit</small><b>{{ site.referral_daily_limit }}</b><span>bir kishiga bonusli taklif</span></div>
+</div>
+
+<div class="grid g-main">
+  <div class="card">
+    <div class="card-h"><h2>So'nggi takliflar</h2></div>
+    <div class="table-wrap">
+      <table class="t">
+        <tr><th>Vaqt</th><th>Kim taklif qildi</th><th>Kim keldi</th><th>Qayerdan</th><th class="num">Kredit</th></tr>
+        {% for r in page %}
+        <tr>
+          <td class="nowrap small">{{ r.created_at|date:"d.m.Y H:i" }}</td>
+          <td><a class="link" href="{% url 'panel:user_detail' r.inviter_id %}">{{ r.inviter.get_full_name|default:r.inviter.username }}</a><br><span class="muted small">{{ r.inviter.profile.phone }}</span></td>
+          <td><a class="link" href="{% url 'panel:user_detail' r.invitee_id %}">{{ r.invitee.get_full_name|default:r.invitee.username }}</a><br><span class="muted small">{{ r.invitee.profile.phone }}</span></td>
+          <td class="small">{% if r.via == "bot" %}Telegram bot{% else %}Sayt{% endif %}</td>
+          <td class="num">+{{ r.inviter_credits }}{% if not r.inviter_credits %} <span class="muted small">(limit)</span>{% endif %}</td>
+        </tr>
+        {% empty %}<tr><td colspan="5" class="empty">Hali taklif yo'q. Foydalanuvchilar havolasini kabinet va rezyume sahifasida ko'radi.</td></tr>{% endfor %}
+      </table>
+    </div>
+    {% include "panel/_pager.html" %}
+  </div>
+
+  <div class="card" style="align-self:start;">
+    <div class="card-h"><h2>🏆 Eng faol taklifchilar</h2></div>
+    <ul class="list">
+      {% for t in top %}<li><a class="link" href="{% url 'panel:user_detail' t.inviter %}">{{ t.inviter__first_name|default:"—" }} {{ t.inviter__last_name }}</a><span><b>{{ t.n }}</b> <span class="muted small">· {{ t.credits|default:0 }} kr</span></span></li>{% empty %}<li class="muted">—</li>{% endfor %}
+    </ul>
+    <div class="fs"><p class="note">🛡 Himoya: bonus faqat havola orqali <b>yangi</b> ochilgan akkaunt uchun (2 soat ichida), bir odam faqat bir marta hisoblanadi, o'zini-o'zi taklif qilib bo'lmaydi, bir xil raqam hisobga olinmaydi, kuniga limit bor. Har bir akkaunt Telegram raqami bilan tasdiqlanadi.</p></div>
+  </div>
+</div>
+{% endblock %}

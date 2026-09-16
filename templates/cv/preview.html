@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load mycv %}
 {% block title %}{{ cv_data.full_name }} — Rezyume · {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
 
 {% block extra_style %}
 .pv { padding: 24px 0 0; }
@@ -97,6 +98,22 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
 .det-row { display: flex; gap: 8px; margin-top: 4px; }
 .det-row .btn { flex: 1; }
 .m-bar { display: none; }
+.tpl-strip { max-width: 794px; margin: 0 auto 14px; }
+.tpl-strip-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 14px; }
+.tpl-strip-h span { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.tpl-strip-h i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; }
+.lg-free { background: #16a34a; } .lg-pro { background: var(--ink); margin-left: 6px; }
+.strip { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x proximity; scrollbar-width: thin; }
+.st { position: relative; flex: 0 0 96px; padding: 0; border: 0; background: none; font: inherit; cursor: pointer; text-align: center; scroll-snap-align: start; }
+.st .paper-thumb { aspect-ratio: 794 / 1123; border-radius: 6px; outline: 1px solid var(--line); transition: transform .15s; }
+.st:hover .paper-thumb { transform: translateY(-2px); }
+.st.sel .paper-thumb { outline: 3px solid var(--accent); outline-offset: 2px; }
+.st em { position: absolute; top: 5px; right: 5px; padding: 1px 5px; border-radius: 4px; font-style: normal; font-size: 9px; font-weight: 800; }
+.st em.free { background: #16a34a; color: #fff; } .st em.pro { background: var(--ink); color: var(--lime); }
+.st span { display: block; margin-top: 5px; font-size: 11.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pro-note { padding: 10px 12px; border-radius: 12px; background: #fff7ed; border: 1px solid #fed7aa; font-size: 13px; line-height: 1.5; color: #9a3412; }
+.pro-note a { text-decoration: underline; font-weight: 700; }
+.invite { background: linear-gradient(135deg, #f0fdf4, #fff); border-color: #bbf7d0; }
 .tg-only { display: none !important; }
 .in-telegram .dl-btn.tg-only { display: flex !important; }
 .rail > * { scroll-margin-top: 84px; }
@@ -105,12 +122,13 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
   .pv { padding-top: 14px; }
   .pv-top { margin-bottom: 12px; gap: 10px; }
   .pv-top h1 { font-size: 21px; }
-  .pv-top .btn { display: none; }
+  .pv-top .btn:not(.keep-sm) { display: none; }
+  .st { flex-basis: 82px; }
   .pv-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   /* Telefonda: avval rezyume, keyin yo'l-yo'lakay — ma'lumot, moslashtirish, yuklab olish */
   .rail { position: static; }
   .r-details { order: 1; } .r-tailor { order: 2; } .r-templates { order: 3; } .r-download { order: 4; }
-  .r-unlock { order: 5; } .r-photo { order: 6; } .r-share { order: 7; }
+  .r-unlock { order: 5; } .r-invite { order: 6; } .r-photo { order: 7; } .r-share { order: 8; }
   .stage { padding: 10px; border-radius: 16px; }
   .locked-ribbon { display: none; }
   .switch-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
@@ -134,6 +152,7 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         {% if template_is_ats %}<span class="badge badge-free">ATS-friendly ✓</span>{% endif %}
         {% if is_unlocked %}<span class="badge badge-free">✓ Ochilgan</span>{% else %}<span class="badge badge-muted">🔒 Yuklab olish yopiq</span>{% endif %}
+        {% if not is_staff_view %}<a href="{% url 'cv_edit' cv.public_id %}" class="btn btn-dark btn-sm keep-sm">✏️ Tahrirlash</a>{% endif %}
         <a href="/cv/builder/" class="btn btn-light btn-sm">+ Yangi rezyume</a>
       </div>
     </div>
@@ -166,7 +185,22 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
         {% endwith %}
         {% endif %}
         {% if not is_unlocked %}
-        <div class="locked-ribbon">👀 Bu to'liq ko'rinish. PDF va Word uchun rezyumeni <b>1 kredit</b> bilan oching{% if credit_packs %} — {{ credit_packs.0.price|money }} so'mdan{% endif %}.</div>
+        <div class="locked-ribbon">{% if pdf_access == "free_available" or pdf_access == "login" %}🎁 Birinchi PDF — <b>bepul</b>. «Bepul» belgili shablonda yuklab oling{% elif pdf_access == "free" %}✅ Bu rezyume uchun PDF bepul ochilgan. Word va Pro shablonlar — <b>1 kredit</b>{% else %}👀 Bu to'liq ko'rinish. Yuklab olish uchun rezyumeni <b>1 kredit</b> bilan oching{% if credit_packs %} — {{ credit_packs.0.price|money }} so'mdan{% endif %}{% endif %}.</div>
+        {% endif %}
+        {% if not is_staff_view %}
+        <div class="tpl-strip" id="tpl-strip">
+          <div class="tpl-strip-h"><b>🎨 Shablonni tanlang</b><span><i class="lg-free"></i>Bepul <i class="lg-pro"></i>Pro</span></div>
+          <form method="post" action="/cv/template/{{ cv.public_id }}/change/" class="strip">
+            {% csrf_token %}
+            {% for t in template_choices %}
+            <button class="st {% if t.selected %}sel{% endif %}" name="template_code" value="{{ t.code }}" title="{{ t.label }} — {{ t.tagline }}">
+              <div class="paper-thumb"><div class="paper-scaler">{% include "cv/partials/cv_template_"|add:t.code|add:".html" with show_watermark=False company_branding=None %}</div></div>
+              <em class="{% if t.pro %}pro{% else %}free{% endif %}">{% if t.pro %}PRO{% else %}Bepul{% endif %}</em>
+              <span>{{ t.label }}</span>
+            </button>
+            {% endfor %}
+          </form>
+        </div>
         {% endif %}
         <div class="paper-fit" id="cv-output"><div class="paper-scaler">{% include template_partial %}</div></div>
       </div>
@@ -191,17 +225,12 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
         {% endif %}
 
         <div class="box r-download" id="download">
-          <div class="box-h"><h2>Yuklab olish</h2></div>
+          <div class="box-h"><h2>Yuklab olish</h2>{% if pdf_access == "free_available" %}<span class="badge badge-free">🎁 {{ free_pdf_left }} ta bepul PDF</span>{% endif %}</div>
           <div class="dl">
-            {% if can_download_pdf %}
+            {% if pdf_access == "full" or pdf_access == "free" or pdf_access == "free_available" %}
               <a href="/cv/download/{{ cv.public_id }}/" class="dl-btn" data-loading data-dl="{{ cv.public_id }}:pdf">
                 <span class="ic" style="background:#e5484d;">PDF</span>
-                <span><b>PDF yuklab olish</b><small>Toza, chop etishga tayyor</small></span>
-                <span class="end">↓</span>
-              </a>
-              <a href="/cv/download/{{ cv.public_id }}/docx/" class="dl-btn" data-dl="{{ cv.public_id }}:docx">
-                <span class="ic" style="background:#2b579a;">DOC</span>
-                <span><b>Word yuklab olish</b><small>Tahrirlanadigan .docx</small></span>
+                <span><b>PDF yuklab olish{% if pdf_access != "full" %} — bepul{% endif %}</b><small>{% if pdf_access == "full" %}Toza, chop etishga tayyor{% elif pdf_access == "free" %}Bu rezyume uchun bepul ochilgan{% else %}Bosing — bepul PDF shu rezyumega beriladi{% endif %}</small></span>
                 <span class="end">↓</span>
               </a>
               <a href="#" class="dl-btn tg-only" data-dl="{{ cv.public_id }}:pdf" data-dl-chat>
@@ -209,20 +238,50 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
                 <span><b>Telegram chatga yuborish</b><small>PDF bot xabarida keladi</small></span>
                 <span class="end">➤</span>
               </a>
-            {% else %}
-              <a href="{% if request.user.is_authenticated %}#unlock{% else %}{{ login_url }}{% endif %}" class="dl-btn locked">
+            {% elif pdf_access == "pro_template" %}
+              <div class="pro-note">⭐ <b>{{ template_label }}</b> — Pro shablon. Bepul PDF uchun <a href="#tpl-strip">«Bepul» belgili shablonni tanlang ↑</a> yoki rezyumeni kredit bilan oching.</div>
+              <a href="#unlock" class="dl-btn locked">
                 <span class="ic" style="background:#e5484d;">PDF</span>
-                <span><b>PDF</b><small>{% if request.user.is_authenticated %}Rezyume ochilgach{% else %}Avval kiring — Telegram, 2 bosish{% endif %}</small></span>
+                <span><b>PDF</b><small>Pro shablon — kredit yoki Pro bilan</small></span>
                 <span class="end">🔒</span>
               </a>
+            {% elif pdf_access == "no_free" %}
+              <a href="#unlock" class="dl-btn locked">
+                <span class="ic" style="background:#e5484d;">PDF</span>
+                <span><b>PDF</b><small>Bepul PDF boshqa rezyumega ishlatilgan</small></span>
+                <span class="end">🔒</span>
+              </a>
+            {% else %}
+              <a href="{{ login_url }}" class="dl-btn">
+                <span class="ic" style="background:#e5484d;">PDF</span>
+                <span><b>PDF yuklab olish — bepul</b><small>Telegram orqali kiring — 2 bosish</small></span>
+                <span class="end">→</span>
+              </a>
+            {% endif %}
+            {% if pdf_access == "full" %}
+              <a href="/cv/download/{{ cv.public_id }}/docx/" class="dl-btn" data-dl="{{ cv.public_id }}:docx">
+                <span class="ic" style="background:#2b579a;">DOC</span>
+                <span><b>Word yuklab olish</b><small>Tahrirlanadigan .docx</small></span>
+                <span class="end">↓</span>
+              </a>
+            {% else %}
               <a href="{% if request.user.is_authenticated %}#unlock{% else %}{{ login_url }}{% endif %}" class="dl-btn locked">
                 <span class="ic" style="background:#2b579a;">DOC</span>
-                <span><b>Word (.docx)</b><small>{% if request.user.is_authenticated %}Rezyume ochilgach{% else %}Avval kiring — Telegram, 2 bosish{% endif %}</small></span>
+                <span><b>Word (.docx)</b><small>Kredit paketi yoki Pro bilan</small></span>
                 <span class="end">🔒</span>
               </a>
             {% endif %}
           </div>
         </div>
+
+        {% if referral_url %}
+        <div class="box r-invite invite">
+          <div class="box-h"><h2>🎁 Do'stingizga yuboring</h2>{% if site.referral_inviter_credits %}<span class="badge badge-free">+{{ site.referral_inviter_credits }} kredit</span>{% endif %}</div>
+          <p class="muted-sm">Havolangiz orqali kelgan do'stingiz ro'yxatdan o'tsa, sizga <b>{{ site.referral_inviter_credits }} kredit</b> beriladi — bitta rezyume to'liq ochiladi.</p>
+          <div class="share-input"><input readonly value="{{ referral_url }}" id="ref-link-pv"><button class="btn btn-light btn-sm" type="button" data-copy-target="ref-link-pv">Nusxa</button></div>
+          <a class="btn btn-tg btn-block" style="margin-top:8px;" target="_blank" rel="noopener" href="https://t.me/share/url?url={{ referral_url|urlencode }}&text={{ referral_text|urlencode }}">✈️ Telegram'da ulashish</a>
+        </div>
+        {% endif %}
 
         {% if not is_unlocked %}
         <div class="unlock r-unlock" id="unlock">
@@ -234,8 +293,8 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
             <button class="btn btn-block btn-lg" style="background:var(--lime);color:var(--ink);">🔓 1 kredit bilan ochish</button>
           </form>
           {% else %}
-          <h2>Yuklab olish uchun oching</h2>
-          <p style="margin:6px 0 4px;color:#a1a3ab;font-size:14px;">1 kredit = 1 rezyume: PDF + Word, 9 shablon, muddatsiz.</p>
+          <h2>{% if pdf_access == "free" or pdf_access == "free_available" %}Word va Pro shablonlar kerakmi?{% else %}Yuklab olish uchun oching{% endif %}</h2>
+          <p style="margin:6px 0 4px;color:#a1a3ab;font-size:14px;">1 kredit = 1 rezyume: PDF + Word, barcha shablonlar (Pro ham), belgisiz, muddatsiz.</p>
           <div class="plan-pick">
             {% for pack in credit_packs %}
             <a class="pp {% if pack.is_featured %}is-on{% endif %}" href="{% if request.user.is_authenticated %}https://t.me/{{ TELEGRAM_BOT_USERNAME }}?start=pay_{{ pack.code }}{% else %}{{ login_url }}{% endif %}" {% if request.user.is_authenticated %}target="_blank" rel="noopener"{% endif %}>
@@ -276,20 +335,6 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
           {% endif %}
         </div>
 
-        <div class="box r-templates">
-          <div class="box-h"><h2>Shablon</h2><span class="muted-sm">almashtirish bepul</span></div>
-          <form method="post" action="/cv/template/{{ cv.public_id }}/change/" class="switch-grid" id="tpl-form">
-            {% csrf_token %}
-            {% for t in template_choices %}
-            <button class="sw {% if t.selected %}sel{% endif %}" name="template_code" value="{{ t.code }}" title="{{ t.tagline }}">
-              <div class="paper-thumb"><div class="paper-scaler">{% include "cv/partials/cv_template_"|add:t.code|add:".html" with show_watermark=False company_branding=None %}</div></div>
-              {% if t.ats %}<u>ATS</u>{% endif %}
-              <span>{{ t.label }}</span>
-            </button>
-            {% endfor %}
-          </form>
-        </div>
-
         <div class="box r-photo">
           <div class="photo-row">
             {% if cv.photo %}<img class="avatar" src="{{ cv.photo.url }}" alt="">{% else %}<div class="avatar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg></div>{% endif %}
@@ -322,11 +367,15 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
 
 {# Telefonda pastda doim turadigan qisqa panel — rezyumeni ko'rishga xalal bermaydi #}
 <div class="m-bar">
-  <a href="#tailor" class="btn btn-light">🎯 Moslashtirish</a>
-  {% if can_download_pdf %}
-  <a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark" data-dl="{{ cv.public_id }}:pdf">⬇ PDF</a>
+  {% if not is_staff_view %}<a href="{% url 'cv_edit' cv.public_id %}" class="btn btn-light">✏️ Tahrirlash</a>{% endif %}
+  {% if pdf_access == "full" or pdf_access == "free" or pdf_access == "free_available" %}
+  <a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark" data-dl="{{ cv.public_id }}:pdf">⬇ PDF{% if pdf_access != "full" %} bepul{% endif %}</a>
+  {% elif pdf_access == "login" %}
+  <a href="{{ login_url }}" class="btn btn-dark">⬇ Bepul PDF</a>
+  {% elif pdf_access == "pro_template" %}
+  <a href="#tpl-strip" class="btn btn-dark">🎨 Bepul shablon</a>
   {% else %}
-  <a href="{% if request.user.is_authenticated %}#unlock{% else %}{{ login_url }}{% endif %}" class="btn btn-dark">⬇ Yuklab olish</a>
+  <a href="#unlock" class="btn btn-dark">⬇ Yuklab olish</a>
   {% endif %}
 </div>
 {% endblock %}
@@ -350,6 +399,16 @@ function removePhoto() {
   var fd = new FormData(); fd.append('csrfmiddlewaretoken', csrf());
   fetch('/cv/photo/{{ cv.public_id }}/remove/', { method: 'POST', body: fd, credentials: 'same-origin' }).then(function () { window.location.reload(); });
 }
+(function () {
+  var sel = document.querySelector('.strip .st.sel');
+  if (sel) sel.parentElement.scrollLeft = sel.offsetLeft - 40;
+  document.querySelectorAll('[data-copy-target]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var input = document.getElementById(b.dataset.copyTarget);
+      navigator.clipboard.writeText(input.value).then(function () { b.textContent = '✓'; setTimeout(function () { b.textContent = 'Nusxa'; }, 1500); });
+    });
+  });
+})();
 function copyShare(btn) {
   var input = document.getElementById('share-link');
   navigator.clipboard.writeText(input.value).then(function () { btn.textContent = '✓ Nusxalandi'; setTimeout(function () { btn.textContent = 'Nusxa'; }, 1600); });

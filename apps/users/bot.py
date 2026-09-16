@@ -137,6 +137,16 @@ def _handle_start(chat_id: int, sender: dict, payload: str) -> None:
         _show_packages(chat_id, user_id, highlight=code)
         return
 
+    if payload.startswith("ref_"):
+        # Do'st taklifi: raqam yuborilib akkaunt yaratilganda bonus beriladi
+        from .growth import valid_code
+        from .models import PendingReferral
+
+        code = payload[4:]
+        if valid_code(code) and not _profile(user_id):
+            PendingReferral.objects.update_or_create(telegram_id=user_id, defaults={"code": code})
+        payload = ""
+
     token = get_active_token(payload) if payload else None
     if token:
         token.telegram_id = user_id
@@ -188,7 +198,12 @@ def _handle_contact(chat_id: int, sender: dict, contact: dict) -> None:
     if token:
         confirm_token(token, telegram_id=user_id, **names)
 
+    from .growth import on_bot_user
+
+    bonus = on_bot_user(user, user_id)
     text = "✅ <b>Raqamingiz tasdiqlandi!</b>"
+    if bonus:
+        text += f"\n🎁 Aksiya: hisobingizga <b>+{bonus} kredit</b> qo'shildi!"
     if token:
         text += "\nSaytdagi sahifa o'zi ochiladi. Telegram ichida ochish uchun pastdagi tugmani bosing."
     send_message(chat_id, text, reply_markup=_main_keyboard())

@@ -1,0 +1,51 @@
+{% extends "panel/base.html" %}
+{% block title %}Shablonlar{% endblock %}
+{% block heading %}🎨 Shablonlar{% endblock %}
+{% block subheading %}<p>Bepul shablonda foydalanuvchi {{ site.free_pdf_downloads }} ta PDF'ni tekin oladi. Pro shablon — faqat kredit yoki Pro bilan. Hammasini ko'rish har doim bepul.</p>{% endblock %}
+{% block actions %}<a href="/cv/templates/" target="_blank" class="btn btn-light">Saytda ko'rish ↗</a>{% endblock %}
+
+{% block style %}
+.tg { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; padding: 16px; }
+.tcard { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #fff; }
+.tcard.off { opacity: .55; }
+.tcard .paper-thumb { position: relative; width: 100%; aspect-ratio: 794 / 900; overflow: hidden; background: #fff; border-bottom: 1px solid var(--line); }
+.tcard .paper-scaler { position: absolute; top: 0; left: 0; width: 794px; transform-origin: top left; pointer-events: none; }
+.tbody { padding: 10px 12px 12px; }
+.tbody b { display: block; font-size: 14px; }
+.tbody .stats { margin: 2px 0 8px; font-size: 11.5px; color: var(--muted); }
+.trow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: 13px; font-weight: 600; }
+.trow input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--ink); }
+.trow .input { width: 70px; min-height: 30px; padding: 3px 8px; }
+{% endblock %}
+
+{% block content %}
+<form method="post" class="card">
+  {% csrf_token %}
+  {{ formset.management_form }}
+  <div class="tg">
+    {% for r in rows %}
+    <div class="tcard {% if not r.form.instance.is_active %}off{% endif %}">
+      {{ r.form.id }}
+      <div class="paper-thumb"><div class="paper-scaler">{% include r.template_partial with cv_data=r.cv_data show_watermark=False company_branding=None %}</div></div>
+      <div class="tbody">
+        <b>{{ r.meta.label }}</b>
+        <div class="stats">{{ r.code }}{% if r.meta.ats %} · ATS{% endif %} · {{ r.uses }} rezyume · {{ r.downloads }} yuklangan</div>
+        <label class="trow">⭐ Pro shablon {{ r.form.is_pro }}</label>
+        <label class="trow">👁 Saytda ko'rsatish {{ r.form.is_active }}</label>
+        <label class="trow">Tartib {{ r.form.sort_order }}</label>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="save"><span class="muted small" style="margin-right:auto;align-self:center;">Kichik tartib raqami — oldinroq ko'rinadi. Tavsiya: 4–5 ta bepul, qolgani Pro.</span><button class="btn btn-lg">Saqlash</button></div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  function fit() { document.querySelectorAll('.tcard .paper-thumb').forEach(function (el) { el.firstElementChild.style.transform = 'scale(' + (el.clientWidth / 794) + ')'; }); }
+  window.addEventListener('load', fit); window.addEventListener('resize', fit); fit();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ sample.title }}{% endblock %}
+{% block meta_description %}{{ sample.seo_description|default:sample.profession }}{% endblock %}
+
+{% block extra_style %}
+.sd { padding: 30px 0 0; }
+.crumbs { font-size: 13px; color: var(--muted); }
+.crumbs a:hover { color: var(--ink); text-decoration: underline; }
+.sd-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 34px; align-items: start; margin-top: 14px; }
+.sd h1 { font-size: clamp(30px, 4.4vw, 50px); line-height: 1.04; font-weight: 800; letter-spacing: -.04em; }
+.sd-lead { margin-top: 12px; font-size: 17px; color: var(--muted); }
+.stage { margin-top: 22px; padding: 22px; border-radius: 24px; background: var(--bg-2); }
+.stage .paper-fit { max-width: 794px; margin: 0 auto; }
+.stage .paper-scaler { box-shadow: var(--shadow-lg); }
+.side { position: sticky; top: 88px; display: grid; gap: 14px; }
+.cta { padding: 22px; border-radius: 22px; background: var(--ink); color: #fff; }
+.cta h2 { font-size: 21px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+.cta p { margin: 8px 0 16px; color: #a1a3ab; font-size: 14.5px; }
+.cta ul { margin: 0 0 16px; padding: 0; list-style: none; display: grid; gap: 6px; }
+.cta li { font-size: 14px; color: #e5e6ea; } .cta li::before { content: "✓ "; color: var(--lime); font-weight: 800; }
+.tips { padding: 20px; border-radius: 20px; background: #fff; border: 1px solid var(--line); }
+.tips h2 { margin-bottom: 10px; font-size: 16px; font-weight: 800; }
+.tips p { margin-bottom: 10px; font-size: 15px; line-height: 1.65; color: var(--ink-2); }
+.tips p:last-child { margin-bottom: 0; }
+.rel { margin-top: 56px; }
+.rel h2 { margin-bottom: 16px; font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+.rel-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.rel-grid a .frame { display: block; padding: 10px 10px 0; border-radius: 16px; background: var(--bg-2); overflow: hidden; }
+.rel-grid .paper-thumb { aspect-ratio: 794 / 820; border-radius: 6px 6px 0 0; box-shadow: var(--shadow-sm); }
+.rel-grid b { display: block; margin-top: 8px; font-size: 14.5px; }
+.m-cta { display: none; }
+@media (max-width: 1000px) {
+  .sd-grid { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; }
+  .stage { padding: 10px; border-radius: 16px; }
+  .rel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .m-cta { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: block; padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+           background: rgba(245,243,238,.95); backdrop-filter: blur(12px); border-top: 1px solid var(--line); }
+  .m-cta .btn { width: 100%; min-height: 50px; }
+  .sd { padding-bottom: 80px; }
+}
+{% endblock %}
+
+{% block content %}
+<div class="sd">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Yo'l"><a href="/">Bosh sahifa</a> › <a href="/namunalar/">Rezyume namunalari</a> › {{ sample.profession }}</nav>
+    <div class="sd-grid">
+      <div>
+        <h1>{{ sample.profession }} rezyume namunasi</h1>
+        <p class="sd-lead">Tayyor namuna — faqat ismingiz, telefon va ish joylaringizni yozasiz. 2 daqiqada PDF tayyor.</p>
+        <div class="stage">
+          <div class="paper-fit"><div class="paper-scaler">{% include template_partial %}</div></div>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="cta">
+          <h2>Shu namunadan o'zingiznikini yarating</h2>
+          <p>Namuna nusxalanadi — keyin oddiy formada o'zgartirasiz.</p>
+          <ul><li>AI kerak emas, limitdan ketmaydi</li><li>Birinchi PDF — bepul</li><li>12 ta shablonga bir bosishda almashtirasiz</li></ul>
+          <form method="post" action="{% url 'sample_use' sample.slug %}">{% csrf_token %}<button class="btn btn-accent btn-lg btn-block">✍️ Shu namunadan boshlash</button></form>
+        </div>
+        {% if paragraphs %}
+        <div class="tips">
+          <h2>💡 {{ sample.profession }} rezyumesida nima muhim</h2>
+          {% for p in paragraphs %}<p>{{ p }}</p>{% endfor %}
+        </div>
+        {% endif %}
+        <div class="tips">
+          <h2>🧭 Foydali qo'llanmalar</h2>
+          <p><a class="link" href="/qollanma/#tajribasiz" style="text-decoration:underline;">Tajriba yo'q bo'lsa nima yoziladi?</a></p>
+          <p><a class="link" href="/qollanma/#topshirish" style="text-decoration:underline;">HR'ga qanday yuborish kerak — namuna xabar</a></p>
+          <p><a class="link" href="/qollanma/#suhbat" style="text-decoration:underline;">Suhbatga qanday tayyorlanish kerak</a></p>
+        </div>
+      </aside>
+    </div>
+
+    {% if related %}
+    <section class="rel">
+      <h2>Boshqa kasblar uchun namunalar</h2>
+      <div class="rel-grid">
+        {% for it in related %}
+        <a href="{{ it.sample.get_absolute_url }}">
+          <div class="frame"><div class="paper-thumb"><div class="paper-scaler">{% include it.template_partial with cv_data=it.cv_data show_watermark=False company_branding=None %}</div></div></div>
+          <b>{{ it.sample.profession }}</b>
+        </a>
+        {% endfor %}
+      </div>
+      <p style="margin-top:18px;"><a href="/namunalar/" class="btn btn-light">Barcha namunalar →</a></p>
+    </section>
+    {% endif %}
+  </div>
+</div>
+<div class="m-cta"><form method="post" action="{% url 'sample_use' sample.slug %}">{% csrf_token %}<button class="btn btn-accent">✍️ Shu namunadan boshlash</button></form></div>
+<script type="application/ld+json">{{ breadcrumbs_json }}</script>
+{% endblock %}

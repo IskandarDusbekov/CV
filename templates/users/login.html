@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Kirish — {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
 
 {% block extra_style %}
 .auth { min-height: calc(100vh - 68px); display: grid; place-items: center; padding: 40px 16px 60px; }

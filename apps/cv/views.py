@@ -18,14 +18,18 @@ from apps.core.analytics import mark_step
 from apps.users.models import CompanyBranding, PricingPlan, UserProfile
 
 from . import quotas
-from .models import CV, AIUsage
+from .models import CV, AIUsage, ResumeSample
 from .pdf import PdfRenderError, render_cv_to_pdf
 from .services import (
     DEFAULT_TEMPLATE,
     TEMPLATE_META,
     AIError,
+    PDF_NO_FREE,
+    PDF_PRO_TEMPLATE,
     build_cv_context,
+    claim_pdf_access,
     demo_template_context,
+    pdf_access,
     generate_cv_from_text,
     resolve_template_name,
     tailor_cv_to_job,
@@ -55,6 +59,7 @@ def builder(request):
             "phone": getattr(profile, "phone", "") or "",
         },
         "initial_template": initial,
+        "samples": ResumeSample.objects.filter(is_published=True)[:12],
         "quota": quotas.generate_quota(request),
         "pro_plan": _active_plans(PricingPlan.SCOPE_ACCOUNT).first(),
     })
@@ -73,8 +78,23 @@ def preview(request, cv_id):
         "unlock_target": cv.root,
         "is_staff_view": request.user.is_staff and not _is_owner(request.user, cv),
         "missing_details": _missing_details(request, cv),
+        **_referral_context(request),
     })
     return render(request, "cv/preview.html", context)
+
+
+def _referral_context(request):
+    from apps.core.models import SiteSettings
+    from apps.users.growth import referral_code_for
+
+    site = SiteSettings.load()
+    if not (request.user.is_authenticated and site.referral_enabled):
+        return {}
+    url = request.build_absolute_uri(f"/r/{referral_code_for(request.user)}/")
+    return {
+        "referral_url": url,
+        "referral_text": "Rezyumeni 2 daqiqada tayyorladim — tayyor namunalar va birinchi PDF bepul. Senga ham foydali bo'ladi 👇",
+    }
 
 
 # AI yozolmaydigan, lekin har kimda bor oddiy ma'lumotlar — yetishmasa preview'da so'raymiz
@@ -217,9 +237,9 @@ def download_pdf(request, cv_id, inline=False):
     cv = _downloadable_cv(request, cv_id)
     if isinstance(cv, HttpResponse):
         return cv
-    if not user_can_download_pdf(request.user, cv):
-        messages.warning(request, "Yuklab olish uchun rezyumeni kredit yoki Pro bilan oching.")
-        return redirect("cv_preview", cv_id=cv.public_id)
+    if not claim_pdf_access(request.user, cv):
+        messages.warning(request, _pdf_denied_message(request.user, cv))
+        return redirect(f"{reverse('cv_preview', args=[cv.public_id])}#download")
 
     try:
         pdf_file = render_cv_to_pdf(cv, request.user, company_branding=_get_company_branding(request.user))
@@ -240,8 +260,8 @@ def download_docx(request, cv_id):
     if isinstance(cv, HttpResponse):
         return cv
     if not user_can_download_docx(request.user, cv):
-        messages.warning(request, "Yuklab olish uchun rezyumeni kredit yoki Pro bilan oching.")
-        return redirect("cv_preview", cv_id=cv.public_id)
+        messages.warning(request, "Word fayl kredit paketi yoki Pro bilan ochiladi. PDF'ni bepul shablonda yuklab olishingiz mumkin.")
+        return redirect(f"{reverse('cv_preview', args=[cv.public_id])}#unlock")
 
     from .docx_export import render_cv_to_docx
 
@@ -269,6 +289,15 @@ _DL_TYPES = {
 }
 
 
+def _pdf_denied_message(user, cv):
+    state = pdf_access(user, cv)
+    if state == PDF_PRO_TEMPLATE:
+        return "Bu Pro shablon. Bepul PDF uchun «Bepul» belgili shablonni tanlang yoki rezyumeni kredit bilan oching."
+    if state == PDF_NO_FREE:
+        return "Bepul PDF boshqa rezyumengizga ishlatilgan. Bu rezyumeni kredit yoki Pro bilan oching."
+    return "Yuklab olish uchun rezyumeni kredit yoki Pro bilan oching."
+
+
 def _build_file(cv, user, fmt):
     if fmt == "docx":
         from .docx_export import render_cv_to_docx
@@ -283,8 +312,11 @@ def _owned_downloadable(request, cv_id, fmt):
     if not request.user.is_authenticated:
         return None, JsonResponse({"error": "Avval kiring."}, status=401)
     cv = _private_cv(request, cv_id)
-    if not user_can_download_pdf(request.user, cv):
-        return None, JsonResponse({"error": "Yuklab olish uchun rezyumeni kredit yoki Pro bilan oching."}, status=403)
+    if fmt == "docx":
+        if not user_can_download_docx(request.user, cv):
+            return None, JsonResponse({"error": "Word fayl kredit paketi yoki Pro bilan ochiladi."}, status=403)
+    elif not claim_pdf_access(request.user, cv):
+        return None, JsonResponse({"error": _pdf_denied_message(request.user, cv)}, status=403)
     return cv, None
 
 
@@ -313,7 +345,8 @@ def signed_download(request, token):
     user = get_object_or_404(User.objects.select_related("profile"), pk=user_id, is_active=True)
     profile = getattr(user, "profile", None)
     allowed = (cv.user_id == user.pk or user.is_staff) and not (profile and profile.is_blocked)
-    if fmt not in _DL_TYPES or not allowed or not user_can_download_pdf(user, cv):
+    can = user_can_download_docx(user, cv) if fmt == "docx" else user_can_download_pdf(user, cv)
+    if fmt not in _DL_TYPES or not allowed or not can:
         raise Http404
     try:
         content = _build_file(cv, user, fmt)

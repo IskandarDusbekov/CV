@@ -1,8 +1,10 @@
+from datetime import timedelta
 from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.cv.models import CV
 from apps.cv.services import DEMO_CV_JSON
@@ -321,3 +323,98 @@ class BlockingAndLoggingTests(TestCase):
         self.client.post("/aloqa/", {"name": "Ali", "contact": "@ali", "message": "Salom, savol bor"})
         self.assertTrue(ContactMessage.objects.filter(name="Ali").exists())
         self.assertEqual(self.client.get("/biz-haqimizda/").status_code, 200)
+
+
+class GrowthTests(TestCase):
+    def _new_user(self, username, phone):
+        from .telegram_auth import get_or_create_user
+
+        return get_or_create_user(phone=phone, telegram_id=hash(username) % 10**9, first_name=username)
+
+    def test_referral_credit_only_for_new_registration_via_link(self):
+        from .growth import REF_COOKIE, referral_code_for
+        from .models import Referral
+
+        inviter = self._new_user("inviter", "998900000001")
+        code = referral_code_for(inviter)
+        self.assertEqual(self.client.get(f"/r/{code}/").cookies[REF_COOKIE].value, code)
+
+        self.client.get(reverse("user_login"))
+        token = TelegramLoginToken.objects.get(token=self.client.session["tg_login_token"])
+        confirm_token(token, phone="998900000002", telegram_id=222, first_name="Do'st")
+        self.assertEqual(self.client.get(reverse("telegram_login_status")).json()["status"], "ok")
+
+        inviter.profile.refresh_from_db()
+        self.assertEqual(inviter.profile.credits, 1)
+        self.assertEqual(Referral.objects.get().invitee.profile.telegram_id, 222)
+
+        # qayta urinish — ikkinchi marta bonus yo'q
+        from .growth import apply_referral
+
+        invitee = Referral.objects.get().invitee
+        self.assertIsNone(apply_referral(invitee, code))
+        inviter.profile.refresh_from_db()
+        self.assertEqual(inviter.profile.credits, 1)
+
+    def test_referral_rejects_self_old_accounts_and_same_phone(self):
+        from datetime import timedelta as td
+
+        from .growth import apply_referral, referral_code_for
+
+        inviter = self._new_user("a", "998900000011")
+        code = referral_code_for(inviter)
+        self.assertIsNone(apply_referral(inviter, code))  # o'zini o'zi
+        twin = self._new_user("b", "998900000011")
+        self.assertEqual(twin.pk, inviter.pk)  # bir xil raqam — bir akkaunt
+        old = self._new_user("c", "998900000012")
+        User.objects.filter(pk=old.pk).update(date_joined=timezone.now() - td(days=3))
+        old.refresh_from_db()
+        self.assertIsNone(apply_referral(old, code))  # eski akkaunt
+        self.assertIsNone(apply_referral(self._new_user("d", "998900000013"), "notexist"))
+        site = SiteSettings.load()
+        site.referral_enabled = False
+        site.save()
+        self.assertIsNone(apply_referral(self._new_user("e", "998900000014"), code))
+
+    @mock.patch.object(bot, "send_message")
+    def test_bot_referral_and_promo(self, send):
+        from .growth import referral_code_for
+        from .models import Promo, PromoGrant
+
+        inviter = self._new_user("inv", "998900000021")
+        code = referral_code_for(inviter)
+        Promo.objects.create(name="Test", starts_at=timezone.now() - timedelta(hours=1), ends_at=timezone.now() + timedelta(days=1), bonus_credits=2)
+
+        base = {"chat": {"id": 77}, "from": {"id": 77, "first_name": "Yangi"}}
+        bot._handle_update({"message": {**base, "text": f"/start ref_{code}"}})
+        bot._handle_update({"message": {**base, "contact": {"phone_number": "998900000022", "user_id": 77}}})
+
+        invitee = UserProfile.objects.get(telegram_id=77)
+        inviter.profile.refresh_from_db()
+        self.assertEqual(inviter.profile.credits, 1)
+        self.assertEqual(invitee.credits, 2)  # aksiya bonusi
+        self.assertEqual(PromoGrant.objects.filter(user=invitee.user).count(), 1)
+        self.assertIn("Aksiya", str(send.call_args_list))
+
+    def test_promo_audience_and_dates(self):
+        from .growth import apply_promos
+        from .models import Promo
+
+        now = timezone.now()
+        old_user = self._new_user("old", "998900000031")
+        User.objects.filter(pk=old_user.pk).update(date_joined=now - timedelta(days=10))
+        old_user.refresh_from_db()
+        Promo.objects.create(name="Yangi", starts_at=now - timedelta(days=1), ends_at=now + timedelta(days=1), bonus_credits=1)
+        self.assertEqual(apply_promos(old_user), 0)  # faqat yangi ro'yxatdan o'tganlarga
+        Promo.objects.create(name="Hammaga", audience=Promo.AUDIENCE_ALL, starts_at=now - timedelta(days=1), ends_at=now + timedelta(days=1), bonus_credits=3)
+        self.assertEqual(apply_promos(old_user), 3)
+        self.assertEqual(apply_promos(old_user), 0)  # bir marta
+        Promo.objects.create(name="Tugagan", audience=Promo.AUDIENCE_ALL, starts_at=now - timedelta(days=5), ends_at=now - timedelta(days=1), bonus_credits=5)
+        self.assertEqual(apply_promos(self._new_user("new", "998900000032")), 4)
+
+    def test_promo_banner(self):
+        from .models import Promo
+
+        Promo.objects.create(name="B", starts_at=timezone.now() - timedelta(hours=1), ends_at=timezone.now() + timedelta(hours=5),
+                             bonus_credits=1, banner_text="🎁 Bugun 1 ta rezyume tekin!")
+        self.assertContains(self.client.get("/"), "Bugun 1 ta rezyume tekin")

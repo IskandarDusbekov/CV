@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Rezyumeni tahrirlash — {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+
+{% block extra_style %}
+.ed { max-width: 760px; margin: 0 auto; padding: 26px 16px 110px; }
+.ed h1 { font-size: clamp(26px, 4vw, 38px); font-weight: 800; letter-spacing: -.035em; line-height: 1.1; }
+.ed-sub { margin: 6px 0 18px; color: var(--muted); }
+.hint-new { margin-bottom: 16px; padding: 14px 16px; border-radius: 16px; background: #f4fbc9; border: 1px solid #dfe98f; font-size: 14.5px; }
+.card-ed { margin-bottom: 14px; padding: 18px; background: #fff; border: 1px solid var(--line); border-radius: 20px; }
+.card-ed h2 { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 16px; font-weight: 800; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 12px; }
+.fe label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: 700; }
+.fe .input, .fe textarea { width: 100%; }
+.fe textarea { min-height: 96px; resize: vertical; line-height: 1.55; }
+.fe .tip { margin-top: 4px; font-size: 12px; color: var(--muted-2); }
+.fe.wide { grid-column: 1 / -1; }
+.item { position: relative; margin-bottom: 10px; padding: 14px; border: 1px dashed var(--line-2); border-radius: 16px; background: var(--bg); }
+.item .rm { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border: 0; border-radius: 9px; background: #fff; color: var(--red); font-size: 16px; cursor: pointer; }
+.item .grid2 { padding-right: 34px; }
+.add { width: 100%; min-height: 44px; border: 1.5px dashed var(--line-2); border-radius: 14px; background: transparent; font: inherit; font-weight: 700; color: var(--muted); cursor: pointer; }
+.add:hover { border-color: var(--ink); color: var(--ink); }
+.save-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; justify-content: center; gap: 8px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+            background: rgba(245,243,238,.95); backdrop-filter: blur(12px); border-top: 1px solid var(--line); }
+.save-bar .btn { min-height: 50px; min-width: 150px; }
+@media (max-width: 600px) { .grid2 { grid-template-columns: minmax(0, 1fr); } .save-bar .btn { flex: 1; min-width: 0; } }
+{% endblock %}
+
+{% block content %}
+<form method="post" class="ed" id="editor">
+  {% csrf_token %}
+  <a href="{% url 'cv_preview' cv.public_id %}" class="muted" style="font-size:13.5px;font-weight:700;">← Rezyumeni ko'rish</a>
+  <h1 style="margin-top:8px;">Rezyumeni tahrirlash</h1>
+  <p class="ed-sub">O'zingizga tegishli bo'lmagan qatorlarni o'chiring, bo'shlarini to'ldiring. AI kerak emas — bepul.</p>
+  {% if is_new %}<div class="hint-new">✨ Namuna nusxalandi. Eng avvalo <b>ismingiz, telefoningiz</b> va <b>ish joylaringizni</b> o'zingiznikiga almashtiring.</div>{% endif %}
+
+  <div class="card-ed">
+    <h2>👤 Asosiy ma'lumot</h2>
+    <div class="grid2">
+      <div class="fe"><label for="f-name">Ism va familiya *</label><input class="input" id="f-name" name="full_name" value="{{ d.full_name }}" required maxlength="150" autocomplete="name"></div>
+      <div class="fe"><label for="f-title">Lavozim</label><input class="input" id="f-title" name="job_title" value="{{ d.job_title }}" maxlength="150" placeholder="Masalan: Sotuvchi-konsultant"></div>
+      <div class="fe"><label for="f-phone">Telefon</label><input class="input" id="f-phone" name="phone" type="tel" value="{{ d.phone }}" maxlength="150" autocomplete="tel"></div>
+      <div class="fe"><label for="f-email">Email</label><input class="input" id="f-email" name="email" type="email" value="{{ d.email }}" maxlength="150" autocomplete="email"></div>
+      <div class="fe"><label for="f-loc">Shahar</label><input class="input" id="f-loc" name="location" value="{{ d.location }}" maxlength="150"></div>
+      <div class="fe"><label for="f-li">LinkedIn / portfolio</label><input class="input" id="f-li" name="linkedin" value="{{ d.linkedin }}" maxlength="150"></div>
+      <input type="hidden" name="github" value="{{ d.github }}">
+      <div class="fe wide"><label for="f-sum">O'zingiz haqingizda</label><textarea class="input" id="f-sum" name="summary" maxlength="1500">{{ d.summary }}</textarea><div class="tip">2–3 gap: kimsiz, qancha tajriba, nimada kuchlisiz.</div></div>
+    </div>
+  </div>
+
+  <div class="card-ed">
+    <h2>💼 Ish tajribasi</h2>
+    <div id="exp-list">
+      {% for e in d.experience %}
+      <div class="item">
+        <button type="button" class="rm" aria-label="O'chirish">✕</button>
+        <div class="grid2">
+          <div class="fe"><label>Lavozim</label><input class="input" name="exp-{{ forloop.counter0 }}-position" value="{{ e.position }}" maxlength="150"></div>
+          <div class="fe"><label>Kompaniya</label><input class="input" name="exp-{{ forloop.counter0 }}-company" value="{{ e.company }}" maxlength="150"></div>
+          <div class="fe"><label>Qachondan — qachongacha</label><input class="input" name="exp-{{ forloop.counter0 }}-duration" value="{{ e.duration }}" maxlength="60" placeholder="2022 — hozir"></div>
+          <div class="fe wide"><label>Nima qildingiz (har biri yangi qatorda)</label><textarea class="input" name="exp-{{ forloop.counter0 }}-responsibilities">{% for r in e.responsibilities %}{{ r }}{% if not forloop.last %}
+{% endif %}{% endfor %}</textarea></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="add" data-add="exp">+ Ish joyi qo'shish</button>
+  </div>
+
+  <div class="card-ed">
+    <h2>🎓 Ta'lim</h2>
+    <div id="edu-list">
+      {% for e in d.education %}
+      <div class="item">
+        <button type="button" class="rm" aria-label="O'chirish">✕</button>
+        <div class="grid2">
+          <div class="fe"><label>O'quv joyi</label><input class="input" name="edu-{{ forloop.counter0 }}-institution" value="{{ e.institution }}" maxlength="200"></div>
+          <div class="fe"><label>Yo'nalish / daraja</label><input class="input" name="edu-{{ forloop.counter0 }}-degree" value="{{ e.degree }}" maxlength="200"></div>
+          <div class="fe"><label>Yillar</label><input class="input" name="edu-{{ forloop.counter0 }}-year" value="{{ e.year }}" maxlength="60" placeholder="2018 — 2022"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="add" data-add="edu">+ O'quv joyi qo'shish</button>
+  </div>
+
+  <div class="card-ed">
+    <h2>🛠 Ko'nikmalar va tillar</h2>
+    <div class="grid2">
+      <div class="fe"><label for="f-skills">Ko'nikmalar (har biri yangi qatorda)</label><textarea class="input" id="f-skills" name="skills">{{ skills_text }}</textarea></div>
+      <div class="fe"><label for="f-langs">Tillar</label><textarea class="input" id="f-langs" name="languages" placeholder="O'zbek — ona tili&#10;Rus — B2">{{ languages_text }}</textarea></div>
+    </div>
+  </div>
+
+  <div class="card-ed">
+    <h2>🚀 Loyihalar <span class="muted" style="font-size:13px;font-weight:600;">(bo'lmasa, bo'sh qoldiring)</span></h2>
+    <div id="proj-list">
+      {% for p in d.projects %}
+      <div class="item">
+        <button type="button" class="rm" aria-label="O'chirish">✕</button>
+        <div class="grid2">
+          <div class="fe"><label>Nomi</label><input class="input" name="proj-{{ forloop.counter0 }}-title" value="{{ p.title }}" maxlength="150"></div>
+          <div class="fe"><label>Vositalar (vergul bilan)</label><input class="input" name="proj-{{ forloop.counter0 }}-technologies" value="{{ p.technologies|join:', ' }}"></div>
+          <div class="fe wide"><label>Qisqacha</label><textarea class="input" name="proj-{{ forloop.counter0 }}-description" maxlength="500" style="min-height:70px;">{{ p.description }}</textarea></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="add" data-add="proj">+ Loyiha qo'shish</button>
+  </div>
+
+  <div class="save-bar">
+    <a href="{% url 'cv_preview' cv.public_id %}" class="btn btn-light">Bekor qilish</a>
+    <button class="btn btn-dark">💾 Saqlash va ko'rish</button>
+  </div>
+</form>
+
+<template id="tpl-exp">
+  <div class="item">
+    <button type="button" class="rm" aria-label="O'chirish">✕</button>
+    <div class="grid2">
+      <div class="fe"><label>Lavozim</label><input class="input" name="exp-__i__-position" maxlength="150"></div>
+      <div class="fe"><label>Kompaniya</label><input class="input" name="exp-__i__-company" maxlength="150"></div>
+      <div class="fe"><label>Qachondan — qachongacha</label><input class="input" name="exp-__i__-duration" maxlength="60" placeholder="2022 — hozir"></div>
+      <div class="fe wide"><label>Nima qildingiz (har biri yangi qatorda)</label><textarea class="input" name="exp-__i__-responsibilities"></textarea></div>
+    </div>
+  </div>
+</template>
+<template id="tpl-edu">
+  <div class="item">
+    <button type="button" class="rm" aria-label="O'chirish">✕</button>
+    <div class="grid2">
+      <div class="fe"><label>O'quv joyi</label><input class="input" name="edu-__i__-institution" maxlength="200"></div>
+      <div class="fe"><label>Yo'nalish / daraja</label><input class="input" name="edu-__i__-degree" maxlength="200"></div>
+      <div class="fe"><label>Yillar</label><input class="input" name="edu-__i__-year" maxlength="60" placeholder="2018 — 2022"></div>
+    </div>
+  </div>
+</template>
+<template id="tpl-proj">
+  <div class="item">
+    <button type="button" class="rm" aria-label="O'chirish">✕</button>
+    <div class="grid2">
+      <div class="fe"><label>Nomi</label><input class="input" name="proj-__i__-title" maxlength="150"></div>
+      <div class="fe"><label>Vositalar (vergul bilan)</label><input class="input" name="proj-__i__-technologies"></div>
+      <div class="fe wide"><label>Qisqacha</label><textarea class="input" name="proj-__i__-description" maxlength="500" style="min-height:70px;"></textarea></div>
+    </div>
+  </div>
+</template>
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var next = 100;
+  document.querySelectorAll('[data-add]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var kind = btn.dataset.add;
+      var html = document.getElementById('tpl-' + kind).innerHTML.replace(/__i__/g, String(next++));
+      var list = document.getElementById(kind + '-list');
+      list.insertAdjacentHTML('beforeend', html);
+      var first = list.lastElementChild.querySelector('input, textarea');
+      if (first) first.focus();
+    });
+  });
+  document.getElementById('editor').addEventListener('click', function (e) {
+    var rm = e.target.closest('.rm');
+    if (rm) rm.closest('.item').remove();
+  });
+  var dirty = false, form = document.getElementById('editor');
+  form.addEventListener('input', function () { dirty = true; });
+  form.addEventListener('submit', function () { dirty = false; });
+  window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+})();
+</script>
+{% endblock %}

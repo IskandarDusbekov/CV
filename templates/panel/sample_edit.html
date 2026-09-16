@@ -1,0 +1,51 @@
+{% extends "panel/base.html" %}
+{% block title %}Namuna{% endblock %}
+{% block heading %}{% if instance %}✏️ {{ instance.profession }}{% else %}➕ Yangi namuna{% endif %}{% endblock %}
+{% block actions %}<a href="{% url 'panel:samples' %}" class="btn btn-light">← Namunalar</a>{% if instance %}<a href="{{ instance.get_absolute_url }}" target="_blank" class="btn btn-light">Saytda ↗</a>{% endif %}{% endblock %}
+
+{% block style %}
+textarea[name=cv_json] { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.5; min-height: 380px !important; }
+{% endblock %}
+
+{% block content %}
+<form method="post" class="card">
+  {% csrf_token %}
+  <div class="fs">
+    <h3>Asosiy</h3>
+    <div class="fs-grid">
+      {% include "panel/_field.html" with field=form.profession %}
+      {% include "panel/_field.html" with field=form.slug %}
+      {% include "panel/_field.html" with field=form.category %}
+      {% include "panel/_field.html" with field=form.template_code %}
+      {% include "panel/_field.html" with field=form.is_published %}
+      {% include "panel/_field.html" with field=form.sort_order %}
+    </div>
+  </div>
+  <div class="fs">
+    <h3>🔍 Google uchun</h3>
+    <div class="fs-grid">
+      {% include "panel/_field.html" with field=form.seo_title %}
+      {% include "panel/_field.html" with field=form.seo_description %}
+      <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.intro %}</div>
+    </div>
+    <p class="muted small" style="margin-top:8px;">Sarlavha bo'sh bo'lsa: «<i>Kasb</i> rezyume namunasi — tayyor shablon». Matnda shu kasb uchun 2–4 ta maslahat yozing — Google shunday sahifalarni yuqoriroq ko'rsatadi.</p>
+  </div>
+  <div class="fs">
+    <h3>📄 Rezyume ma'lumotlari</h3>
+    {% include "panel/_field.html" with field=form.cv_json %}
+  </div>
+  <div class="save"><button class="btn btn-lg">Saqlash</button></div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var name = document.querySelector('[name=profession]'), slug = document.querySelector('[name=slug]');
+  if (!name || !slug || slug.value) return;
+  name.addEventListener('input', function () {
+    slug.value = name.value.toLowerCase().replace(/[‘’ʻ']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
+  });
+})();
+</script>
+{% endblock %}

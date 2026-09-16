@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load mycv %}
-{% block title %}Narxlar — {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
+{% block title %}Narxlar — rezyume yaratish bepul, PDF va Word | {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
+{% block meta_description %}Rezyume yaratish va birinchi PDF — bepul. Word va Pro shablonlar uchun kredit paketlari yoki oylik Pro. Obunasiz, kredit muddati tugamaydi.{% endblock %}
 
 {% block extra_style %}
 .p-hero { padding: 64px 0 40px; text-align: center; }
@@ -39,8 +40,10 @@
         <tbody>
           <tr><td>AI bilan rezyume yaratish</td><td>{{ FREE_CV_LIMIT }} ta</td><td>bepul limitdan</td><td>{{ pro_plan.max_cvs|default:30 }} ta / davr</td></tr>
           <tr><td>Vakansiyaga moslashtirish</td><td>{{ FREE_TAILOR_LIMIT }} ta</td><td>{{ site.tailor_per_unlocked_cv }} ta har bir ochilgan rezyume uchun</td><td>{{ pro_plan.max_tailorings|default:50 }} ta / davr</td></tr>
-          <tr><td>9 ta shablonda ko'rish (2 tasi ATS)</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
-          <tr><td>PDF va Word yuklab olish</td><td class="no">—</td><td class="yes">✓ ochilgan rezyumelar</td><td class="yes">✓ hamma rezyumelar</td></tr>
+          <tr><td>Barcha shablonlarda ko'rish</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>Tayyor namunadan rezyume</td><td class="yes">✓ cheksiz</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+          <tr><td>PDF yuklab olish</td><td>{{ site.free_pdf_downloads }} ta, bepul shablonlarda</td><td class="yes">✓ ochilgan rezyumelar</td><td class="yes">✓ hammasi</td></tr>
+          <tr><td>Word (.docx) va Pro shablonlar</td><td class="no">—</td><td class="yes">✓ ochilgan rezyumelar</td><td class="yes">✓ hammasi</td></tr>
           <tr><td>Ommaviy havola</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
           <tr><td>Kompaniya brendingi</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
           <tr><td>Amal qilish muddati</td><td>—</td><td>kredit va ochilgan rezyume — muddatsiz</td><td>{{ pro_plan.duration_days|default:30 }} kun, avtomatik yangilanmaydi</td></tr>
@@ -50,7 +53,7 @@
 
     <div class="why">
       <div><h3>Nega obunasiz?</h3><p>Ish qidirayotgan odamga odatda bitta yaxshi rezyume kerak. Oylik to'lov uchun eslatma kutish shart emas.</p></div>
-      <div><h3>Avval ko'ring, keyin to'lang</h3><p>Rezyume tayyor bo'lgach 9 ta shablonda ko'rasiz. Faqat natija yoqsa ochasiz.</p></div>
+      <div><h3>Avval ko'ring, keyin to'lang</h3><p>Rezyumeni barcha shablonlarda ko'rasiz va birinchi PDF'ni bepul olasiz. Yoqsa — Word va Pro shablonlar uchun ochasiz.</p></div>
       <div><h3>Telegram orqali to'lov</h3><p>Botda paketni tanlaysiz, kartaga o'tkazasiz va chekni yuborasiz. Click va Payme tez orada.</p></div>
     </div>
   </div>

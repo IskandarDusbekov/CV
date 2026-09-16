@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ site.site_name|default:'tezrezyume.uz' }} — Matn yozing, professional rezyume tayyor{% endblock %}
+{% block title %}{{ site.seo_default_title|default:site.site_name }}{% endblock %}
 
 {% block extra_style %}
 /* HERO */
@@ -52,6 +52,10 @@
 .step p { color: var(--muted); }
 
 /* TEMPLATES */
+.sample-rail { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+.sample-card .paper-thumb { aspect-ratio: 794 / 900; border-radius: 12px; border: 1px solid var(--line); box-shadow: var(--shadow-sm); transition: transform .25s; }
+.sample-card:hover .paper-thumb { transform: translateY(-5px); }
+.sample-card b { display: block; margin-top: 8px; font-size: 14.5px; }
 .tpl-rail { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px; }
 .tpl-card { display: block; }
 .tpl-card .paper-thumb { aspect-ratio: 794 / 1000; border-radius: 12px; border: 1px solid var(--line); box-shadow: var(--shadow-sm); transition: transform .25s, box-shadow .25s; }
@@ -105,7 +109,7 @@
   .demo { grid-template-columns: minmax(0, 1fr); }
   .arrow { transform: rotate(90deg); }
   .steps { grid-template-columns: minmax(0, 1fr); }
-  .tpl-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tpl-rail, .sample-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bento { grid-template-columns: minmax(0, 1fr); }
   .t-wide, .t-third { grid-column: auto; }
 }
@@ -114,6 +118,8 @@
   .cta { padding: 44px 22px; }
 }
 {% endblock %}
+
+{% block head_extra %}<script type="application/ld+json">{{ home_schema }}</script>{% endblock %}
 
 {% block content %}
 <section class="hero">
@@ -170,8 +176,27 @@
     <div class="steps" style="margin-top:16px;">
       <div class="step"><div class="step-n">1</div><h3>Yozing</h3><p>Tajriba, ko'nikma, ta'lim — erkin matn. Xohlasangiz rasm qo'shing va rezyume tilini tanlang.</p></div>
       <div class="step"><div class="step-n">2</div><h3>AI tartiblaydi</h3><p>Bo'limlarga ajratadi, vazifalarni natijaga yo'naltirilgan jumlalarga aylantiradi.</p></div>
-      <div class="step"><div class="step-n">3</div><h3>Shablon va yuklab olish</h3><p>9 ta dizayndan (2 tasi ATS uchun) birini tanlang, vakansiyaga moslang, PDF yoki Word yuklab oling.</p></div>
+      <div class="step"><div class="step-n">3</div><h3>Shablon va yuklab olish</h3><p>{{ templates|length }} ta dizayndan birini tanlang, vakansiyaga moslang. Birinchi PDF — bepul.</p></div>
     </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Tayyor namunalar</span>
+      <h2>Kasbingizni tanlang — <span class="serif">ismingizni</span> yozing</h2>
+      <p>Tajribali HR maslahati bilan yozilgan namunalar. Namunani oching, o'zingizga moslang — 2 daqiqada tayyor.</p>
+    </div>
+    <div class="sample-rail">
+      {% for it in samples %}
+      <a href="{{ it.sample.get_absolute_url }}" class="sample-card">
+        <div class="paper-thumb"><div class="paper-scaler">{% include it.template_partial with cv_data=it.cv_data show_watermark=False company_branding=None %}</div></div>
+        <b>{{ it.sample.profession }}</b>
+      </a>
+      {% endfor %}
+    </div>
+    <p style="margin-top:22px;"><a href="/namunalar/" class="btn btn-dark btn-lg">Barcha namunalar →</a></p>
   </div>
 </section>
 
@@ -186,7 +211,7 @@
       {% for t in templates %}
       <a href="/cv/template-preview/{{ t.code }}/" class="tpl-card">
         <div class="paper-thumb"><div class="paper-scaler">{% include t.template_partial with cv_data=t.cv_data show_watermark=False %}</div></div>
-        <div class="tpl-meta"><b>{{ t.label }}</b>{% if t.ats %}<span class="badge badge-free">ATS ✓</span>{% endif %}</div>
+        <div class="tpl-meta"><b>{{ t.label }}</b>{% if t.pro %}<span class="badge badge-pro">PRO</span>{% else %}<span class="badge badge-free">Bepul</span>{% endif %}</div>
       </a>
       {% endfor %}
       <a href="/cv/namuna/" class="tpl-more">
@@ -253,8 +278,8 @@
   <div class="wrap">
     <div class="section-head center"><h2>Ko'p so'raladigan savollar</h2></div>
     <div class="faq">
-      <details open><summary>Nima bepul, nima pullik?</summary><p>{{ FREE_CV_LIMIT }} ta rezyume yaratish va {{ FREE_TAILOR_LIMIT }} ta vakansiyaga moslashtirish bepul — natijani to'liq ekranda ko'rasiz. PDF yoki Word yuklab olish uchun Telegram orqali kirib, rezyumeni bir martalik to'lov yoki Pro bilan ochasiz.</p></details>
-      <details><summary>Kredit nima?</summary><p>1 kredit bitta rezyumeni ochadi: 9 ta shablon, belgisiz PDF va Word — cheksiz yuklab olish, {{ site.tailor_per_unlocked_cv }} ta vakansiyaga moslashtirilgan versiya (ular ham ochiq). Kredit va ochilgan rezyume muddatsiz. Paketda olsangiz, har bir rezyume arzonroqqa tushadi.</p></details>
+      <details open><summary>Nima bepul, nima pullik?</summary><p>Bepul: AI bilan {{ FREE_CV_LIMIT }} ta rezyume, tayyor namunalardan cheksiz rezyume, {{ FREE_TAILOR_LIMIT }} ta vakansiyaga moslashtirish va <b>{{ site.free_pdf_downloads }} ta PDF yuklab olish</b> («Bepul» belgili shablonlarda, Telegram orqali 2 bosishda kirasiz). Word fayl, Pro shablonlar va ko'proq PDF — kredit paketi yoki Pro bilan.</p></details>
+      <details><summary>Kredit nima?</summary><p>1 kredit bitta rezyumeni to'liq ochadi: barcha shablonlar (Pro ham), belgisiz PDF va Word — cheksiz yuklab olish, {{ site.tailor_per_unlocked_cv }} ta vakansiyaga moslashtirilgan versiya (ular ham ochiq). Kredit va ochilgan rezyume muddatsiz. Paketda olsangiz, har bir rezyume arzonroqqa tushadi.</p></details>
       <details><summary>Pro kimlar uchun?</summary><p>Ko'p vakansiyaga topshiradiganlar va HR agentliklar uchun: 30 kun ichida 30 ta rezyume va 50 ta moslashtirish, hammasi ochiq. Avtomatik yangilanmaydi.</p></details>
       <details><summary>ATS-friendly nima degani?</summary><p>Katta kompaniyalar rezyumelarni avval dastur (ATS) bilan saralaydi. Ustunli, ikonkali dizaynlarni u noto'g'ri o'qiydi. ATS shablonlarimiz bir ustunli, standart sarlavhali — dastur ham, HR ham to'g'ri o'qiydi.</p></details>
       <details><summary>Qanday to'lash mumkin?</summary><p>Hozircha Telegram bot orqali: paketni tanlaysiz, kartaga o'tkazasiz va chek skrinshotini yuborasiz. Tekshirilgach kredit avtomatik qo'shiladi. Click va Payme tez orada ulanadi.</p></details>

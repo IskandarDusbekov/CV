@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ item.q }} — {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
+{% block meta_description %}{{ description }}{% endblock %}
+
+{% block extra_style %}
+.gq { max-width: 760px; margin: 0 auto; padding: 30px 16px 0; }
+.crumbs { font-size: 13px; color: var(--muted); }
+.crumbs a:hover { color: var(--ink); text-decoration: underline; }
+.gq h1 { margin-top: 12px; font-size: clamp(28px, 4.4vw, 44px); line-height: 1.08; font-weight: 800; letter-spacing: -.035em; }
+.gq .sec { display: inline-flex; gap: 6px; margin-top: 12px; padding: 4px 11px; border-radius: 999px; background: #fff; border: 1px solid var(--line); font-size: 13px; font-weight: 700; color: var(--muted); }
+.ans { margin-top: 22px; padding: 24px; border-radius: 22px; background: #fff; border: 1px solid var(--line); font-size: 16.5px; line-height: 1.75; color: var(--ink-2); }
+.ans p { margin: 0 0 12px; } .ans p:last-child { margin-bottom: 0; }
+.ans ul, .ans ol { margin: 0 0 12px; padding-left: 22px; } .ans li { margin-bottom: 6px; }
+.ans a { text-decoration: underline; text-underline-offset: 3px; }
+.ans code { padding: 1px 6px; border-radius: 6px; background: var(--bg); font-size: 14.5px; overflow-wrap: anywhere; }
+.ans .tpl { margin: 10px 0 14px; padding: 14px 16px; border-radius: 14px; background: var(--bg); border-left: 3px solid var(--lime); white-space: pre-line; font-size: 15.5px; color: var(--ink); }
+.cta { display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 22px; padding: 24px; border-radius: 22px; background: var(--ink); color: #fff; }
+.cta h2 { font-size: 21px; font-weight: 800; line-height: 1.15; }
+.cta p { margin-top: 4px; color: #a1a3ab; font-size: 14.5px; }
+.more { margin-top: 34px; }
+.more h2 { margin-bottom: 10px; font-size: 20px; font-weight: 800; }
+.more a { display: flex; justify-content: space-between; gap: 12px; padding: 13px 16px; margin-bottom: 8px; border-radius: 14px; background: #fff; border: 1px solid var(--line); font-weight: 700; }
+.more a:hover { border-color: var(--ink); }
+.more a span { color: var(--muted-2); }
+{% endblock %}
+
+{% block content %}
+<article class="gq">
+  <nav class="crumbs" aria-label="Yo'l"><a href="/">Bosh sahifa</a> › <a href="/qollanma/">Qo'llanma</a> › <a href="/qollanma/#{{ section.id }}">{{ section.title }}</a></nav>
+  <h1>{{ item.q }}</h1>
+  <span class="sec">{{ section.icon }} {{ section.title }}</span>
+  <div class="ans">{{ item.a }}</div>
+
+  <div class="cta">
+    <div><h2>Rezyumengizni hoziroq tayyorlang</h2><p>Tayyor namunadan yoki savol-javob bilan — 2 daqiqada, birinchi PDF bepul.</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a href="/namunalar/" class="btn btn-light">Namunalar</a>
+      <a href="/cv/builder/" class="btn btn-accent">Yaratish →</a>
+    </div>
+  </div>
+
+  {% if siblings %}
+  <section class="more">
+    <h2>Shu mavzuda yana</h2>
+    {% for s in siblings %}<a href="/qollanma/{{ s.slug }}/">{{ s.q }}<span>→</span></a>{% endfor %}
+    <p style="margin-top:12px;"><a href="/qollanma/" class="btn btn-light" style="display:inline-flex;border:1px solid var(--line);">Barcha savollar</a></p>
+  </section>
+  {% endif %}
+</article>
+<script type="application/ld+json">{{ schema }}</script>
+{% endblock %}

@@ -43,10 +43,45 @@ class DownloadPermissionTests(TestCase):
         return CV.objects.create(user=self.user, raw_input_text="x", cv_json=DEMO_CV_JSON,
                                  selected_template=template, is_unlocked=unlocked, **kw)
 
-    def test_locked_cv_cannot_download_any_format(self):
-        cv = self._cv("ats")
+    def test_locked_pro_template_cannot_download_any_format(self):
+        cv = self._cv("creative")
         for name in ("download_pdf", "download_docx"):
-            self.assertRedirects(self.client.get(reverse(name, args=[cv.public_id])), reverse("cv_preview", args=[cv.public_id]))
+            response = self.client.get(reverse(name, args=[cv.public_id]))
+            self.assertEqual(response.status_code, 302)
+            self.assertTrue(response["Location"].startswith(reverse("cv_preview", args=[cv.public_id])))
+
+    @mock.patch("apps.cv.views.render_cv_to_pdf", return_value=b"%PDF-1.7")
+    def test_first_pdf_is_free_on_free_template_but_word_is_not(self, _):
+        first, second = self._cv("ats"), self._cv("simple")
+        self.assertEqual(self.client.get(reverse("download_pdf", args=[first.public_id]))["Content-Type"], "application/pdf")
+        first.refresh_from_db()
+        self.user.profile.refresh_from_db()
+        self.assertTrue(first.free_pdf)
+        self.assertEqual(self.user.profile.free_pdf_used, 1)
+        # shu rezyumeni qayta yuklash — yana bepul, hisob o'smaydi
+        self.assertEqual(self.client.get(reverse("download_pdf", args=[first.public_id])).status_code, 200)
+        self.user.profile.refresh_from_db()
+        self.assertEqual(self.user.profile.free_pdf_used, 1)
+        # ikkinchi rezyume — bepul limit tugagan
+        self.assertEqual(self.client.get(reverse("download_pdf", args=[second.public_id])).status_code, 302)
+        # Word — faqat kredit/Pro
+        self.assertEqual(self.client.get(reverse("download_docx", args=[first.public_id])).status_code, 302)
+        # Pro shablonga almashtirilsa, bepul PDF ishlamaydi
+        first.selected_template = "bold"
+        first.save()
+        self.assertEqual(self.client.get(reverse("download_pdf", args=[first.public_id])).status_code, 302)
+
+    def test_free_pdf_limit_from_settings_and_template_tiers_from_panel(self):
+        from .models import TemplateSetting
+        from .services import pdf_access, template_is_pro
+
+        site = SiteSettings.load()
+        site.free_pdf_downloads = 0
+        site.save()
+        self.assertEqual(pdf_access(self.user, self._cv("ats")), "no_free")
+        self.assertTrue(template_is_pro("bold"))
+        TemplateSetting.objects.filter(code="bold").update(is_pro=False)
+        self.assertFalse(template_is_pro("bold"))
 
     @mock.patch("apps.cv.views.render_cv_to_pdf", return_value=b"%PDF-1.7")
     def test_unlocked_cv_downloads(self, _):
@@ -163,6 +198,7 @@ class DocxExportTests(TestCase):
 class PageRenderTests(TestCase):
     def test_public_pages(self):
         for url in ["/", "/pricing/", "/cv/templates/", "/cv/namuna/", "/cv/builder/", "/users/login/", "/users/login/?mode=signup",
+                    "/namunalar/", "/namunalar/kassir/", "/sitemap.xml", "/qollanma/diplomsiz-ish-topsa-boladimi/",
                     *[f"/cv/template-preview/{c}/" for c in SUPPORTED_TEMPLATES]]:
             self.assertEqual(self.client.get(url).status_code, 200, url)
 
@@ -242,8 +278,9 @@ class TelegramAppDownloadTests(TestCase):
             self.assertEqual(self.client_class().get(url).status_code, 410)
 
     def test_locked_or_foreign_cv_gets_no_link(self, _):
-        locked = CV.objects.create(user=self.user, raw_input_text="x", cv_json=DEMO_CV_JSON)
+        locked = CV.objects.create(user=self.user, raw_input_text="x", cv_json=DEMO_CV_JSON, selected_template="dark")
         self.assertEqual(self._link(cv=locked).status_code, 403)
+        self.assertEqual(self._link("docx", cv=CV.objects.create(user=self.user, raw_input_text="x", cv_json=DEMO_CV_JSON, selected_template="ats")).status_code, 403)
         foreign = CV.objects.create(user=User.objects.create_user(username="z"), raw_input_text="x", cv_json=DEMO_CV_JSON, is_unlocked=True)
         self.assertEqual(self._link(cv=foreign).status_code, 404)
         self.client.logout()
@@ -323,3 +360,85 @@ class AICostTests(TestCase):
         self.assertEqual(AIUsage.objects.filter(success=False).count(), 3)
         mocked.side_effect = None
         self.assertEqual(self.client.post(reverse("generate_cv"), {"text": "men sardor, 6 yil python dasturchiman"}).status_code, 200)
+
+
+class SamplesAndEditorTests(TestCase):
+    def test_sample_to_editor_flow_for_anonymous(self):
+        from .models import ResumeSample
+
+        response = self.client.post("/namunalar/kassir/boshlash/")
+        cv = CV.objects.get()
+        self.assertRedirects(response, f"/cv/edit/{cv.public_id}/?new=1", fetch_redirect_response=False)
+        self.assertEqual(cv.cv_json["full_name"], "Malika Tursunova")
+        self.assertFalse(AIUsage.objects.exists())  # AI ishlatilmaydi
+        self.assertEqual(ResumeSample.objects.get(slug="kassir").uses, 1)
+        self.assertContains(self.client.get(f"/cv/edit/{cv.public_id}/?new=1"), "Namuna nusxalandi")
+
+        response = self.client.post(f"/cv/edit/{cv.public_id}/", {
+            "full_name": "Ali Valiyev", "job_title": "Kassir", "phone": "+998 91 000 00 00", "skills": "Excel, 1C\nKassa",
+            "languages": "O'zbek — ona tili", "exp-0-position": "Kassir", "exp-0-company": "Havas", "exp-0-duration": "2024 — hozir",
+            "exp-0-responsibilities": "Kassada ishladim\n• Hisobot topshirdim", "exp-7-position": "", "edu-3-institution": "Kollej",
+            "edu-3-degree": "Buxgalteriya", "edu-3-year": "2023",
+        })
+        self.assertRedirects(response, reverse("cv_preview", args=[cv.public_id]), fetch_redirect_response=False)
+        cv.refresh_from_db()
+        self.assertEqual(cv.cv_json["full_name"], "Ali Valiyev")
+        self.assertEqual(cv.cv_json["skills"], ["Excel", "1C", "Kassa"])
+        self.assertEqual(cv.cv_json["experience"], [{"position": "Kassir", "company": "Havas", "duration": "2024 — hozir",
+                                                     "responsibilities": ["Kassada ishladim", "Hisobot topshirdim"]}])
+        self.assertEqual(cv.cv_json["education"][0]["institution"], "Kollej")
+        self.assertEqual(cv.cv_json["_language"], "uz")
+
+    def test_logged_in_user_sample_uses_own_name_and_other_user_cannot_edit(self):
+        user = User.objects.create_user(username="s", first_name="Sardor", last_name="Aliyev")
+        UserProfile.objects.filter(user=user).update(phone="+998901112233")
+        self.client.force_login(user)
+        self.client.post("/namunalar/haydovchi/boshlash/")
+        cv = CV.objects.get()
+        self.assertEqual((cv.cv_json["full_name"], cv.cv_json["phone"], cv.user_id), ("Sardor Aliyev", "+998901112233", user.pk))
+        self.client.force_login(User.objects.create_user(username="other"))
+        self.assertEqual(self.client.get(f"/cv/edit/{cv.public_id}/").status_code, 404)
+
+    def test_renaming_free_pdf_cv_resets_free_pdf(self):
+        user = User.objects.create_user(username="r")
+        self.client.force_login(user)
+        cv = CV.objects.create(user=user, raw_input_text="x", cv_json=DEMO_CV_JSON, selected_template="ats", free_pdf=True)
+        self.client.post(f"/cv/edit/{cv.public_id}/", {"full_name": "Boshqa Odam"})
+        cv.refresh_from_db()
+        self.assertFalse(cv.free_pdf)
+
+    def test_preview_shows_template_strip_with_tiers_and_referral(self):
+        user = User.objects.create_user(username="p")
+        self.client.force_login(user)
+        cv = CV.objects.create(user=user, raw_input_text="x", cv_json=DEMO_CV_JSON, selected_template="ats")
+        response = self.client.get(reverse("cv_preview", args=[cv.public_id]))
+        self.assertContains(response, 'id="tpl-strip"')
+        self.assertContains(response, "PDF yuklab olish — bepul")
+        self.assertContains(response, '<em class="pro">PRO</em>')
+        self.assertContains(response, "/r/")
+
+
+class SeoTests(TestCase):
+    def test_sitemap_robots_and_meta(self):
+        from apps.core.models import SeoPage
+
+        sitemap = self.client.get("/sitemap.xml").content.decode()
+        for path in ("/namunalar/kassir/", "/qollanma/", "/cv/template-preview/bold/"):
+            self.assertIn(path, sitemap)
+        self.assertIn("Sitemap:", self.client.get("/robots.txt").content.decode())
+        home = self.client.get("/").content.decode()
+        self.assertIn('rel="canonical"', home)
+        self.assertIn('"@type": "SoftwareApplication"', home)
+
+        SeoPage.objects.create(path="namunalar", title="Maxsus sarlavha", description="Maxsus tavsif", noindex=True)
+        page = self.client.get("/namunalar/").content.decode()
+        self.assertIn("<title>Maxsus sarlavha</title>", page)
+        self.assertIn('content="Maxsus tavsif"', page)
+        self.assertIn('content="noindex, follow"', page)
+
+    def test_private_pages_noindex_and_guide_question_page(self):
+        self.assertContains(self.client.get("/users/login/"), 'content="noindex, nofollow"')
+        response = self.client.get("/qollanma/diplomsiz-ish-topsa-boladimi/")
+        self.assertContains(response, "<h1>Diplomsiz ish topsa bo&#x27;ladimi?</h1>", html=False)
+        self.assertContains(response, '"@type": "FAQPage"')
+        self.assertEqual(self.client.get("/qollanma/yoq-savol/").status_code, 404)

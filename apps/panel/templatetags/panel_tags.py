@@ -7,6 +7,7 @@ ACTION_COLORS = {
     "cv_unlock": "amber", "download_pdf": "gray", "download_docx": "gray", "payment_request": "orange",
     "payment_approved": "green", "payment_rejected": "red", "blocked": "red", "unblocked": "green",
     "limit_reached": "amber", "credits_changed": "violet", "pro_granted": "violet", "staff_granted": "violet", "staff_removed": "amber", "contact": "sky",
+    "referral": "green", "promo_bonus": "orange",
 }
 PAYMENT_COLORS = {"awaiting_receipt": "gray", "pending": "amber", "approved": "green", "rejected": "red", "cancelled": "gray"}
 

@@ -88,6 +88,8 @@ class UserProfile(models.Model):
     )
     premium_until = models.DateTimeField(null=True, blank=True)
     credits = models.PositiveIntegerField("Kreditlar", default=0, help_text="1 kredit = 1 CV ni ochish")
+    free_pdf_used = models.PositiveIntegerField("Ishlatilgan bepul PDF", default=0)
+    referral_code = models.CharField("Taklif kodi", max_length=16, unique=True, null=True, blank=True)
     email_verified = models.BooleanField(default=False)
     phone_verified = models.BooleanField(default=False)
     is_blocked = models.BooleanField("Bloklangan", default=False)
@@ -442,3 +444,76 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
         return
 
     UserProfile.objects.get_or_create(user=instance)
+
+
+class Referral(models.Model):
+    """Do'st taklifi: taklif qilingan odam ro'yxatdan o'tgandagina kredit beriladi (har bir odam uchun bir marta)."""
+
+    inviter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="referrals_made")
+    invitee = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="referral_received")
+    inviter_credits = models.PositiveIntegerField(default=0)
+    invitee_credits = models.PositiveIntegerField(default=0)
+    via = models.CharField(max_length=20, blank=True)  # site / bot
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        verbose_name = "Taklif"
+        verbose_name_plural = "Takliflar"
+
+    def __str__(self):
+        return f"{self.inviter} → {self.invitee}"
+
+
+class PendingReferral(models.Model):
+    """Bot orqali kelgan taklif: raqam yuborilib akkaunt yaratilguncha saqlanadi."""
+
+    telegram_id = models.BigIntegerField(unique=True)
+    code = models.CharField(max_length=16)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class Promo(models.Model):
+    """Aksiya: belgilangan sanalarda ro'yxatdan o'tgan (yoki kirgan) har bir foydalanuvchiga bonus kredit."""
+
+    AUDIENCE_NEW = "new"
+    AUDIENCE_ALL = "all"
+    AUDIENCE_CHOICES = [
+        (AUDIENCE_NEW, "Shu sanalarda ro'yxatdan o'tganlar"),
+        (AUDIENCE_ALL, "Shu sanalarda kirgan barcha foydalanuvchilar"),
+    ]
+
+    name = models.CharField("Nomi", max_length=120, help_text="Masalan: Bitiruvchilar haftaligi")
+    starts_at = models.DateTimeField("Boshlanishi")
+    ends_at = models.DateTimeField("Tugashi")
+    audience = models.CharField("Kimga", max_length=10, choices=AUDIENCE_CHOICES, default=AUDIENCE_NEW)
+    bonus_credits = models.PositiveIntegerField("Bonus kredit", default=1, help_text="1 kredit = 1 rezyume PDF + Word, barcha shablonlar")
+    banner_text = models.CharField("Saytdagi e'lon matni", max_length=200, blank=True,
+                                   help_text="Masalan: 🎁 20-sentabrgacha ro'yxatdan o'tganlarga 2 ta rezyume tekin!")
+    show_banner = models.BooleanField("E'lonni sayt tepasida ko'rsatish", default=True)
+    is_active = models.BooleanField("Faol", default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-starts_at",)
+        verbose_name = "Aksiya"
+        verbose_name_plural = "Aksiyalar"
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def is_running(self):
+        now = timezone.now()
+        return self.is_active and self.starts_at <= now <= self.ends_at
+
+
+class PromoGrant(models.Model):
+    promo = models.ForeignKey(Promo, on_delete=models.CASCADE, related_name="grants")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="promo_grants")
+    credits = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        constraints = [models.UniqueConstraint(fields=["promo", "user"], name="one_grant_per_promo_user")]

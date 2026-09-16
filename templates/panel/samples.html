@@ -1,0 +1,30 @@
+{% extends "panel/base.html" %}
+{% block title %}Namunalar{% endblock %}
+{% block heading %}📄 Tayyor namunalar{% endblock %}
+{% block subheading %}<p>Kasblar bo'yicha rezyume namunalari: har biri Google uchun alohida sahifa (/namunalar/…) · jami {{ total_uses }} marta ishlatilgan</p>{% endblock %}
+{% block actions %}<a href="/namunalar/" target="_blank" class="btn btn-light">Saytda ko'rish ↗</a><a href="{% url 'panel:sample_new' %}" class="btn">➕ Yangi namuna</a>{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="table-wrap">
+    <table class="t">
+      <tr><th>Kasb</th><th>Yo'nalish</th><th>Shablon</th><th class="num">Ishlatilgan</th><th>Holat</th><th class="num">Tartib</th><th></th></tr>
+      {% for s in items %}
+      <tr>
+        <td><b>{{ s.profession }}</b><br><a class="link small muted" href="{{ s.get_absolute_url }}" target="_blank">{{ s.get_absolute_url }}</a></td>
+        <td class="small">{{ s.category|default:"—" }}</td>
+        <td class="small">{{ s.template_code }}</td>
+        <td class="num"><b>{{ s.uses }}</b></td>
+        <td>{% if s.is_published %}<span class="badge b-green">Chop etilgan</span>{% else %}<span class="badge b-gray">Qoralama</span>{% endif %}</td>
+        <td class="num">{{ s.sort_order }}</td>
+        <td class="nowrap">
+          <a class="btn btn-light btn-sm" href="{% url 'panel:sample_edit' s.pk %}">Tahrirlash</a>
+          <form method="post" action="{% url 'panel:sample_delete' s.pk %}" style="display:inline;">{% csrf_token %}<button class="btn btn-light btn-sm" data-confirm="«{{ s.profession }}» namunasi o'chirilsinmi?">✕</button></form>
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="7" class="empty">Namuna yo'q</td></tr>{% endfor %}
+    </table>
+  </div>
+</div>
+<p class="note" style="margin-top:14px;">💡 Yangi namunani eng oson yo'li: <a class="link" href="{% url 'panel:cvs' %}">CV lar</a> bo'limida chiroyli rezyumeni toping va <b>«➕ Namuna»</b> tugmasini bosing — ma'lumotlar o'zi to'ladi, faqat ism-familiya va raqamni o'zgartirasiz. Har bir namuna Google'da «<i>kasb</i> rezyume namunasi» so'rovi bo'yicha chiqishi uchun alohida sahifa bo'ladi.</p>
+{% endblock %}

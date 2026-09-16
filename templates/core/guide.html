@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Ishga qanday topshiraman? Qo'llanma — {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
+{% block title %}Ishga qanday topshirish: rezyume, diplom, suhbat — to'liq qo'llanma{% endblock %}
+{% block meta_description %}Diplomsiz ish topsa bo'ladimi? Tajriba yo'q bo'lsa rezyumega nima yoziladi? HR'ga qanday yuboriladi? 50+ savolga aniq javob va tayyor namunalar.{% endblock %}
 
 {% block extra_style %}
 .gd { padding: 40px 0 0; }
@@ -97,7 +98,7 @@
           <details class="qa" id="{{ item.n }}" data-qa>
             <summary>{{ item.q }}</summary>
             <div class="ans">{{ item.a }}</div>
-            <div class="qa-foot"><button type="button" class="qa-link" data-link="{{ item.n }}">🔗 Havolani nusxalash</button></div>
+            <div class="qa-foot"><a class="qa-link" href="/qollanma/{{ item.slug }}/">Alohida sahifada ochish →</a>&nbsp;&nbsp;<button type="button" class="qa-link" data-link="{{ item.n }}">🔗 Havolani nusxalash</button></div>
           </details>
           {% endfor %}
         </section>

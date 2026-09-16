@@ -98,6 +98,20 @@
     .input, select.input, textarea.input { min-height: 36px; padding: 7px 11px; border: 1px solid var(--line-2); border-radius: 10px; background: #fff; font: inherit; font-size: 13.5px; color: var(--ink); outline: none; }
     .input:focus { border-color: var(--ink); box-shadow: 0 0 0 3px rgba(21,22,26,.08); }
     .search { min-width: 240px; flex: 1; max-width: 360px; }
+    /* formalar (sozlamalar, aksiyalar, namunalar, SEO) */
+    .fs { padding: 16px; border-bottom: 1px solid var(--line); }
+    .fs:last-of-type { border-bottom: 0; }
+    .fs h3 { margin-bottom: 12px; font-size: 14px; font-weight: 800; }
+    .fs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+    .f label { display: block; margin-bottom: 4px; font-size: 12.5px; font-weight: 700; }
+    .f .input { width: 100%; }
+    .f textarea.input { min-height: 70px; }
+    .f .help { margin-top: 3px; font-size: 11.5px; color: var(--muted-2); }
+    .f .err { margin-top: 3px; font-size: 12px; color: var(--red); }
+    .f.wide { grid-column: 1 / -1; }
+    .save { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); background: #fafaf8; border-radius: 0 0 var(--radius) var(--radius); }
+    .note { padding: 12px 14px; border-radius: 12px; background: #f8fafc; border: 1px solid var(--line); font-size: 13px; line-height: 1.55; color: var(--ink-2); }
+    @media (max-width: 860px) { .fs-grid { grid-template-columns: minmax(0, 1fr); } }
 
     .toasts { display: grid; gap: 8px; margin-bottom: 14px; }
     .toast { padding: 10px 14px; border-radius: 12px; font-weight: 600; border: 1px solid; }
@@ -149,7 +163,13 @@
     <a href="{% url 'panel:errors' %}" class="{% if p == 'errors' %}on{% endif %}"><span class="ic">🐞</span>Xatolar{% if counts.errors %}<span class="cnt soft">{{ counts.errors }}</span>{% endif %}</a>
     <a href="{% url 'panel:activity' %}" class="{% if p == 'activity' %}on{% endif %}"><span class="ic">🕓</span>Faollik</a>
     <a href="{% url 'panel:messages' %}" class="{% if p == 'messages' %}on{% endif %}"><span class="ic">✉️</span>Murojaatlar{% if counts.messages %}<span class="cnt">{{ counts.messages }}</span>{% endif %}</a>
+    <div class="nav-group">Marketing</div>
+    <a href="{% url 'panel:samples' %}" class="{% if p == 'samples' or p == 'sample_edit' or p == 'sample_new' %}on{% endif %}"><span class="ic">📄</span>Namunalar</a>
+    <a href="{% url 'panel:referrals' %}" class="{% if p == 'referrals' %}on{% endif %}"><span class="ic">🤝</span>Takliflar</a>
     {% if request.user.is_superuser %}
+    <a href="{% url 'panel:promos' %}" class="{% if p == 'promos' or p == 'promo_edit' %}on{% endif %}"><span class="ic">🎁</span>Aksiyalar</a>
+    <a href="{% url 'panel:templates' %}" class="{% if p == 'templates' %}on{% endif %}"><span class="ic">🎨</span>Shablonlar</a>
+    <a href="{% url 'panel:seo' %}" class="{% if p == 'seo' or p == 'seo_page' %}on{% endif %}"><span class="ic">🔍</span>SEO</a>
     <div class="nav-group">Sozlash</div>
     <a href="{% url 'panel:settings' %}" class="{% if p == 'settings' %}on{% endif %}"><span class="ic">⚙️</span>Sozlamalar va narxlar</a>
     {% endif %}

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import marketing, views
 
 app_name = "panel"
 
@@ -23,4 +23,15 @@ urlpatterns = [
     path("murojaatlar/", views.contact_messages, name="messages"),
     path("murojaatlar/<int:pk>/", views.message_resolve, name="message_resolve"),
     path("sozlamalar/", views.settings_view, name="settings"),
+    path("aksiyalar/", marketing.promos, name="promos"),
+    path("aksiyalar/<int:pk>/", marketing.promos, name="promo_edit"),
+    path("aksiyalar/<int:pk>/ochirish/", marketing.promo_delete, name="promo_delete"),
+    path("takliflar/", marketing.referrals, name="referrals"),
+    path("namunalar/", marketing.samples, name="samples"),
+    path("namunalar/yangi/", marketing.sample_edit, name="sample_new"),
+    path("namunalar/<int:pk>/", marketing.sample_edit, name="sample_edit"),
+    path("namunalar/<int:pk>/ochirish/", marketing.sample_delete, name="sample_delete"),
+    path("shablonlar/", marketing.templates_view, name="templates"),
+    path("seo/", marketing.seo, name="seo"),
+    path("seo/<int:pk>/", marketing.seo, name="seo_page"),
 ]

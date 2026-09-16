@@ -249,10 +249,10 @@ SECTIONS = [
             ("Sayt qanday ishlaydi?",
              "<ol><li>Oddiy savollarga javob berasiz yoki o'zingiz haqingizda erkin yozasiz — bilmaganingizni o'tkazib yuborasiz.</li>"
              "<li>AI ~1 daqiqada tartibli, professional rezyume yozadi.</li>"
-             "<li>9 ta shablondan birini tanlaysiz, kerak bo'lsa vakansiyaga moslashtirasiz.</li>"
+             "<li>tayyor namunadan boshlaysiz yoki shablonni tanlaysiz, kerak bo'lsa vakansiyaga moslashtirasiz.</li>"
              "<li>PDF yoki Word qilib yuklab olasiz.</li></ol>"),
             ("Bepulmi?",
-             "<p>Rezyume yaratish va ekranda to'liq ko'rish — <b>bepul</b> (limit bor). PDF/Word yuklab olish uchun rezyumeni <b>kredit</b> bilan ochasiz yoki ko'p rezyume kerak bo'lsa <b>Pro</b> olasiz. "
+             "<p>Rezyume yaratish, tayyor namunalar va <b>birinchi PDF — bepul</b> («Bepul» belgili shablonlarda). Word fayl, Pro shablonlar va ko'proq PDF uchun rezyumeni <b>kredit</b> bilan ochasiz yoki ko'p rezyume kerak bo'lsa <b>Pro</b> olasiz. "
              "Obuna yo'q, kredit muddati tugamaydi. Aniq narxlar <a href='/pricing/'>Narxlar</a> sahifasida.</p>"),
             ("AI rezyumemga yolg'on narsa qo'shib qo'yadimi?",
              "<p>Yo'q. AI faqat siz yozgan ma'lumotdan foydalanadi: jumlalarni chiroyli qiladi, tartiblaydi, imloni to'g'rilaydi. "
@@ -288,3 +288,37 @@ def faq_schema(sections=SECTIONS):
             for section in sections for q, a in section["items"]
         ],
     }
+
+
+def plain_text(html):
+    import re
+    from html import unescape
+
+    return re.sub(r"\s+", " ", unescape(re.sub(r"<[^>]+>", " ", html))).strip()
+
+
+def slugify_question(question):
+    """«Diplomsiz ish topsa bo'ladimi?» → «diplomsiz-ish-topsa-boladimi» (o'zbek lotin harflari uchun)."""
+    import re
+
+    text = question.lower()
+    for a, b in (("o‘", "o"), ("g‘", "g"), ("o'", "o"), ("g'", "g"), ("ʻ", ""), ("’", ""), ("'", ""), ("«", ""), ("»", "")):
+        text = text.replace(a, b)
+    text = re.sub(r"[^a-z0-9]+", "-", text).strip("-")
+    return text[:80].rstrip("-")
+
+
+def all_questions():
+    """[(section, index, question, answer_html, slug)] — tartib bilan."""
+    items = []
+    for section in SECTIONS:
+        for i, (q, a) in enumerate(section["items"], 1):
+            items.append({"section": section, "n": f"{section['id']}-{i}", "q": q, "a": a, "slug": slugify_question(q)})
+    return items
+
+
+def find_question(slug):
+    for item in all_questions():
+        if item["slug"] == slug:
+            return item
+    return None

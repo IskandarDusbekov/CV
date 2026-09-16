@@ -1,0 +1,107 @@
+{% include "cv/partials/_paper_base.html" %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap">
+<style>
+  .cvt-simple { --ink: #1a1a1a; --body: #333; --muted: #6b6b6b; --line: #cfcfcf; --accent: #2f5d8a;
+    padding: 50px 60px 60px; background: #fff; font-family: "PT Sans", Arial, sans-serif; font-size: 13px; color: var(--body); }
+  .cvt-simple .si-head { display: flex; align-items: center; gap: 22px; padding-bottom: 16px; border-bottom: 3px double var(--line); }
+  .cvt-simple .si-photo { width: 96px; height: 116px; object-fit: cover; border: 1px solid var(--line); }
+  .cvt-simple .si-id { flex: 1; min-width: 0; }
+  .cvt-simple .si-name { font-size: 30px; font-weight: 700; line-height: 1.1; color: var(--ink); }
+  .cvt-simple .si-title { margin-top: 4px; font-size: 15px; color: var(--accent); font-weight: 700; }
+  .cvt-simple .si-contacts { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12.5px; color: var(--body); }
+  .cvt-simple .si-contacts span b { font-weight: 700; color: var(--muted); margin-right: 4px; }
+  .cvt-simple .si-sec { margin-top: 20px; }
+  .cvt-simple .si-sh { margin-bottom: 9px; padding: 3px 10px; background: #eef2f6; border-left: 4px solid var(--accent);
+    font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); }
+  .cvt-simple .si-summary { line-height: 1.65; }
+  .cvt-simple .si-item { display: grid; grid-template-columns: 128px 1fr; gap: 14px; margin-bottom: 12px; }
+  .cvt-simple .si-item:last-child { margin-bottom: 0; }
+  .cvt-simple .si-date { font-size: 12.5px; color: var(--muted); padding-top: 1px; }
+  .cvt-simple .si-pos { font-size: 14px; font-weight: 700; color: var(--ink); }
+  .cvt-simple .si-co { font-size: 13px; color: var(--accent); }
+  .cvt-simple .si-bullets { margin-top: 4px; }
+  .cvt-simple .si-bullets li { position: relative; padding-left: 13px; margin-bottom: 2px; line-height: 1.55; }
+  .cvt-simple .si-bullets li::before { content: "•"; position: absolute; left: 0; color: var(--accent); }
+  .cvt-simple .si-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 30px; }
+  .cvt-simple .si-list li { position: relative; padding-left: 13px; margin-bottom: 3px; line-height: 1.5; }
+  .cvt-simple .si-list li::before { content: "•"; position: absolute; left: 0; color: var(--accent); }
+  .cvt-simple .si-tech { margin-top: 2px; font-size: 12px; color: var(--muted); }
+  .cvt-simple .cvt-mark { color: var(--muted); }
+</style>
+{% if pdf_mode %}<style>@page { margin: 14mm 0; } @page :first { margin-top: 0; } .cvt-simple { min-height: 0; }</style>{% endif %}
+
+<div class="cvt cvt-simple">
+  <header class="si-head cvt-avoid">
+    {% if cv_data.photo_url %}<img class="si-photo" src="{{ cv_data.photo_url }}" alt="">{% endif %}
+    <div class="si-id">
+      <div class="si-name">{{ cv_data.full_name }}</div>
+      <div class="si-title">{{ cv_data.job_title }}</div>
+      <div class="si-contacts">
+        {% if cv_data.phone %}<span><b>Tel:</b>{{ cv_data.phone }}</span>{% endif %}
+        {% if cv_data.email %}<span><b>Email:</b>{{ cv_data.email }}</span>{% endif %}
+        {% if cv_data.location %}<span>{{ cv_data.location }}</span>{% endif %}
+        {% for item in cv_data.profile_links %}<span>{{ item.value }}</span>{% endfor %}
+      </div>
+    </div>
+  </header>
+
+  {% if cv_data.summary %}
+  <section class="si-sec cvt-avoid">
+    <div class="si-sh cvt-keep">{{ cv_data.labels.profile_summary }}</div>
+    <p class="si-summary">{{ cv_data.summary }}</p>
+  </section>
+  {% endif %}
+
+  {% if cv_data.experience %}
+  <section class="si-sec">
+    <div class="si-sh cvt-keep">{{ cv_data.labels.experience }}</div>
+    {% for exp in cv_data.experience %}
+    <div class="si-item cvt-avoid">
+      <div class="si-date">{{ exp.duration }}</div>
+      <div>
+        <div class="si-pos">{{ exp.position|default:cv_data.labels.position }}</div>
+        {% if exp.company %}<div class="si-co">{{ exp.company }}</div>{% endif %}
+        {% if exp.responsibilities %}<ul class="si-bullets">{% for r in exp.responsibilities %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if cv_data.education %}
+  <section class="si-sec">
+    <div class="si-sh cvt-keep">{{ cv_data.labels.education }}</div>
+    {% for edu in cv_data.education %}
+    <div class="si-item cvt-avoid">
+      <div class="si-date">{{ edu.year }}</div>
+      <div><div class="si-pos">{{ edu.institution }}</div>{% if edu.degree %}<div class="si-co">{{ edu.degree }}</div>{% endif %}</div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if cv_data.projects %}
+  <section class="si-sec">
+    <div class="si-sh cvt-keep">{{ cv_data.labels.projects }}</div>
+    {% for p in cv_data.projects %}
+    <div class="si-item cvt-avoid">
+      <div class="si-date"></div>
+      <div>
+        <div class="si-pos">{{ p.title|default:cv_data.labels.project }}</div>
+        {% if p.description %}<div>{{ p.description }}</div>{% endif %}
+        {% if p.technologies %}<div class="si-tech">{{ p.technologies|join:", " }}</div>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if cv_data.skills or cv_data.languages %}
+  <section class="si-sec cvt-avoid si-cols">
+    {% if cv_data.skills %}<div><div class="si-sh cvt-keep">{{ cv_data.labels.skills }}</div><ul class="si-list">{% for s in cv_data.skills %}<li>{{ s }}</li>{% endfor %}</ul></div>{% endif %}
+    {% if cv_data.languages %}<div><div class="si-sh cvt-keep">{{ cv_data.labels.languages }}</div><ul class="si-list">{% for l in cv_data.languages %}<li>{{ l }}</li>{% endfor %}</ul></div>{% endif %}
+  </section>
+  {% endif %}
+
+  {% if show_watermark %}<div class="cvt-mark">{{ site.site_name|default:'tezrezyume.uz' }} orqali yaratildi</div>{% elif company_branding %}<div class="cvt-mark">{{ company_branding.get_footer_display }}</div>{% endif %}
+</div>

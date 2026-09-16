@@ -1,0 +1,81 @@
+{% extends "panel/base.html" %}
+{% block title %}SEO{% endblock %}
+{% block heading %}🔍 SEO — Google va Yandex{% endblock %}
+{% block subheading %}<p>Sarlavhalar, tavsiflar, tasdiqlash kodlari va statistika — kod yozmasdan</p>{% endblock %}
+{% block actions %}<a href="{{ sitemap_url }}" target="_blank" class="btn btn-light">sitemap.xml ↗</a><a href="/robots.txt" target="_blank" class="btn btn-light">robots.txt ↗</a>{% endblock %}
+
+{% block content %}
+<div class="grid g-main">
+  <div class="grid" style="align-content:start;">
+    <form method="post" class="card">
+      {% csrf_token %}
+      <input type="hidden" name="section" value="settings">
+      <div class="card-h"><h2>⚙️ Umumiy SEO sozlamalari</h2></div>
+      <div class="fs">
+        <h3>Standart sarlavha va tavsif</h3>
+        <div class="fs-grid">
+          <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=settings_form.seo_default_title %}</div>
+          <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=settings_form.seo_default_description %}</div>
+        </div>
+      </div>
+      <div class="fs">
+        <h3>Tasdiqlash va statistika</h3>
+        <div class="fs-grid">
+          {% include "panel/_field.html" with field=settings_form.google_site_verification %}
+          {% include "panel/_field.html" with field=settings_form.yandex_verification %}
+          {% include "panel/_field.html" with field=settings_form.google_analytics_id %}
+          {% include "panel/_field.html" with field=settings_form.yandex_metrika_id %}
+        </div>
+      </div>
+      <div class="save"><button class="btn btn-lg">Saqlash</button></div>
+    </form>
+
+    <div class="card">
+      <div class="card-h"><h2>📑 Sahifalar bo'yicha sozlama</h2><span class="muted small">bu yerdagi qiymat sahifadagi standart matndan ustun</span></div>
+      <div class="table-wrap">
+        <table class="t">
+          <tr><th>Manzil</th><th>Sarlavha / tavsif</th><th></th></tr>
+          {% for p in pages %}
+          <tr>
+            <td class="small"><a class="link" href="{{ p.path }}" target="_blank">{{ p.path }}</a>{% if p.noindex %}<br><span class="badge b-red">noindex</span>{% endif %}</td>
+            <td class="small"><b>{{ p.title|default:"—" }}</b><br><span class="muted">{{ p.description|default:"—"|truncatechars:90 }}</span></td>
+            <td class="nowrap"><a class="btn btn-light btn-sm" href="{% url 'panel:seo_page' p.pk %}">Tahrirlash</a></td>
+          </tr>
+          {% empty %}<tr><td colspan="3" class="empty">Hozircha hamma sahifa o'zining tayyor SEO matnidan foydalanyapti — bu yaxshi.</td></tr>{% endfor %}
+        </table>
+      </div>
+      <form method="post" class="fs" style="border-top:1px solid var(--line);">
+        {% csrf_token %}
+        <input type="hidden" name="section" value="page">
+        <h3>{% if page_instance %}✏️ {{ page_instance.path }}{% else %}➕ Sahifa qo'shish{% endif %}</h3>
+        <div class="fs-grid">
+          {% include "panel/_field.html" with field=page_form.path %}
+          {% include "panel/_field.html" with field=page_form.noindex %}
+          <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=page_form.title %}</div>
+          <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=page_form.description %}</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="btn">Saqlash</button>
+          {% if page_instance %}<a href="{% url 'panel:seo' %}" class="btn btn-light">Bekor</a><button class="btn btn-light" name="section" value="delete" data-confirm="O'chirilsinmi?">O'chirish</button>{% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card" style="align-self:start;">
+    <div class="card-h"><h2>✅ Google'da chiqish uchun qadamlar</h2></div>
+    <div class="fs">
+      <ol style="margin:0;padding-left:18px;display:grid;gap:10px;font-size:13.5px;line-height:1.55;">
+        <li><b>Google Search Console</b> (search.google.com/search-console) → «URL prefix» → <code>{{ host }}</code> → «HTML tag» usuli → <code>content="…"</code> ichidagi kodni chapdagi maydonga qo'ying, saqlang va «Verify» bosing.</li>
+        <li>Search Console → <b>Sitemaps</b> → <code>sitemap.xml</code> yozib yuboring.</li>
+        <li><b>Yandex Webmaster</b> (webmaster.yandex.ru) — xuddi shunday: kod + sitemap.</li>
+        <li>Search Console → «URL inspection» → bosh sahifa va <code>/namunalar/</code> uchun «Request indexing».</li>
+        <li><b>Bepul statistika:</b> Google Analytics yoki Yandex Metrika ID sini qo'ying — qaysi so'zlar bilan kelishayotganini ko'rasiz.</li>
+        <li>Har hafta panelda yangi <a class="link" href="{% url 'panel:samples' %}">namuna</a> qo'shing (hozir {{ samples_count }} ta) — har biri Google'da alohida so'rov bo'yicha chiqadi.</li>
+        <li>Telegram kanal, guruh va boshqa saytlarda <code>{{ host }}/namunalar/…</code> va <code>/qollanma/…</code> havolalarini ulashing — tashqi havolalar reytingni ko'taradi.</li>
+      </ol>
+      <p class="note" style="margin-top:14px;">⏳ Google yangi saytni odatda <b>2–8 haftada</b> indekslaydi, raqobatli so'rovlarda yuqoriga chiqish <b>3–6 oy</b> oladi. Hech kim «doim 1-o'rin»ni kafolatlay olmaydi — lekin foydali sahifalar soni va sifati eng katta ta'sir qiladi.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

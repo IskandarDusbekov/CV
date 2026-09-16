@@ -105,5 +105,9 @@ class BlockAndPresenceMiddleware:
                     return render(request, "core/blocked.html", {"reason": reason}, status=403)
                 if profile and (not profile.last_seen or (timezone.now() - profile.last_seen).total_seconds() > 300):
                     type(profile).objects.filter(pk=profile.pk).update(last_seen=timezone.now(), last_ip=ip)
+                    # «Barcha kirganlarga» aksiyasi allaqachon tizimda bo'lganlarga ham tegishi uchun
+                    from apps.users.growth import apply_promos
+
+                    apply_promos(user)
 
         return self.get_response(request)

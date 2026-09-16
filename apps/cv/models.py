@@ -17,6 +17,9 @@ class CV(models.Model):
         ('minimal',   'Minimal'),
         ('dark',      'Dark Mode'),
         ('elegant',   'Elegant'),
+        ('simple',    'Oddiy'),
+        ('teal',      'Yashil panel'),
+        ('bold',      'Yorqin'),
         ('free_classic',   'Free Classic (legacy)'),
         ('premium_modern', 'Premium Modern (legacy)'),
     ]
@@ -34,6 +37,8 @@ class CV(models.Model):
     # Bir martalik to'lov bilan ochilgan CV: barcha shablonlar, PDF + Word, watermark'siz
     is_unlocked = models.BooleanField(default=False)
     unlocked_at = models.DateTimeField(null=True, blank=True)
+    # Foydalanuvchining bepul PDF'i shu rezyumega ishlatilgan (faqat bepul shablonlarda, Word yo'q)
+    free_pdf = models.BooleanField("Bepul PDF ochilgan", default=False)
     # Vakansiyaga moslashtirilgan nusxa: asl CV, e'lon matni va AI hisoboti
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="tailored_versions")
     job_description = models.TextField(blank=True)
@@ -101,3 +106,60 @@ class AIUsage(models.Model):
 
     def __str__(self):
         return f"{self.kind} · {self.user or self.ip or self.session_key[:8]}"
+
+
+class TemplateSetting(models.Model):
+    """Shablonlarning Bepul/Pro holati, tartibi va ko'rinishi — paneldan boshqariladi."""
+
+    code = models.CharField("Kod", max_length=50, unique=True)
+    is_pro = models.BooleanField("Pro shablon", default=False,
+                                 help_text="Pro shablonda PDF/Word faqat kredit yoki Pro bilan. Bepul shablonda 1 ta bepul PDF bor.")
+    is_active = models.BooleanField("Ko'rsatish", default=True)
+    sort_order = models.PositiveIntegerField("Tartib", default=0)
+
+    class Meta:
+        ordering = ("sort_order", "code")
+        verbose_name = "Shablon sozlamasi"
+        verbose_name_plural = "Shablon sozlamalari"
+
+    def __str__(self):
+        return self.code
+
+    def save(self, *args, **kwargs):
+        from django.core.cache import cache
+
+        super().save(*args, **kwargs)
+        cache.delete("template_settings")
+
+
+class ResumeSample(models.Model):
+    """Kasblar bo'yicha tayyor rezyume namunalari: SEO sahifa + «shu namunadan boshlash»."""
+
+    slug = models.SlugField("URL", max_length=80, unique=True, help_text="Masalan: sotuvchi-konsultant")
+    profession = models.CharField("Kasb nomi", max_length=100, help_text="Masalan: Sotuvchi-konsultant")
+    category = models.CharField("Yo'nalish", max_length=60, blank=True, help_text="Masalan: Savdo, IT, Ta'lim")
+    seo_title = models.CharField("SEO sarlavha", max_length=70, blank=True)
+    seo_description = models.CharField("SEO tavsif", max_length=170, blank=True)
+    intro = models.TextField("Sahifa matni (maslahatlar)", blank=True, help_text="Bo'sh qator — yangi paragraf")
+    cv_json = models.JSONField("Rezyume ma'lumotlari")
+    template_code = models.CharField("Shablon", max_length=50, default="ats_modern")
+    is_published = models.BooleanField("Chop etilgan", default=True)
+    sort_order = models.PositiveIntegerField("Tartib", default=0)
+    uses = models.PositiveIntegerField("Ishlatilgan", default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("sort_order", "profession")
+        verbose_name = "Rezyume namunasi"
+        verbose_name_plural = "Rezyume namunalari"
+
+    def __str__(self):
+        return self.profession
+
+    def get_absolute_url(self):
+        return f"/namunalar/{self.slug}/"
+
+    @property
+    def title(self):
+        return self.seo_title or f"{self.profession} rezyume namunasi — tayyor shablon"
