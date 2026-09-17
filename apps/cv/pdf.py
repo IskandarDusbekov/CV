@@ -44,9 +44,12 @@ def _photo_to_base64(cv) -> str:
         return ""
 
 
-def build_pdf_html(cv, user, company_branding=None) -> str:
+def build_pdf_html(cv, user, company_branding=None, force_watermark=False) -> str:
     context = build_cv_context(cv, user)
     context["company_branding"] = company_branding if context["is_pro"] else None
+    if force_watermark:
+        # Bot orqali sovg'a qilingan PDF — pastida «sayt orqali yaratildi» belgisi doim bo'ladi
+        context["show_watermark"] = True
     context["pdf_mode"] = True
     context["site"] = SiteSettings.load()
 
@@ -61,9 +64,9 @@ class PdfRenderError(Exception):
     pass
 
 
-def render_cv_to_pdf(cv, user, base_url: str = "", company_branding=None) -> bytes:
+def render_cv_to_pdf(cv, user, base_url: str = "", company_branding=None, force_watermark=False) -> bytes:
     """PDF baytlarini qaytaradi yoki sababi yozilgan PdfRenderError ko'taradi."""
-    return render_html_to_pdf(build_pdf_html(cv, user, company_branding), base_url=base_url)
+    return render_html_to_pdf(build_pdf_html(cv, user, company_branding, force_watermark), base_url=base_url)
 
 
 def render_html_to_pdf(html: str, base_url: str = "") -> bytes:

@@ -508,6 +508,97 @@ class Promo(models.Model):
         return self.is_active and self.starts_at <= now <= self.ends_at
 
 
+class Broadcast(models.Model):
+    """Paneldan bot orqali ommaviy xabar: tanlangan yoki barcha foydalanuvchilarga, CV sovg'asi, kredit va javob tugmalari bilan."""
+
+    AUDIENCE_ALL = "all"
+    AUDIENCE_NOT_DOWNLOADED = "cv_not_downloaded"
+    AUDIENCE_NO_CV = "no_cv"
+    AUDIENCE_SELECTED = "selected"
+    AUDIENCE_CHOICES = [
+        (AUDIENCE_ALL, "Barcha foydalanuvchilar"),
+        (AUDIENCE_NOT_DOWNLOADED, "Rezyume yaratgan, lekin yuklab olmaganlar"),
+        (AUDIENCE_NO_CV, "Hali rezyume yaratmaganlar"),
+        (AUDIENCE_SELECTED, "Tanlangan foydalanuvchilar"),
+    ]
+
+    STATUS_DRAFT = "draft"
+    STATUS_SENDING = "sending"
+    STATUS_DONE = "done"
+    STATUS_CANCELLED = "cancelled"
+    STATUS_CHOICES = [
+        (STATUS_DRAFT, "Qoralama"),
+        (STATUS_SENDING, "Yuborilmoqda"),
+        (STATUS_DONE, "Yuborildi"),
+        (STATUS_CANCELLED, "To'xtatildi"),
+    ]
+
+    MAX_OPTIONS = 6
+
+    title = models.CharField("Nomi (faqat panel uchun)", max_length=120)
+    audience = models.CharField("Kimga", max_length=30, choices=AUDIENCE_CHOICES, default=AUDIENCE_ALL)
+    selected_users = models.TextField(
+        "Tanlangan foydalanuvchilar", blank=True,
+        help_text="Har qatorda bittadan: telefon, @username yoki panel ID si. Vergul bilan ham bo'ladi.")
+    text = models.TextField(
+        "Xabar matni",
+        help_text="{ism} — foydalanuvchi ismi, {kredit} — bonus kredit soni. <b>qalin</b>, <i>kursiv</i>, <a href=\"...\">havola</a> ishlaydi.")
+    attach_cv = models.BooleanField(
+        "Foydalanuvchining o'z rezyumesini PDF qilib yuborish", default=False,
+        help_text="Oxirgi rezyumesi «sovg'a» sifatida fayl bo'lib boradi. Rezyumesi yo'qlarga yuborilmaydi. Matn 1000 belgigacha.")
+    bonus_credits = models.PositiveIntegerField("Bonus kredit", default=0, help_text="Xabar yetib borsa, hisobiga qo'shiladi")
+    feedback_options = models.TextField(
+        "Javob tugmalari", blank=True,
+        help_text="Har qatorda bitta tugma, masalan: «👍 Foydali bo'ldi». Kim nimani bosgani shu yerda ko'rinadi.")
+    button_site = models.BooleanField("«Saytni ochish» tugmasi", default=True)
+    button_share = models.BooleanField("«Do'stga ulashish» tugmasi", default=False,
+                                       help_text="Foydalanuvchining shaxsiy taklif havolasi bilan")
+    status = models.CharField("Holat", max_length=20, choices=STATUS_CHOICES, default=STATUS_DRAFT, db_index=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        verbose_name = "Bot xabari"
+        verbose_name_plural = "Bot xabarlari"
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def options(self):
+        lines = [line.strip()[:40] for line in self.feedback_options.splitlines() if line.strip()]
+        return lines[:self.MAX_OPTIONS]
+
+
+class BroadcastRecipient(models.Model):
+    STATUS_PENDING = "pending"
+    STATUS_SENT = "sent"
+    STATUS_BLOCKED = "blocked"
+    STATUS_FAILED = "failed"
+    STATUS_CHOICES = [
+        (STATUS_PENDING, "Navbatda"),
+        (STATUS_SENT, "Yetkazildi"),
+        (STATUS_BLOCKED, "Botni bloklagan"),
+        (STATUS_FAILED, "Xato"),
+    ]
+
+    broadcast = models.ForeignKey(Broadcast, on_delete=models.CASCADE, related_name="recipients")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="broadcasts_received")
+    cv = models.ForeignKey("cv.CV", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING, db_index=True)
+    error = models.CharField(max_length=300, blank=True)
+    response = models.CharField("Javobi", max_length=60, blank=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    responded_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("id",)
+        constraints = [models.UniqueConstraint(fields=["broadcast", "user"], name="one_message_per_broadcast_user")]
+
+
 class PromoGrant(models.Model):
     promo = models.ForeignKey(Promo, on_delete=models.CASCADE, related_name="grants")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="promo_grants")

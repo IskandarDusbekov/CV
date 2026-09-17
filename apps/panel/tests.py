@@ -162,3 +162,142 @@ class PanelTests(TestCase):
         self.client.post(reverse("panel:errors_resolve"), {"ids": [e.pk]})
         e.refresh_from_db()
         self.assertTrue(e.is_resolved)
+
+
+def tg_ok(method, payload=None, files=None):
+    return {"ok": True, "result": {"message_id": 1}}
+
+
+class BroadcastTests(TestCase):
+    def setUp(self):
+        from apps.users.models import Broadcast
+
+        self.Broadcast = Broadcast
+        self.admin = User.objects.create_user(username="boss", first_name="Bosh", is_staff=True, is_superuser=True)
+        self.client.force_login(self.admin)
+        self.fresh = self._user("fresh", "Aziza", "998901110001", 101, cv=True)          # yaratgan, yuklamagan
+        self.loader = self._user("loader", "Botir", "998901110002", 102, cv=True)        # yuklab olgan
+        ActivityLog.objects.create(user=self.loader, action="download_pdf")
+        self.empty = self._user("empty", "Dilnoza", "998901110003", 103, username_tg="dilnoza")  # rezyume yo'q
+        self._user("webonly", "Eldor", "998901110004", None, cv=True)                   # Telegram yo'q
+        blocked = self._user("blocked", "Farrux", "998901110005", 105, cv=True)
+        UserProfile.objects.filter(user=blocked).update(is_blocked=True)
+
+    def _user(self, username, first_name, phone, tg_id, cv=False, username_tg=""):
+        user = User.objects.create_user(username=username, first_name=first_name)
+        UserProfile.objects.filter(user=user).update(phone=f"+{phone}", telegram_id=tg_id, telegram_username=username_tg)
+        if cv:
+            CV.objects.create(user=user, raw_input_text="x", cv_json={**DEMO_CV_JSON, "full_name": f"{first_name} Test"})
+        return user
+
+    def _form(self, **kw):
+        data = {"title": "Test", "audience": "all", "selected_users": "", "text": "Salom {ism}!", "bonus_credits": "0",
+                "feedback_options": "", "button_site": "on"}
+        data.update(kw)
+        return {k: v for k, v in data.items() if v is not False}
+
+    def test_audiences_only_reach_linked_active_users(self):
+        from apps.users.broadcast import audience_profiles
+
+        def names(**kw):
+            return sorted(p.user.username for p in audience_profiles(self.Broadcast(**kw)))
+
+        self.assertEqual(names(audience="all"), ["empty", "fresh", "loader"])
+        self.assertEqual(names(audience="cv_not_downloaded"), ["fresh"])
+        self.assertEqual(names(audience="no_cv"), ["empty"])
+        self.assertEqual(names(audience="all", attach_cv=True), ["fresh", "loader"])
+        self.assertEqual(names(audience="selected", selected_users=f"90 111 00 01, @DILNOZA\n{self.loader.pk}\n+998901110005"),
+                         ["empty", "fresh", "loader"])  # bloklangan tanlansa ham yuborilmaydi
+
+    def test_form_validation(self):
+        url = reverse("panel:broadcasts")
+        self.assertContains(self.client.post(url, self._form(text="<div>salom</div>")), "Telegram bu teglarni qo")
+        self.assertContains(self.client.post(url, self._form(audience="selected")), "Kimga yuborilishini yozing")
+        self.assertContains(self.client.post(url, self._form(attach_cv="on", text="x" * 1100)), "1000 belgidan")
+        self.assertFalse(self.Broadcast.objects.exists())
+        self.assertEqual(self.client.get(url).status_code, 200)
+        self.assertContains(self.client.get(url + f"?to={self.fresh.pk}"), f"{self.fresh.pk}</textarea>")
+
+    @mock.patch("apps.users.bot._post")
+    @mock.patch("apps.users.broadcast._render_pdf", return_value=b"%PDF-1.7")
+    @mock.patch("apps.users.broadcast._api")
+    def test_gift_cv_with_credit_feedback_and_blocked_user(self, api, _pdf, post):
+        from apps.users.broadcast import handle_feedback, process_pending
+        from apps.users.models import BroadcastRecipient
+
+        blocked_bot = self._user("gone", "Gulnora", "998901110006", 106, cv=True)
+        api.side_effect = lambda method, payload=None, files=None: (
+            {"ok": False, "error_code": 403, "description": "Forbidden: bot was blocked by the user"}
+            if payload["chat_id"] == 106 else tg_ok(method, payload, files))
+
+        self.client.post(reverse("panel:broadcasts"), self._form(
+            title="Sovg'a", audience="cv_not_downloaded", attach_cv="on", bonus_credits="1",
+            text="🎁 <b>{ism}</b>, rezyumengiz sovg'a! +{kredit} kredit", feedback_options="👍 Foydali bo'ldi\n👎 Kerak emas"))
+        b = self.Broadcast.objects.get()
+        detail = self.client.get(reverse("panel:broadcast_detail", args=[b.pk]))
+        self.assertContains(detail, "Yuborish (2)")
+        self.assertContains(detail, "Foydali bo")
+
+        self.client.post(reverse("panel:broadcast_action", args=[b.pk]), {"action": "start"})
+        b.refresh_from_db()
+        self.assertEqual((b.status, b.recipients.count()), ("sending", 2))
+        api.assert_not_called()  # sayt so'rovi yubormaydi — bot fon oqimi yuboradi
+
+        self.assertEqual(process_pending(pause=0), 2)
+        b.refresh_from_db()
+        self.assertEqual(b.status, "done")
+        method, payload, files = api.call_args_list[0].args[0], api.call_args_list[0].args[1], api.call_args_list[0].kwargs["files"]
+        self.assertEqual(method, "sendDocument")
+        self.assertEqual(files["document"][0], "Aziza_Test_Rezyume_tezrezyume.uz.pdf")
+        self.assertIn("<b>Aziza</b>, rezyumengiz sovg'a! +1 kredit", payload["caption"])
+        buttons = [btn["text"] for row in payload["reply_markup"]["inline_keyboard"] for btn in row]
+        self.assertEqual(buttons, ["👍 Foydali bo'ldi", "👎 Kerak emas"])
+
+        sent = BroadcastRecipient.objects.get(user=self.fresh)
+        gone = BroadcastRecipient.objects.get(user=blocked_bot)
+        self.assertEqual((sent.status, gone.status), ("sent", "blocked"))
+        self.assertEqual(UserProfile.objects.get(user=self.fresh).credits, 1)
+        self.assertEqual(UserProfile.objects.get(user=blocked_bot).credits, 0)  # yetib bormagan — kredit yo'q
+        self.assertTrue(ActivityLog.objects.filter(user=self.fresh, action="broadcast_bonus").exists())
+
+        callback = {"id": "c1", "data": f"bf:{sent.pk}:0", "from": {"id": 101}, "message": {"message_id": 5, "chat": {"id": 101}}}
+        handle_feedback({**callback, "from": {"id": 999}})  # begona odam bosa olmaydi
+        sent.refresh_from_db()
+        self.assertEqual(sent.response, "")
+        handle_feedback(callback)
+        handle_feedback({**callback, "data": f"bf:{sent.pk}:1"})  # fikrini o'zgartirib bo'lmaydi
+        sent.refresh_from_db()
+        self.assertEqual(sent.response, "👍 Foydali bo'ldi")
+        edited = [c for c in post.call_args_list if c.args[0] == "editMessageReplyMarkup"][-1]
+        self.assertEqual(edited.kwargs["reply_markup"]["inline_keyboard"][0][0]["text"], "✓ 👍 Foydali bo'ldi")
+        self.assertContains(self.client.get(reverse("panel:broadcast_detail", args=[b.pk]) + "?s=answered"), "Aziza")
+
+    @mock.patch("apps.users.broadcast._api", side_effect=tg_ok)
+    def test_test_send_cancel_and_copy(self, api):
+        from apps.users.broadcast import process_pending
+
+        self.client.post(reverse("panel:broadcasts"), self._form(title="E'lon", bonus_credits="2"))
+        b = self.Broadcast.objects.get()
+        action = reverse("panel:broadcast_action", args=[b.pk])
+
+        self.assertContains(self.client.post(action, {"action": "test"}, follow=True), "Telegram bilan bog")
+        UserProfile.objects.filter(user=self.admin).update(telegram_id=1)
+        self.assertContains(self.client.post(action, {"action": "test"}, follow=True), "Sinov xabari")
+        self.assertEqual(api.call_args.args[1]["chat_id"], 1)
+        self.assertEqual(UserProfile.objects.get(user=self.admin).credits, 0)  # sinovda kredit berilmaydi
+
+        self.client.post(action, {"action": "start"})
+        self.client.post(action, {"action": "cancel"})
+        api.reset_mock()
+        self.assertEqual(process_pending(pause=0), 0)
+        api.assert_not_called()
+        b.refresh_from_db()
+        self.assertEqual(b.status, "cancelled")
+
+        self.client.post(action, {"action": "copy"})
+        self.assertEqual(self.Broadcast.objects.filter(status="draft", title="E'lon (nusxa)").count(), 1)
+
+    def test_only_superuser(self):
+        helper = User.objects.create_user(username="helper", is_staff=True)
+        self.client.force_login(helper)
+        self.assertRedirects(self.client.get(reverse("panel:broadcasts")), reverse("panel:dashboard"), fetch_redirect_response=False)

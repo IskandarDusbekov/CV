@@ -167,6 +167,7 @@
     <a href="{% url 'panel:samples' %}" class="{% if p == 'samples' or p == 'sample_edit' or p == 'sample_new' %}on{% endif %}"><span class="ic">📄</span>Namunalar</a>
     <a href="{% url 'panel:referrals' %}" class="{% if p == 'referrals' %}on{% endif %}"><span class="ic">🤝</span>Takliflar</a>
     {% if request.user.is_superuser %}
+    <a href="{% url 'panel:broadcasts' %}" class="{% if p == 'broadcasts' or p == 'broadcast_detail' or p == 'broadcast_edit' %}on{% endif %}"><span class="ic">📣</span>Xabar yuborish</a>
     <a href="{% url 'panel:promos' %}" class="{% if p == 'promos' or p == 'promo_edit' %}on{% endif %}"><span class="ic">🎁</span>Aksiyalar</a>
     <a href="{% url 'panel:templates' %}" class="{% if p == 'templates' %}on{% endif %}"><span class="ic">🎨</span>Shablonlar</a>
     <a href="{% url 'panel:seo' %}" class="{% if p == 'seo' or p == 'seo_page' %}on{% endif %}"><span class="ic">🔍</span>SEO</a>

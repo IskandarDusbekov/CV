@@ -1,0 +1,89 @@
+{% extends "panel/base.html" %}
+{% block title %}Xabar yuborish{% endblock %}
+{% block heading %}📣 Xabar yuborish{% endblock %}
+{% block subheading %}<p>Bot orqali tanlangan yoki barcha foydalanuvchilarga: e'lon, so'rovnoma, rezyume sovg'asi, bonus kredit</p>{% endblock %}
+
+{% block style %}
+.presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.presets button { padding: 7px 11px; border: 1px dashed var(--line-2); border-radius: 10px; background: #fff; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.presets button:hover { border-color: var(--ink); }
+.sel-only[hidden] { display: none; }
+.checks { display: grid; gap: 8px; }
+.checks .f { display: flex; flex-direction: row-reverse; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: wrap; }
+.checks .f label { margin: 0; }
+.checks .f .help { flex-basis: 100%; margin: 0 0 0 26px; }
+{% endblock %}
+
+{% block content %}
+<div class="grid g-main">
+  <div class="card" style="align-self:start;">
+    <div class="card-h"><h2>Xabarlar</h2></div>
+    <div class="table-wrap">
+      <table class="t">
+        <tr><th>Nomi</th><th>Kimga</th><th class="num">Yetkazildi</th><th class="num">Javoblar</th><th>Holat</th></tr>
+        {% for b in items %}
+        <tr>
+          <td><a class="name link" href="{% url 'panel:broadcast_detail' b.pk %}">{{ b.title }}</a><br><span class="muted small">{{ b.created_at|date:"d.m.Y H:i" }}{% if b.attach_cv %} · PDF{% endif %}{% if b.bonus_credits %} · +{{ b.bonus_credits }} kredit{% endif %}</span></td>
+          <td class="small">{{ b.get_audience_display }}</td>
+          <td class="num">{% if b.n %}<b>{{ b.n_sent }}</b> / {{ b.n }}{% else %}—{% endif %}</td>
+          <td class="num">{% if b.options %}{{ b.n_answers }}{% else %}<span class="muted">—</span>{% endif %}</td>
+          <td>{% if b.status == "sending" %}<span class="badge b-amber">● Yuborilmoqda</span>{% elif b.status == "done" %}<span class="badge b-green">Yuborildi</span>{% elif b.status == "cancelled" %}<span class="badge b-red">To'xtatildi</span>{% else %}<span class="badge b-gray">Qoralama</span>{% endif %}</td>
+        </tr>
+        {% empty %}<tr><td colspan="5" class="empty">Hali xabar yo'q. O'ngdagi formadan birinchisini yarating — tayyor shablonlardan boshlash mumkin.</td></tr>{% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <form method="post" class="card" style="align-self:start;" id="bform" action="{% if instance %}{% url 'panel:broadcast_edit' instance.pk %}{% else %}{% url 'panel:broadcasts' %}{% endif %}">
+    {% csrf_token %}
+    <div class="card-h"><h2>{% if instance %}✏️ «{{ instance.title }}»{% else %}➕ Yangi xabar{% endif %}</h2>{% if instance %}<a href="{% url 'panel:broadcast_detail' instance.pk %}" class="btn btn-light btn-sm">← Orqaga</a>{% endif %}</div>
+    <div class="fs">
+      {% if not instance %}
+      <div class="presets">
+        <span class="muted small" style="align-self:center;">Tayyor shablon:</span>
+        {% for p in presets %}<button type="button" data-preset="{{ forloop.counter0 }}">{{ p.label }}</button>{% endfor %}
+      </div>
+      {% endif %}
+      <div class="fs-grid">
+        <div class="f wide" style="margin:0;">{% include "panel/_field.html" with field=form.title %}</div>
+        <div class="wide" style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.audience %}</div>
+        <div class="sel-only" style="grid-column:1/-1;" id="sel-box">{% include "panel/_field.html" with field=form.selected_users %}</div>
+        <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.text %}</div>
+        <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.feedback_options %}</div>
+        {% include "panel/_field.html" with field=form.bonus_credits %}
+        <div></div>
+        <div class="checks" style="grid-column:1/-1;">
+          {% include "panel/_field.html" with field=form.attach_cv %}
+          {% include "panel/_field.html" with field=form.button_site %}
+          {% include "panel/_field.html" with field=form.button_share %}
+        </div>
+      </div>
+      <p class="note" style="margin-top:12px;">💡 Saqlagach, xabar <b>qoralama</b> bo'ladi: avval «Menga sinov» bilan o'z Telegram'ingizda ko'rasiz, keyin «Yuborish»ni bosasiz. Yuborishni bot navbat bilan bajaradi — botni bloklaganlar va xatolar alohida ko'rinadi.</p>
+    </div>
+    <div class="save"><button class="btn btn-lg">Saqlash</button></div>
+  </form>
+</div>
+{{ presets|json_script:"presets-data" }}
+{% endblock %}
+
+{% block js %}
+<script>
+(function () {
+  var form = document.getElementById('bform');
+  var audience = form.querySelector('[name=audience]');
+  var selBox = document.getElementById('sel-box');
+  function sync() { selBox.hidden = audience.value !== 'selected'; }
+  audience.addEventListener('change', sync); sync();
+
+  var presets = JSON.parse(document.getElementById('presets-data').textContent);
+  form.querySelectorAll('[data-preset]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var p = presets[+btn.dataset.preset];
+      ['title', 'audience', 'text', 'feedback_options', 'bonus_credits'].forEach(function (k) { form.querySelector('[name=' + k + ']').value = p[k]; });
+      ['attach_cv', 'button_site', 'button_share'].forEach(function (k) { form.querySelector('[name=' + k + ']').checked = !!p[k]; });
+      sync();
+    });
+  });
+})();
+</script>
+{% endblock %}

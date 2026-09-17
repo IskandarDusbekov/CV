@@ -377,6 +377,12 @@ def notify_payment_result(req: PaymentRequest) -> None:
 
 def _handle_callback(callback: dict) -> None:
     data = callback.get("data") or ""
+    if data.startswith("bf:"):
+        # Ommaviy xabardagi javob tugmasi — o'zi «rahmat» deb javob beradi
+        from .broadcast import handle_feedback
+
+        handle_feedback(callback)
+        return
     sender = callback.get("from") or {}
     chat_id = (callback.get("message") or {}).get("chat", {}).get("id") or sender.get("id")
     _post("answerCallbackQuery", callback_query_id=callback.get("id"))
@@ -532,6 +538,10 @@ def run_polling() -> None:
     if menu and "web_app" in menu:
         # Chat pastidagi «Sayt» tugmasi — Mini App, har doim kirgan holda ochiladi
         _post("setChatMenuButton", menu_button={"type": "web_app", "text": "Sayt", "web_app": menu["web_app"]})
+    # Paneldan yuborilgan ommaviy xabarlarni fon oqimida tarqatadi (alohida servis kerak emas)
+    from .broadcast import start_worker
+
+    start_worker()
     logger.info("Telegram bot ishga tushdi (long polling)...")
     offset = 0
 

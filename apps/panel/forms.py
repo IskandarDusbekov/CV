@@ -4,7 +4,7 @@ from django.forms import modelformset_factory
 from apps.core.models import SeoPage, SiteSettings
 from apps.cv.models import ResumeSample, TemplateSetting
 from apps.cv.services import TEMPLATE_META
-from apps.users.models import PricingPlan, Promo
+from apps.users.models import Broadcast, PricingPlan, Promo
 
 
 class StyledMixin:
@@ -71,6 +71,36 @@ class PromoForm(StyledMixin, forms.ModelForm):
         data = super().clean()
         if data.get("starts_at") and data.get("ends_at") and data["ends_at"] <= data["starts_at"]:
             self.add_error("ends_at", "Tugash sanasi boshlanishidan keyin bo'lishi kerak.")
+        return data
+
+
+class BroadcastForm(StyledMixin, forms.ModelForm):
+    class Meta:
+        model = Broadcast
+        fields = ("title", "audience", "selected_users", "text", "attach_cv", "bonus_credits", "feedback_options", "button_site", "button_share")
+        widgets = {
+            "text": forms.Textarea(attrs={"rows": 7}),
+            "selected_users": forms.Textarea(attrs={"rows": 3, "placeholder": "+998901234567\n@username\n15"}),
+            "feedback_options": forms.Textarea(attrs={"rows": 3, "placeholder": "👍 Foydali bo'ldi\n👎 Kerak emas"}),
+        }
+
+    def clean(self):
+        from apps.users.broadcast import CAPTION_LIMIT, TEXT_LIMIT, validate_text
+
+        data = super().clean()
+        text = data.get("text", "")
+        if data.get("audience") == Broadcast.AUDIENCE_SELECTED and not data.get("selected_users", "").strip():
+            self.add_error("selected_users", "Kimga yuborilishini yozing.")
+        limit = CAPTION_LIMIT if data.get("attach_cv") else TEXT_LIMIT
+        if len(text) > limit:
+            self.add_error("text", f"Matn {limit} belgidan oshmasin (hozir {len(text)}). Fayl bilan yuborilganda Telegram izohi qisqa bo'ladi.")
+        error = validate_text(text)
+        if error:
+            self.add_error("text", error)
+        if (data.get("bonus_credits") or 0) > 10:
+            self.add_error("bonus_credits", "Bir xabar bilan 10 kreditdan ko'p berib bo'lmaydi.")
+        if len([line for line in data.get("feedback_options", "").splitlines() if line.strip()]) > Broadcast.MAX_OPTIONS:
+            self.add_error("feedback_options", f"Ko'pi bilan {Broadcast.MAX_OPTIONS} ta tugma.")
         return data
 
 

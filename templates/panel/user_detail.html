@@ -3,7 +3,7 @@
 {% block title %}{{ u.get_full_name|default:u.username }}{% endblock %}
 {% block heading %}{{ u.get_full_name|default:u.username }}{% if profile.is_blocked %} <span class="badge b-red" style="vertical-align:middle;">bloklangan</span>{% endif %}{% endblock %}
 {% block subheading %}<p>{{ profile.phone|default:"telefon yo'q" }}{% if profile.telegram_username %} · <a class="link" href="https://t.me/{{ profile.telegram_username }}" target="_blank">@{{ profile.telegram_username }}</a>{% endif %} · ro'yxatdan {{ profile.created_at|date:"d.m.Y H:i" }}</p>{% endblock %}
-{% block actions %}<a href="{% url 'panel:users' %}" class="btn btn-light">← Ro'yxat</a><a href="{% url 'admin:users_userprofile_change' profile.pk %}" class="btn btn-light" target="_blank">Django admin'da</a>{% endblock %}
+{% block actions %}<a href="{% url 'panel:users' %}" class="btn btn-light">← Ro'yxat</a>{% if request.user.is_superuser and profile.telegram_id %}<a href="{% url 'panel:broadcasts' %}?to={{ u.pk }}" class="btn btn-light">📣 Botda xabar yozish</a>{% endif %}<a href="{% url 'admin:users_userprofile_change' profile.pk %}" class="btn btn-light" target="_blank">Django admin'da</a>{% endblock %}
 
 {% block style %}
 .acts form { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }

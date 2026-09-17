@@ -200,6 +200,7 @@ class ActivityLog(models.Model):
         ("limit_reached", "Limitga yetdi"),
         ("referral", "Do'st taklif qildi"),
         ("promo_bonus", "Aksiya bonusi oldi"),
+        ("broadcast_bonus", "Bot xabari bilan kredit oldi"),
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="activity_logs")

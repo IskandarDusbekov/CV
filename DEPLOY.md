@@ -201,6 +201,18 @@ cat /home/tezrezyume/.ssh/id_ed25519.pub   # GitHub → repo → Settings → De
 sudo -u tezrezyume git -C /home/tezrezyume/app remote set-url origin git@github.com:SIZNING/REPO.git
 ```
 
+## Bot orqali xabar yuborish
+
+Panel → **Xabar yuborish**: tanlangan yoki barcha foydalanuvchilarga e'lon, so'rovnoma, o'z rezyumesini PDF sovg'a, bonus kredit.
+Xabarlarni alohida servis emas, **`tezrezyume-bot`** jarayoni fon oqimida yuboradi. Panelda «Navbatda» soni kamaymasa:
+
+```bash
+systemctl status tezrezyume-bot --no-pager
+journalctl -u tezrezyume-bot -n 50
+```
+
+Kerak bo'lsa qo'lda: `python manage.py sendbroadcasts`.
+
 ## Monitoring
 
 `https://tezrezyume.uz/healthz/` — sayt va baza ishlasa `{"status": "ok"}` qaytaradi. Uni bepul UptimeRobot yoki BetterStack ga qo'shing — sayt tushib qolsa SMS/Telegram xabar keladi.

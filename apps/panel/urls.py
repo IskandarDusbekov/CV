@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import marketing, views
+from . import broadcasts, marketing, views
 
 app_name = "panel"
 
@@ -27,6 +27,10 @@ urlpatterns = [
     path("aksiyalar/<int:pk>/", marketing.promos, name="promo_edit"),
     path("aksiyalar/<int:pk>/ochirish/", marketing.promo_delete, name="promo_delete"),
     path("takliflar/", marketing.referrals, name="referrals"),
+    path("xabarlar/", broadcasts.broadcasts, name="broadcasts"),
+    path("xabarlar/<int:pk>/", broadcasts.broadcast_detail, name="broadcast_detail"),
+    path("xabarlar/<int:pk>/tahrir/", broadcasts.broadcasts, name="broadcast_edit"),
+    path("xabarlar/<int:pk>/amal/", broadcasts.broadcast_action, name="broadcast_action"),
     path("namunalar/", marketing.samples, name="samples"),
     path("namunalar/yangi/", marketing.sample_edit, name="sample_new"),
     path("namunalar/<int:pk>/", marketing.sample_edit, name="sample_edit"),
