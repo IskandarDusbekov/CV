@@ -1,6 +1,7 @@
 {% extends "panel/base.html" %}
+{% load ui %}
 {% block title %}Shablonlar{% endblock %}
-{% block heading %}🎨 Shablonlar{% endblock %}
+{% block heading %}{% icon "palette" %} Shablonlar{% endblock %}
 {% block subheading %}<p>Bepul shablonda foydalanuvchi {{ site.free_pdf_downloads }} ta PDF'ni tekin oladi. Pro shablon — faqat kredit yoki Pro bilan. Hammasini ko'rish har doim bepul.</p>{% endblock %}
 {% block actions %}<a href="/cv/templates/" target="_blank" class="btn btn-light">Saytda ko'rish ↗</a>{% endblock %}
 
@@ -30,8 +31,8 @@
       <div class="tbody">
         <b>{{ r.meta.label }}</b>
         <div class="stats">{{ r.code }}{% if r.meta.ats %} · ATS{% endif %} · {{ r.uses }} rezyume · {{ r.downloads }} yuklangan</div>
-        <label class="trow">⭐ Pro shablon {{ r.form.is_pro }}</label>
-        <label class="trow">👁 Saytda ko'rsatish {{ r.form.is_active }}</label>
+        <label class="trow">{% icon "star" %} Pro shablon {{ r.form.is_pro }}</label>
+        <label class="trow">{% icon "eye" %} Saytda ko'rsatish {{ r.form.is_active }}</label>
         <label class="trow">Tartib {{ r.form.sort_order }}</label>
       </div>
     </div>

@@ -1,4 +1,4 @@
-{% load panel_tags static %}{% panel_counts as counts %}{% with p=request.resolver_match.url_name %}<!DOCTYPE html>
+{% load panel_tags static ui %}{% panel_counts as counts %}{% with p=request.resolver_match.url_name %}<!DOCTYPE html>
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
@@ -24,30 +24,45 @@
     h1, h2, h3, p { margin: 0; }
     img { max-width: 100%; }
 
-    .side { position: fixed; inset: 0 auto 0 0; z-index: 40; width: var(--side-w); display: flex; flex-direction: column; background: var(--ink); color: #c9cad0; padding: 16px 12px; overflow-y: auto; }
-    .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 18px; color: #fff; font-weight: 800; font-size: 16px; }
-    .brand i { width: 30px; height: 30px; border-radius: 9px; background: var(--lime); color: var(--ink); display: grid; place-items: center; font-style: normal; font-size: 12px; font-weight: 800; }
-    .brand small { display: block; font-size: 11px; font-weight: 600; color: #8b8d94; }
-    .nav-group { margin: 14px 8px 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #6f7178; }
-    .nav a { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; font-weight: 600; font-size: 13.5px; }
-    .nav a:hover { background: rgba(255,255,255,.06); color: #fff; }
-    .nav a.on { background: rgba(255,255,255,.1); color: #fff; }
-    .nav a .ic { width: 18px; text-align: center; opacity: .9; }
+    svg.i { display: inline-block; flex-shrink: 0; vertical-align: -3px; width: 16px; height: 16px; }
+
+    .side { position: fixed; inset: 0 auto 0 0; z-index: 40; width: var(--side-w); display: flex; flex-direction: column; background: #111215; color: #b9bac1; padding: 16px 12px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #2a2c33 transparent; }
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 6px 8px 16px; color: #fff; font-weight: 800; font-size: 15.5px; border-bottom: 1px solid rgba(255,255,255,.07); }
+    .brand small { display: block; font-size: 11px; font-weight: 600; color: #7d7f87; }
+    .nav-group { margin: 16px 10px 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #5f6169; }
+    .nav a { position: relative; display: flex; align-items: center; gap: 11px; margin-bottom: 1px; padding: 8px 10px; border-radius: 10px; font-weight: 600; font-size: 13.5px; transition: background .12s, color .12s; }
+    .nav a:hover { background: rgba(255,255,255,.05); color: #fff; }
+    .nav a.on { background: rgba(217,243,106,.1); color: #fff; }
+    .nav a.on::before { content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--lime); }
+    .nav a .ic { display: grid; place-items: center; width: 18px; color: #7d7f87; }
+    .nav a .ic svg.i { width: 17px; height: 17px; }
+    .nav a:hover .ic { color: #d4d5da; }
+    .nav a.on .ic { color: var(--lime); }
     .nav a .cnt { margin-left: auto; min-width: 20px; padding: 1px 7px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 800; text-align: center; }
-    .nav a .cnt.soft { background: rgba(255,255,255,.14); }
-    .side-foot { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid rgba(255,255,255,.08); font-size: 12.5px; }
-    .side-foot a { display: block; padding: 5px 0; color: #9a9ca3; }
-    .side-foot a:hover { color: #fff; }
+    .nav a .cnt.soft { background: rgba(255,255,255,.12); }
+    .side-foot { margin-top: auto; padding: 12px 6px 0; border-top: 1px solid rgba(255,255,255,.07); font-size: 12.5px; }
+    .side-foot a { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-radius: 8px; color: #8b8d94; }
+    .side-foot a:hover { color: #fff; background: rgba(255,255,255,.04); }
+    .side-foot .me { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 10px 4px 0; border-top: 1px solid rgba(255,255,255,.07); }
+    .side-foot .av { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--lime); color: var(--ink); font-weight: 800; font-size: 13px; flex-shrink: 0; }
+    .side-foot .me b { display: block; color: #fff; font-size: 12.5px; line-height: 1.2; }
+    .side-foot .me a { display: inline; padding: 0; color: #8b8d94; }
 
     .main { margin-left: var(--side-w); min-height: 100vh; padding: 22px 28px 60px; }
     .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
-    .top h1 { font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
-    .top p { color: var(--muted); font-size: 13.5px; }
+    .top h1 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 23px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; }
+    .top h1 > svg.i { width: 34px; height: 34px; padding: 7px; border-radius: 10px; background: var(--ink); color: var(--lime); }
+    .top p { margin-top: 2px; color: var(--muted); font-size: 13.5px; }
     .top .burger { display: none; }
+    .top .btn svg.i { width: 15px; height: 15px; }
 
-    .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
-    .card-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
-    .card-h h2 { font-size: 15px; font-weight: 800; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 1px 2px rgba(21,22,26,.04); }
+    .card-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+    .card-h h2 { display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 800; }
+    .card-h h2 svg.i, .fs h3 svg.i { color: var(--muted); }
+    .fs h3 { display: flex; align-items: center; gap: 8px; }
+    .btn svg.i { width: 15px; height: 15px; vertical-align: -2px; }
+    .note svg.i { color: var(--muted); vertical-align: -3px; }
     .card-b { padding: 16px; }
     .grid { display: grid; gap: 14px; }
     .g-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -55,13 +70,15 @@
     .g-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .g-main { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
 
-    .kpi { display: block; padding: 14px 16px; }
-    .kpi small { color: var(--muted); font-size: 12px; font-weight: 700; }
-    .kpi b { display: block; margin: 2px 0; font-size: 26px; font-weight: 800; letter-spacing: -.03em; line-height: 1.2; }
+    .kpi { display: block; padding: 14px 16px; transition: border-color .15s, box-shadow .15s, transform .15s; }
+    .kpi small { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .kpi small svg.i { width: 26px; height: 26px; padding: 5px; border-radius: 8px; background: var(--gray-bg); color: var(--ink-2); }
+    .kpi b { display: block; margin: 6px 0 2px; font-size: 26px; font-weight: 800; letter-spacing: -.03em; line-height: 1.2; }
     .kpi span { color: var(--muted-2); font-size: 12px; }
-    a.kpi:hover { border-color: var(--ink); }
+    a.kpi:hover { border-color: var(--line-2); box-shadow: 0 8px 24px -14px rgba(21,22,26,.25); transform: translateY(-1px); }
     .kpi.hot { background: #fff7ed; border-color: #fdba74; }
     .kpi.hot b { color: var(--orange); }
+    .kpi.hot small svg.i { background: #ffedd5; color: var(--orange); }
 
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid transparent; background: var(--ink); color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
     .btn:hover { background: #000; }
@@ -141,8 +158,12 @@
     @media (max-width: 860px) {
       .side { transform: translateX(-100%); transition: transform .2s; }
       body.menu .side { transform: none; box-shadow: 0 0 0 100vmax rgba(0,0,0,.35); }
-      .main { margin-left: 0; padding: 16px 14px 60px; }
-      .top .burger { display: inline-flex; }
+      .main { margin-left: 0; padding: 0 14px 60px; }
+      .top { position: sticky; top: 0; z-index: 30; margin: 0 -14px 14px; padding: 10px 14px; background: rgba(244,244,241,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+      .top h1 { font-size: 18px; }
+      .top h1 > svg.i { width: 28px; height: 28px; padding: 6px; }
+      .top p { font-size: 12.5px; }
+      .top .burger { display: inline-flex; width: 38px; min-height: 38px; padding: 0; }
       .g-3, .g-2 { grid-template-columns: 1fr; }
       .search { min-width: 0; max-width: none; width: 100%; }
     }
@@ -153,39 +174,42 @@
 <aside class="side">
   <a href="{% url 'panel:dashboard' %}" class="brand"><img src="{% static 'brand/logo-mark.svg' %}" alt="" width="34" height="34" style="border-radius:9px;flex-shrink:0;"><span>{{ site.site_name }}<small>Boshqaruv paneli</small></span></a>
   <nav class="nav">
-    <a href="{% url 'panel:dashboard' %}" class="{% if p == 'dashboard' %}on{% endif %}"><span class="ic">◧</span>Bosh sahifa</a>
-    <a href="{% url 'panel:payments' %}" class="{% if p == 'payments' %}on{% endif %}"><span class="ic">💳</span>To'lovlar{% if counts.payments %}<span class="cnt">{{ counts.payments }}</span>{% endif %}</a>
-    <a href="{% url 'panel:users' %}" class="{% if p == 'users' or p == 'user_detail' %}on{% endif %}"><span class="ic">👤</span>Foydalanuvchilar</a>
-    <a href="{% url 'panel:cvs' %}" class="{% if p == 'cvs' %}on{% endif %}"><span class="ic">📄</span>CV lar</a>
+    <a href="{% url 'panel:dashboard' %}" class="{% if p == 'dashboard' %}on{% endif %}"><span class="ic">{% icon "grid" %}</span>Bosh sahifa</a>
+    <a href="{% url 'panel:payments' %}" class="{% if p == 'payments' %}on{% endif %}"><span class="ic">{% icon "credit-card" %}</span>To'lovlar{% if counts.payments %}<span class="cnt">{{ counts.payments }}</span>{% endif %}</a>
+    <a href="{% url 'panel:users' %}" class="{% if p == 'users' or p == 'user_detail' %}on{% endif %}"><span class="ic">{% icon "user" %}</span>Foydalanuvchilar</a>
+    <a href="{% url 'panel:cvs' %}" class="{% if p == 'cvs' %}on{% endif %}"><span class="ic">{% icon "file-text" %}</span>CV lar</a>
     <div class="nav-group">Nazorat</div>
-    <a href="{% url 'panel:visits' %}" class="{% if p == 'visits' or p == 'visitor_detail' %}on{% endif %}"><span class="ic">📈</span>Tashriflar</a>
-    <a href="{% url 'panel:ai' %}" class="{% if p == 'ai' %}on{% endif %}"><span class="ic">✨</span>AI xarajati</a>
-    <a href="{% url 'panel:errors' %}" class="{% if p == 'errors' %}on{% endif %}"><span class="ic">🐞</span>Xatolar{% if counts.errors %}<span class="cnt soft">{{ counts.errors }}</span>{% endif %}</a>
-    <a href="{% url 'panel:activity' %}" class="{% if p == 'activity' %}on{% endif %}"><span class="ic">🕓</span>Faollik</a>
-    <a href="{% url 'panel:messages' %}" class="{% if p == 'messages' %}on{% endif %}"><span class="ic">✉️</span>Murojaatlar{% if counts.messages %}<span class="cnt">{{ counts.messages }}</span>{% endif %}</a>
+    <a href="{% url 'panel:visits' %}" class="{% if p == 'visits' or p == 'visitor_detail' %}on{% endif %}"><span class="ic">{% icon "bar-chart" %}</span>Tashriflar</a>
+    <a href="{% url 'panel:ai' %}" class="{% if p == 'ai' %}on{% endif %}"><span class="ic">{% icon "sparkles" %}</span>AI xarajati</a>
+    <a href="{% url 'panel:errors' %}" class="{% if p == 'errors' %}on{% endif %}"><span class="ic">{% icon "bug" %}</span>Xatolar{% if counts.errors %}<span class="cnt soft">{{ counts.errors }}</span>{% endif %}</a>
+    <a href="{% url 'panel:activity' %}" class="{% if p == 'activity' %}on{% endif %}"><span class="ic">{% icon "clock" %}</span>Faollik</a>
+    <a href="{% url 'panel:messages' %}" class="{% if p == 'messages' %}on{% endif %}"><span class="ic">{% icon "mail" %}</span>Murojaatlar{% if counts.messages %}<span class="cnt">{{ counts.messages }}</span>{% endif %}</a>
     <div class="nav-group">Marketing</div>
-    <a href="{% url 'panel:samples' %}" class="{% if p == 'samples' or p == 'sample_edit' or p == 'sample_new' %}on{% endif %}"><span class="ic">📄</span>Namunalar</a>
-    <a href="{% url 'panel:referrals' %}" class="{% if p == 'referrals' %}on{% endif %}"><span class="ic">🤝</span>Takliflar</a>
+    <a href="{% url 'panel:samples' %}" class="{% if p == 'samples' or p == 'sample_edit' or p == 'sample_new' %}on{% endif %}"><span class="ic">{% icon "layout" %}</span>Namunalar</a>
+    <a href="{% url 'panel:referrals' %}" class="{% if p == 'referrals' %}on{% endif %}"><span class="ic">{% icon "users" %}</span>Takliflar</a>
     {% if request.user.is_superuser %}
-    <a href="{% url 'panel:broadcasts' %}" class="{% if p == 'broadcasts' or p == 'broadcast_detail' or p == 'broadcast_edit' %}on{% endif %}"><span class="ic">📣</span>Xabar yuborish</a>
-    <a href="{% url 'panel:promos' %}" class="{% if p == 'promos' or p == 'promo_edit' %}on{% endif %}"><span class="ic">🎁</span>Aksiyalar</a>
-    <a href="{% url 'panel:templates' %}" class="{% if p == 'templates' %}on{% endif %}"><span class="ic">🎨</span>Shablonlar</a>
-    <a href="{% url 'panel:seo' %}" class="{% if p == 'seo' or p == 'seo_page' %}on{% endif %}"><span class="ic">🔍</span>SEO</a>
+    <a href="{% url 'panel:broadcasts' %}" class="{% if p == 'broadcasts' or p == 'broadcast_detail' or p == 'broadcast_edit' %}on{% endif %}"><span class="ic">{% icon "megaphone" %}</span>Xabar yuborish</a>
+    <a href="{% url 'panel:promos' %}" class="{% if p == 'promos' or p == 'promo_edit' %}on{% endif %}"><span class="ic">{% icon "gift" %}</span>Aksiyalar</a>
+    <a href="{% url 'panel:templates' %}" class="{% if p == 'templates' %}on{% endif %}"><span class="ic">{% icon "palette" %}</span>Shablonlar</a>
+    <a href="{% url 'panel:seo' %}" class="{% if p == 'seo' or p == 'seo_page' %}on{% endif %}"><span class="ic">{% icon "search" %}</span>SEO</a>
     <div class="nav-group">Sozlash</div>
-    <a href="{% url 'panel:settings' %}" class="{% if p == 'settings' %}on{% endif %}"><span class="ic">⚙️</span>Sozlamalar va narxlar</a>
+    <a href="{% url 'panel:settings' %}" class="{% if p == 'settings' %}on{% endif %}"><span class="ic">{% icon "settings" %}</span>Sozlamalar va narxlar</a>
     {% endif %}
   </nav>
   <div class="side-foot">
-    {% if request.user.is_superuser %}<a href="{% url 'admin:index' %}" target="_blank">Django admin (qolgan hammasi) ↗</a>{% endif %}
-    <a href="/" target="_blank">Saytni ochish ↗</a>
-    <a href="/users/logout/">Chiqish · {{ request.user.get_full_name|default:request.user.username }}</a>
+    <a href="/" target="_blank">{% icon "globe" %} Saytni ochish</a>
+    {% if request.user.is_superuser %}<a href="{% url 'admin:index' %}" target="_blank">{% icon "external" %} Django admin</a>{% endif %}
+    <div class="me">
+      <span class="av">{{ request.user.first_name|default:request.user.username|first|upper }}</span>
+      <div style="min-width:0;"><b>{{ request.user.get_full_name|default:request.user.username }}</b><a href="/users/logout/">{% icon "logout" 12 %} Chiqish</a></div>
+    </div>
   </div>
 </aside>
 
 <main class="main">
   <div class="top">
     <div style="display:flex;gap:10px;align-items:center;">
-      <button class="btn btn-light btn-sm burger" type="button" onclick="document.body.classList.toggle('menu')">☰</button>
+      <button class="btn btn-light btn-sm burger" type="button" onclick="document.body.classList.toggle('menu')">{% icon "menu" %}</button>
       <div><h1>{% block heading %}{% endblock %}</h1>{% block subheading %}{% endblock %}</div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">{% block actions %}{% endblock %}</div>

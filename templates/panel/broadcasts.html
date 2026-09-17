@@ -1,89 +1,351 @@
 {% extends "panel/base.html" %}
+{% load ui %}
 {% block title %}Xabar yuborish{% endblock %}
-{% block heading %}📣 Xabar yuborish{% endblock %}
+{% block heading %}{% icon "megaphone" %} Xabar yuborish{% endblock %}
 {% block subheading %}<p>Bot orqali tanlangan yoki barcha foydalanuvchilarga: e'lon, so'rovnoma, rezyume sovg'asi, bonus kredit</p>{% endblock %}
 
 {% block style %}
-.presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
-.presets button { padding: 7px 11px; border: 1px dashed var(--line-2); border-radius: 10px; background: #fff; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
-.presets button:hover { border-color: var(--ink); }
-.sel-only[hidden] { display: none; }
-.checks { display: grid; gap: 8px; }
-.checks .f { display: flex; flex-direction: row-reverse; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: wrap; }
-.checks .f label { margin: 0; }
-.checks .f .help { flex-basis: 100%; margin: 0 0 0 26px; }
+.bx-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.step { padding: 16px; border-bottom: 1px solid var(--line); }
+.step:last-of-type { border-bottom: 0; }
+.step-h { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.step-h .n { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: var(--lime); font-size: 12px; font-weight: 800; flex-shrink: 0; }
+.step-h b { font-size: 14px; }
+.step-h .n svg.i { width: 12px; height: 12px; }
+#bform textarea[name=text] { width: 100%; min-height: 150px; line-height: 1.55; }
+.step-h span.muted { margin-left: auto; font-size: 12px; }
+
+.presets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.preset { display: flex; gap: 10px; align-items: flex-start; padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; font: inherit; text-align: left; cursor: pointer; }
+.preset:hover { border-color: var(--ink); }
+.preset svg.i { width: 30px; height: 30px; padding: 7px; border-radius: 9px; background: var(--gray-bg); color: var(--ink-2); }
+.preset b { display: block; font-size: 13px; } .preset small { display: block; color: var(--muted); font-size: 11.5px; line-height: 1.35; }
+
+.aud { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.aud label { position: relative; display: flex; gap: 10px; align-items: center; padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; cursor: pointer; font-size: 13px; font-weight: 700; }
+.aud label:hover { border-color: var(--line-2); }
+.aud input { position: absolute; opacity: 0; pointer-events: none; }
+.aud label svg.i { width: 30px; height: 30px; padding: 7px; border-radius: 9px; background: var(--gray-bg); color: var(--muted); }
+.aud label:has(input:checked) { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.aud label:has(input:checked) svg.i { background: var(--ink); color: var(--lime); }
+
+/* Tanlagich */
+.picker { margin-top: 12px; }
+.pk-search { position: relative; }
+.pk-search > svg.i { position: absolute; left: 12px; top: 11px; color: var(--muted-2); }
+.pk-search input { width: 100%; min-height: 40px; padding-left: 36px; }
+.pk-results { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 20; max-height: 340px; overflow-y: auto; background: #fff; border: 1px solid var(--line-2); border-radius: 12px; box-shadow: 0 18px 40px -18px rgba(21,22,26,.35); }
+.pk-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 12px; border: 0; border-bottom: 1px solid var(--line); background: #fff; font: inherit; text-align: left; cursor: pointer; }
+.pk-row:last-child { border-bottom: 0; }
+.pk-row:hover { background: #fafaf8; }
+.pk-row[disabled] { cursor: not-allowed; opacity: .55; }
+.pk-row .grow { flex: 1; min-width: 0; }
+.pk-row b { display: block; font-size: 13.5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pk-row small, .pk-person small { display: block; color: var(--muted); font-size: 12px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.av { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--gray-bg); color: var(--ink-2); font-weight: 800; font-size: 13px; flex-shrink: 0; }
+.pk-empty { padding: 16px; color: var(--muted); font-size: 13px; text-align: center; }
+.pk-sum { display: flex; justify-content: space-between; align-items: center; margin: 12px 0 8px; font-size: 12.5px; color: var(--muted); }
+.pk-sum button { border: 0; background: none; color: var(--muted); font: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; }
+.pk-list { display: grid; gap: 8px; }
+.pk-person { border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
+.pk-person-h { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+.pk-person-h .grow { flex: 1; min-width: 0; }
+.pk-person-h b { display: block; font-size: 13.5px; }
+.pk-rm { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--muted); cursor: pointer; }
+.pk-rm:hover { color: var(--red); border-color: #fecaca; }
+.pk-cvs { display: none; padding: 4px 12px 12px 54px; }
+.picker.with-cv .pk-cvs { display: grid; gap: 6px; }
+.pk-cv { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; font-size: 13px; }
+.pk-cv:hover { border-color: var(--line-2); }
+.pk-cv:has(input:checked) { border-color: var(--ink); background: #fafaf8; }
+.pk-cv input { accent-color: var(--ink); }
+.pk-cv .grow { flex: 1; min-width: 0; }
+.pk-cv .grow b { font-size: 13px; }
+.pk-cv a { color: var(--muted); }
+.pk-cv a:hover { color: var(--ink); }
+.pk-warn { padding: 8px 10px; border-radius: 10px; background: var(--amber-bg); color: var(--amber); font-size: 12.5px; }
+
+.editor-tools { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+.editor-tools button { min-height: 28px; padding: 0 9px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.editor-tools button:hover { border-color: var(--ink); }
+.counter { margin-top: 4px; font-size: 11.5px; color: var(--muted-2); text-align: right; }
+.counter.over { color: var(--red); font-weight: 700; }
+.toggles { display: grid; gap: 8px; }
+.toggle { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; }
+.toggle:has(input:checked) { border-color: var(--ink); background: #fafaf8; }
+.toggle input { margin-top: 2px; width: 16px; height: 16px; accent-color: var(--ink); }
+.toggle b { display: block; font-size: 13px; } .toggle small { display: block; color: var(--muted); font-size: 12px; }
+.err { margin-top: 4px; font-size: 12px; color: var(--red); }
+.hist .name { display: block; }
+@media (max-width: 1100px) { .bx-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) { .presets, .aud { grid-template-columns: minmax(0, 1fr); } .pk-cvs { padding-left: 12px; } }
 {% endblock %}
 
 {% block content %}
-<div class="grid g-main">
-  <div class="card" style="align-self:start;">
-    <div class="card-h"><h2>Xabarlar</h2></div>
+<div class="bx-grid">
+  <form method="post" class="card" id="bform" action="{% if instance %}{% url 'panel:broadcast_edit' instance.pk %}{% else %}{% url 'panel:broadcasts' %}{% endif %}">
+    {% csrf_token %}
+    {{ form.selected_users }}{{ form.selected_cvs }}
+    <div class="card-h"><h2>{% if instance %}{% icon "edit" %} «{{ instance.title }}»{% else %}{% icon "plus" %} Yangi xabar{% endif %}</h2>{% if instance %}<a href="{% url 'panel:broadcast_detail' instance.pk %}" class="btn btn-light btn-sm">{% icon "arrow-left" %} Orqaga</a>{% endif %}</div>
+
+    {% if not instance %}
+    <div class="step">
+      <div class="step-h"><span class="n">{% icon "zap" 12 %}</span><b>Tayyor shablon</b><span class="muted">bosing — maydonlar to'ladi</span></div>
+      <div class="presets">
+        {% for p in presets %}
+        <button type="button" class="preset" data-preset="{{ forloop.counter0 }}">
+          {% if p.key == "gift_cv" %}{% icon "file-text" %}{% elif p.key == "gift_credit" %}{% icon "gift" %}{% else %}{% icon "bar-chart" %}{% endif %}
+          <span><b>{{ p.label }}</b><small>{% if p.key == "gift_cv" %}Yuklamaganlarga o'z rezyumesi PDF{% elif p.key == "gift_credit" %}Kredit va «ulashing» tugmasi{% else %}Javob tugmalari bilan savol{% endif %}</small></span>
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="step">
+      <div class="step-h"><span class="n">1</span><b>Kimga</b></div>
+      <div class="f" style="margin-bottom:10px;">{% include "panel/_field.html" with field=form.title %}</div>
+      <div class="aud">
+        {% for value, label in form.audience.field.choices %}
+        <label><input type="radio" name="audience" value="{{ value }}" {% if form.audience.value == value %}checked{% endif %}>
+          {% if value == "all" %}{% icon "users" %}{% elif value == "cv_not_downloaded" %}{% icon "download" %}{% elif value == "no_cv" %}{% icon "file-text" %}{% else %}{% icon "search" %}{% endif %}
+          <span>{{ label }}</span></label>
+        {% endfor %}
+      </div>
+      {% for e in form.audience.errors %}<div class="err">{{ e }}</div>{% endfor %}
+
+      <div class="picker" id="picker" hidden>
+        <div class="pk-search">
+          {% icon "search" %}
+          <input class="input" id="pk-q" type="search" autocomplete="off" placeholder="Ism, telefon, @username yoki ID bo'yicha qidiring">
+          <div class="pk-results" id="pk-results" hidden></div>
+        </div>
+        <div class="pk-sum"><span id="pk-count">Hali hech kim tanlanmagan</span><button type="button" id="pk-clear" hidden>Hammasini olib tashlash</button></div>
+        <div class="pk-list" id="pk-list"></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-h"><span class="n">2</span><b>Xabar</b><span class="muted">Telegram HTML: qalin, kursiv, havola</span></div>
+      <div class="editor-tools">
+        <button type="button" data-wrap="b"><b>B</b></button>
+        <button type="button" data-wrap="i"><i>I</i></button>
+        <button type="button" data-wrap="u"><u>U</u></button>
+        <button type="button" data-insert="{ism}">{ism}</button>
+        <button type="button" data-insert="{kredit}">{kredit}</button>
+      </div>
+      {{ form.text }}
+      <div class="counter" id="counter"></div>
+      {% for e in form.text.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+
+    <div class="step">
+      <div class="step-h"><span class="n">3</span><b>Sovg'a va tugmalar</b></div>
+      <div class="toggles">
+        <label class="toggle">{{ form.attach_cv }}<span><b>{% icon "file-text" 14 %} Foydalanuvchining o'z rezyumesini PDF qilib yuborish</b><small>Fayl nomida va ichida sayt nomi bo'ladi. Rezyumesi yo'qlarga yuborilmaydi, matn 1000 belgigacha.</small></span></label>
+        <label class="toggle">{{ form.button_site }}<span><b>{% icon "globe" 14 %} «Saytni ochish» tugmasi</b><small>Telegram ichida kabinet ochiladi, kirish shart emas</small></span></label>
+        <label class="toggle">{{ form.button_share }}<span><b>{% icon "users" 14 %} «Do'stga ulashish» tugmasi</b><small>Har kimning o'z taklif havolasi bilan — do'sti kelsa kredit oladi</small></span></label>
+      </div>
+      <div class="fs-grid" style="margin-top:12px;">
+        {% include "panel/_field.html" with field=form.feedback_options %}
+        {% include "panel/_field.html" with field=form.bonus_credits %}
+      </div>
+    </div>
+
+    <div class="save">
+      <span class="muted small" style="margin-right:auto;align-self:center;">Saqlagach «Menga sinov» bilan tekshirasiz</span>
+      <button class="btn btn-lg">{% icon "check" %} Saqlash</button>
+    </div>
+  </form>
+
+  <div class="card hist">
+    <div class="card-h"><h2>{% icon "clock" %} Xabarlar tarixi</h2></div>
     <div class="table-wrap">
       <table class="t">
-        <tr><th>Nomi</th><th>Kimga</th><th class="num">Yetkazildi</th><th class="num">Javoblar</th><th>Holat</th></tr>
         {% for b in items %}
         <tr>
-          <td><a class="name link" href="{% url 'panel:broadcast_detail' b.pk %}">{{ b.title }}</a><br><span class="muted small">{{ b.created_at|date:"d.m.Y H:i" }}{% if b.attach_cv %} · PDF{% endif %}{% if b.bonus_credits %} · +{{ b.bonus_credits }} kredit{% endif %}</span></td>
-          <td class="small">{{ b.get_audience_display }}</td>
-          <td class="num">{% if b.n %}<b>{{ b.n_sent }}</b> / {{ b.n }}{% else %}—{% endif %}</td>
-          <td class="num">{% if b.options %}{{ b.n_answers }}{% else %}<span class="muted">—</span>{% endif %}</td>
-          <td>{% if b.status == "sending" %}<span class="badge b-amber">● Yuborilmoqda</span>{% elif b.status == "done" %}<span class="badge b-green">Yuborildi</span>{% elif b.status == "cancelled" %}<span class="badge b-red">To'xtatildi</span>{% else %}<span class="badge b-gray">Qoralama</span>{% endif %}</td>
+          <td><a class="name link" href="{% url 'panel:broadcast_detail' b.pk %}">{{ b.title }}</a>
+            <span class="muted small">{{ b.created_at|date:"d.m H:i" }} · {{ b.get_audience_display|truncatechars:28 }}{% if b.attach_cv %} · PDF{% endif %}{% if b.bonus_credits %} · +{{ b.bonus_credits }}{% endif %}</span></td>
+          <td class="num nowrap">{% if b.n %}<b>{{ b.n_sent }}</b>/{{ b.n }}{% if b.options %}<br><span class="muted small">{{ b.n_answers }} javob</span>{% endif %}{% else %}—{% endif %}</td>
+          <td class="nowrap">{% if b.status == "sending" %}<span class="badge b-amber">Yuborilmoqda</span>{% elif b.status == "done" %}<span class="badge b-green">Yuborildi</span>{% elif b.status == "cancelled" %}<span class="badge b-red">To'xtatildi</span>{% else %}<span class="badge b-gray">Qoralama</span>{% endif %}</td>
         </tr>
-        {% empty %}<tr><td colspan="5" class="empty">Hali xabar yo'q. O'ngdagi formadan birinchisini yarating — tayyor shablonlardan boshlash mumkin.</td></tr>{% endfor %}
+        {% empty %}<tr><td class="empty">Hali xabar yo'q. Chapdagi tayyor shablondan boshlang.</td></tr>{% endfor %}
       </table>
     </div>
   </div>
-
-  <form method="post" class="card" style="align-self:start;" id="bform" action="{% if instance %}{% url 'panel:broadcast_edit' instance.pk %}{% else %}{% url 'panel:broadcasts' %}{% endif %}">
-    {% csrf_token %}
-    <div class="card-h"><h2>{% if instance %}✏️ «{{ instance.title }}»{% else %}➕ Yangi xabar{% endif %}</h2>{% if instance %}<a href="{% url 'panel:broadcast_detail' instance.pk %}" class="btn btn-light btn-sm">← Orqaga</a>{% endif %}</div>
-    <div class="fs">
-      {% if not instance %}
-      <div class="presets">
-        <span class="muted small" style="align-self:center;">Tayyor shablon:</span>
-        {% for p in presets %}<button type="button" data-preset="{{ forloop.counter0 }}">{{ p.label }}</button>{% endfor %}
-      </div>
-      {% endif %}
-      <div class="fs-grid">
-        <div class="f wide" style="margin:0;">{% include "panel/_field.html" with field=form.title %}</div>
-        <div class="wide" style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.audience %}</div>
-        <div class="sel-only" style="grid-column:1/-1;" id="sel-box">{% include "panel/_field.html" with field=form.selected_users %}</div>
-        <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.text %}</div>
-        <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.feedback_options %}</div>
-        {% include "panel/_field.html" with field=form.bonus_credits %}
-        <div></div>
-        <div class="checks" style="grid-column:1/-1;">
-          {% include "panel/_field.html" with field=form.attach_cv %}
-          {% include "panel/_field.html" with field=form.button_site %}
-          {% include "panel/_field.html" with field=form.button_share %}
-        </div>
-      </div>
-      <p class="note" style="margin-top:12px;">💡 Saqlagach, xabar <b>qoralama</b> bo'ladi: avval «Menga sinov» bilan o'z Telegram'ingizda ko'rasiz, keyin «Yuborish»ni bosasiz. Yuborishni bot navbat bilan bajaradi — botni bloklaganlar va xatolar alohida ko'rinadi.</p>
-    </div>
-    <div class="save"><button class="btn btn-lg">Saqlash</button></div>
-  </form>
 </div>
 {{ presets|json_script:"presets-data" }}
+{{ picker_initial|json_script:"picker-initial" }}
 {% endblock %}
 
 {% block js %}
 <script>
 (function () {
   var form = document.getElementById('bform');
-  var audience = form.querySelector('[name=audience]');
-  var selBox = document.getElementById('sel-box');
-  function sync() { selBox.hidden = audience.value !== 'selected'; }
-  audience.addEventListener('change', sync); sync();
+  var picker = document.getElementById('picker');
+  var attach = form.querySelector('[name=attach_cv]');
+  var usersInput = form.querySelector('[name=selected_users]');
+  var cvsInput = form.querySelector('[name=selected_cvs]');
+  var text = form.querySelector('[name=text]');
+  var ICON_X = '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+  var ICON_EXT = '<svg class="i" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>';
 
+  function audience() { var r = form.querySelector('[name=audience]:checked'); return r ? r.value : 'all'; }
+  function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  function initial(name) { return (name || '?').trim().charAt(0).toUpperCase(); }
+  function meta(p) { return [p.phone, p.tg ? '@' + p.tg : '', p.cvs.length ? p.cvs.length + ' ta rezyume' : 'rezyume yo\'q'].filter(Boolean).join(' · '); }
+
+  // ── Tanlanganlar ──
+  var selected = JSON.parse(document.getElementById('picker-initial').textContent) || [];
+
+  function syncHidden() {
+    usersInput.value = selected.map(function (p) { return p.id; }).join('\n');
+    var map = {};
+    selected.forEach(function (p) { if (p.cv) map[p.id] = p.cv; });
+    cvsInput.value = JSON.stringify(map);
+    document.getElementById('pk-count').textContent = selected.length ? selected.length + ' kishi tanlandi' : 'Hali hech kim tanlanmagan';
+    document.getElementById('pk-clear').hidden = !selected.length;
+  }
+
+  function renderSelected() {
+    var list = document.getElementById('pk-list');
+    list.innerHTML = '';
+    selected.forEach(function (p, idx) {
+      var card = el('div', 'pk-person');
+      var head = el('div', 'pk-person-h');
+      head.appendChild(el('span', 'av', initial(p.name)));
+      var info = el('div', 'grow');
+      info.appendChild(el('b', '', p.name));
+      info.appendChild(el('small', '', meta(p)));
+      head.appendChild(info);
+      var rm = el('button', 'pk-rm'); rm.type = 'button'; rm.innerHTML = ICON_X; rm.title = 'Olib tashlash';
+      rm.addEventListener('click', function () { selected.splice(idx, 1); renderSelected(); });
+      head.appendChild(rm);
+      card.appendChild(head);
+
+      var cvs = el('div', 'pk-cvs');
+      if (!p.cvs.length) {
+        cvs.appendChild(el('div', 'pk-warn', "Rezyumesi yo'q — PDF sovg'a yoqilgan bo'lsa, unga xabar yuborilmaydi."));
+      } else {
+        var groupName = 'cv-' + p.id;
+        function option(value, title, sub, url) {
+          var row = el('label', 'pk-cv');
+          var radio = document.createElement('input');
+          radio.type = 'radio'; radio.name = groupName; radio.checked = (p.cv || null) === value;
+          radio.addEventListener('change', function () { p.cv = value; syncHidden(); });
+          row.appendChild(radio);
+          var g = el('span', 'grow');
+          g.appendChild(el('b', '', title));
+          if (sub) g.appendChild(el('small', '', sub));
+          row.appendChild(g);
+          if (url) { var a = el('a'); a.href = url; a.target = '_blank'; a.title = "Ko'rish"; a.innerHTML = ICON_EXT; row.appendChild(a); }
+          return row;
+        }
+        cvs.appendChild(option(null, 'Avtomatik — eng oxirgi rezyume', ''));
+        p.cvs.forEach(function (c) {
+          var sub = [c.title, c.template, c.date, c.tailored ? 'moslashtirilgan: ' + c.tailored : '', c.unlocked ? 'ochilgan' : ''].filter(Boolean).join(' · ');
+          cvs.appendChild(option(c.id, c.name, sub, c.url));
+        });
+      }
+      card.appendChild(cvs);
+      list.appendChild(card);
+    });
+    syncHidden();
+  }
+
+  function add(p) {
+    if (selected.some(function (s) { return s.id === p.id; })) return;
+    p.cv = null;
+    selected.push(p);
+    renderSelected();
+  }
+
+  document.getElementById('pk-clear').addEventListener('click', function () { selected = []; renderSelected(); });
+
+  // ── Qidiruv ──
+  var q = document.getElementById('pk-q'), results = document.getElementById('pk-results'), timer = null, lastQuery = null;
+
+  function renderResults(people) {
+    results.innerHTML = '';
+    if (!people.length) { results.appendChild(el('div', 'pk-empty', 'Hech kim topilmadi')); }
+    people.forEach(function (p) {
+      var chosen = selected.some(function (s) { return s.id === p.id; });
+      var row = el('button', 'pk-row'); row.type = 'button';
+      row.appendChild(el('span', 'av', initial(p.name)));
+      var g = el('span', 'grow'); g.appendChild(el('b', '', p.name)); g.appendChild(el('small', '', meta(p))); row.appendChild(g);
+      var badge;
+      if (!p.telegram) { badge = el('span', 'badge b-gray', "Telegram yo'q"); row.disabled = true; }
+      else if (p.blocked) { badge = el('span', 'badge b-red', 'Bloklangan'); row.disabled = true; }
+      else if (chosen) { badge = el('span', 'badge b-green', 'Tanlangan'); }
+      else { badge = el('span', 'badge b-ink', '+ Qo\'shish'); }
+      row.appendChild(badge);
+      row.addEventListener('click', function () {
+        if (row.disabled) return;
+        if (chosen) { selected = selected.filter(function (s) { return s.id !== p.id; }); renderSelected(); }
+        else add(p);
+        renderResults(people);
+      });
+      results.appendChild(row);
+    });
+    results.hidden = false;
+  }
+
+  function search(force) {
+    var value = q.value.trim();
+    if (!force && value === lastQuery) { results.hidden = false; return; }
+    lastQuery = value;
+    fetch('{% url "panel:broadcast_people" %}?q=' + encodeURIComponent(value), { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { if (value === lastQuery) renderResults(d.people || []); })
+      .catch(function () { results.innerHTML = ''; results.appendChild(el('div', 'pk-empty', 'Xatolik. Qayta urinib ko\'ring.')); results.hidden = false; });
+  }
+  q.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(search, 250); });
+  q.addEventListener('focus', function () { search(); });
+  q.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); search(true); } if (e.key === 'Escape') results.hidden = true; });
+  document.addEventListener('click', function (e) { if (!e.target.closest('.pk-search')) results.hidden = true; });
+
+  // ── Kimga / PDF ──
+  function syncAudience() {
+    picker.hidden = audience() !== 'selected';
+    picker.classList.toggle('with-cv', attach.checked);
+  }
+  form.querySelectorAll('[name=audience]').forEach(function (r) { r.addEventListener('change', syncAudience); });
+  attach.addEventListener('change', function () { syncAudience(); updateCounter(); });
+
+  // ── Matn ──
+  var counter = document.getElementById('counter');
+  function updateCounter() {
+    var limit = attach.checked ? 1000 : 3500;
+    counter.textContent = text.value.length + ' / ' + limit;
+    counter.classList.toggle('over', text.value.length > limit);
+  }
+  text.addEventListener('input', updateCounter);
+  form.querySelectorAll('[data-wrap], [data-insert]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var s = text.selectionStart, e = text.selectionEnd, v = text.value, piece;
+      if (b.dataset.insert) piece = b.dataset.insert;
+      else piece = '<' + b.dataset.wrap + '>' + (v.slice(s, e) || 'matn') + '</' + b.dataset.wrap + '>';
+      text.value = v.slice(0, s) + piece + v.slice(e);
+      text.focus(); text.selectionStart = text.selectionEnd = s + piece.length;
+      updateCounter();
+    });
+  });
+
+  // ── Tayyor shablonlar ──
   var presets = JSON.parse(document.getElementById('presets-data').textContent);
   form.querySelectorAll('[data-preset]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var p = presets[+btn.dataset.preset];
-      ['title', 'audience', 'text', 'feedback_options', 'bonus_credits'].forEach(function (k) { form.querySelector('[name=' + k + ']').value = p[k]; });
+      ['title', 'text', 'feedback_options', 'bonus_credits'].forEach(function (k) { form.querySelector('[name=' + k + ']').value = p[k]; });
       ['attach_cv', 'button_site', 'button_share'].forEach(function (k) { form.querySelector('[name=' + k + ']').checked = !!p[k]; });
-      sync();
+      var radio = form.querySelector('[name=audience][value="' + p.audience + '"]'); if (radio) radio.checked = true;
+      syncAudience(); updateCounter();
     });
   });
+
+  renderSelected();
+  syncAudience();
+  updateCounter();
 })();
 </script>
 {% endblock %}

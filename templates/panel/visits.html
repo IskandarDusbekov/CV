@@ -1,7 +1,7 @@
 {% extends "panel/base.html" %}
-{% load panel_tags %}
+{% load panel_tags ui %}
 {% block title %}Tashriflar{% endblock %}
-{% block heading %}📈 Tashriflar{% endblock %}
+{% block heading %}{% icon "bar-chart" %} Tashriflar{% endblock %}
 {% block subheading %}<p>Kim keldi — real odam, bot yoki skaner; qayerdan keldi, nima qildi va qayerda to'xtadi</p>{% endblock %}
 {% block actions %}
 <div class="tabs">
@@ -41,10 +41,10 @@
 
 {% block content %}
 <div class="grid g-4" style="margin-bottom:14px;">
-  <a href="{% qs kind='human' stage='' %}" class="card kpi"><small>🧑 Real odamlar</small><b>{{ humans }}</b><span>hozir saytda: {{ online }} · 📱 {{ mobile_share }}% telefonda</span></a>
-  <a href="{% qs kind='human' stage='' q='' %}" class="card kpi"><small>🏠 Landingga kelgan odamlar</small><b>{{ landing_humans }}</b><span>sahifa ko'rishlar: {{ human_pageviews }}</span></a>
-  <a href="{% qs kind='bot' stage='' %}" class="card kpi"><small>🤖 Botlar</small><b>{{ bots }}</b><span>aniqlanmagan: {{ unknown }}</span></a>
-  <a href="{% qs kind='scanner' stage='' %}" class="card kpi {% if scanners %}hot{% endif %}"><small>🛡 Skanerlar</small><b>{{ scanners }}</b><span>zaiflik qidirganlar</span></a>
+  <a href="{% qs kind='human' stage='' %}" class="card kpi"><small>{% icon "user" %} Real odamlar</small><b>{{ humans }}</b><span>hozir saytda: {{ online }} · {% icon "smartphone" %} {{ mobile_share }}% telefonda</span></a>
+  <a href="{% qs kind='human' stage='' q='' %}" class="card kpi"><small>{% icon "home" %} Landingga kelgan odamlar</small><b>{{ landing_humans }}</b><span>sahifa ko'rishlar: {{ human_pageviews }}</span></a>
+  <a href="{% qs kind='bot' stage='' %}" class="card kpi"><small>{% icon "bot" %} Botlar</small><b>{{ bots }}</b><span>aniqlanmagan: {{ unknown }}</span></a>
+  <a href="{% qs kind='scanner' stage='' %}" class="card kpi {% if scanners %}hot{% endif %}"><small>{% icon "shield" %} Skanerlar</small><b>{{ scanners }}</b><span>zaiflik qidirganlar</span></a>
 </div>
 
 <div class="grid g-main" style="margin-bottom:14px;">
@@ -63,7 +63,7 @@
   </div>
 
   <div class="card">
-    <div class="card-h"><h2>🚦 Qayerda to'xtadi</h2><span class="muted small">real odamlar</span></div>
+    <div class="card-h"><h2>{% icon "flag" %} Qayerda to'xtadi</h2><span class="muted small">real odamlar</span></div>
     <div class="stages">
       {% for s in stages %}
       <a href="{% qs kind='human' stage=s.key %}">
@@ -76,7 +76,7 @@
 </div>
 
 <div class="card" style="margin-bottom:14px;">
-  <div class="card-h"><h2>🔻 Voronka — nima qildi</h2><span class="muted small">real odamlar, {{ days }} kun</span></div>
+  <div class="card-h"><h2>{% icon "filter" %} Voronka — nima qildi</h2><span class="muted small">real odamlar, {{ days }} kun</span></div>
   <div class="funnel">
     {% for f in funnel %}
     <div class="fn">
@@ -90,21 +90,21 @@
 
 <div class="grid g-3" style="margin-bottom:14px;">
   <div class="card">
-    <div class="card-h"><h2>🚪 Chiqib ketgan sahifa</h2></div>
+    <div class="card-h"><h2>{% icon "logout" %} Chiqib ketgan sahifa</h2></div>
     <ul class="list">
       {% for e in exits %}<li><span class="path">{{ e.last_path }}</span><b>{{ e.n }}</b></li>{% empty %}<li class="muted">Ma'lumot yo'q</li>{% endfor %}
     </ul>
     <div class="explain">Rezyume yaratmasdan ketgan odamlar oxirgi marta shu sahifada bo'lgan.</div>
   </div>
   <div class="card">
-    <div class="card-h"><h2>🔗 Qayerdan keldi</h2></div>
+    <div class="card-h"><h2>{% icon "link" %} Qayerdan keldi</h2></div>
     <ul class="list">
       {% for s in sources %}<li><span>{{ s.name }}</span><b>{{ s.n }}</b></li>{% empty %}<li class="muted">Ma'lumot yo'q</li>{% endfor %}
     </ul>
     <div class="explain">Reklama havolasiga <code>?utm_source=instagram</code> qo'shsangiz, shu yerda alohida ko'rinadi. Mini App orqali: {{ telegram_app }}.</div>
   </div>
   <div class="card">
-    <div class="card-h"><h2>🛬 Birinchi ochgan sahifa</h2></div>
+    <div class="card-h"><h2>{% icon "log-in" %} Birinchi ochgan sahifa</h2></div>
     <ul class="list">
       {% for l in landings %}<li><span class="path">{{ l.landing_path }}</span><b>{{ l.n }}</b></li>{% empty %}<li class="muted">Ma'lumot yo'q</li>{% endfor %}
       {% for d in devices %}<li><span class="muted">{{ d.device|device_icon }} {{ d.device|default:"—" }}</span><b>{{ d.n }}</b></li>{% endfor %}
@@ -114,19 +114,19 @@
 
 <div class="grid g-3" style="margin-bottom:14px;">
   <div class="card">
-    <div class="card-h"><h2>🤖 Botlar</h2></div>
+    <div class="card-h"><h2>{% icon "bot" %} Botlar</h2></div>
     <ul class="list">
       {% for b in bot_list %}<li><span>{{ b.bot_name|default:"Noma'lum" }}</span><b>{{ b.n }}</b></li>{% empty %}<li class="muted">Bot yo'q</li>{% endfor %}
     </ul>
   </div>
   <div class="card">
-    <div class="card-h"><h2>🛡 Skaner IP lari</h2></div>
+    <div class="card-h"><h2>{% icon "shield" %} Skaner IP lari</h2></div>
     <ul class="list">
-      {% for s in scanner_ips %}<li><a class="link path" href="{% qs kind='scanner' q=s.ip stage='' %}">{{ s.ip }}</a><span class="muted small">{{ s.hits }} so'rov</span></li>{% empty %}<li class="muted">Skaner yo'q 🎉</li>{% endfor %}
+      {% for s in scanner_ips %}<li><a class="link path" href="{% qs kind='scanner' q=s.ip stage='' %}">{{ s.ip }}</a><span class="muted small">{{ s.hits }} so'rov</span></li>{% empty %}<li class="muted">Skaner yo'q</li>{% endfor %}
     </ul>
   </div>
   <div class="card">
-    <div class="card-h"><h2>🎯 Skanerlar qidirgan manzillar</h2></div>
+    <div class="card-h"><h2>{% icon "target" %} Skanerlar qidirgan manzillar</h2></div>
     <ul class="list">
       {% for s in scanner_paths %}<li><span class="path">{{ s.path|truncatechars:48 }}</span><b>{{ s.n }}</b></li>{% empty %}<li class="muted">—</li>{% endfor %}
     </ul>

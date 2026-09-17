@@ -1,6 +1,7 @@
 {% extends "panel/base.html" %}
+{% load ui %}
 {% block title %}Aksiyalar{% endblock %}
-{% block heading %}🎁 Aksiyalar{% endblock %}
+{% block heading %}{% icon "gift" %} Aksiyalar{% endblock %}
 {% block subheading %}<p>Belgilangan sanalarda ro'yxatdan o'tgan (yoki kirgan) har bir foydalanuvchiga bonus kredit — avtomatik, bir martadan</p>{% endblock %}
 
 {% block content %}
@@ -20,7 +21,7 @@
           <td>{% if p.state == "running" %}<span class="badge b-green">● Davom etmoqda</span>{% elif p.state == "scheduled" %}<span class="badge b-sky">Kutilmoqda</span>{% else %}<span class="badge b-gray">Tugagan / o'chiq</span>{% endif %}</td>
           <td class="nowrap">
             <a class="btn btn-light btn-sm" href="{% url 'panel:promo_edit' p.pk %}">Tahrirlash</a>
-            <form method="post" action="{% url 'panel:promo_delete' p.pk %}" style="display:inline;">{% csrf_token %}<button class="btn btn-light btn-sm" data-confirm="«{{ p.name }}» o'chirilsinmi?">✕</button></form>
+            <form method="post" action="{% url 'panel:promo_delete' p.pk %}" style="display:inline;">{% csrf_token %}<button class="btn btn-light btn-sm" data-confirm="«{{ p.name }}» o'chirilsinmi?">{% icon "x" 15 %}</button></form>
           </td>
         </tr>
         {% empty %}<tr><td colspan="7" class="empty">Hali aksiya yo'q. O'ngdagi formadan birinchisini yarating.</td></tr>{% endfor %}
@@ -30,7 +31,7 @@
 
   <form method="post" class="card" style="align-self:start;">
     {% csrf_token %}
-    <div class="card-h"><h2>{% if instance %}✏️ «{{ instance.name }}»{% else %}➕ Yangi aksiya{% endif %}</h2>{% if instance %}<a href="{% url 'panel:promos' %}" class="btn btn-light btn-sm">Yangi</a>{% endif %}</div>
+    <div class="card-h"><h2>{% if instance %}{% icon "edit" %} «{{ instance.name }}»{% else %}{% icon "plus" %} Yangi aksiya{% endif %}</h2>{% if instance %}<a href="{% url 'panel:promos' %}" class="btn btn-light btn-sm">Yangi</a>{% endif %}</div>
     <div class="fs">
       <div class="fs-grid">
         <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.name %}</div>
@@ -42,7 +43,7 @@
         {% include "panel/_field.html" with field=form.show_banner %}
         {% include "panel/_field.html" with field=form.is_active %}
       </div>
-      <p class="note" style="margin-top:12px;">💡 <b>Qanday ishlaydi:</b> sanalar oralig'ida foydalanuvchi Telegram orqali kirishi bilan bonus kredit hisobiga tushadi (har bir aksiyadan bir marta). «Barcha kirganlar» tanlansa, sayt yoki botga kirgan eski foydalanuvchilar ham oladi. 1 kredit = 1 rezyume to'liq ochiladi.</p>
+      <p class="note" style="margin-top:12px;">{% icon "lightbulb" %} <b>Qanday ishlaydi:</b> sanalar oralig'ida foydalanuvchi Telegram orqali kirishi bilan bonus kredit hisobiga tushadi (har bir aksiyadan bir marta). «Barcha kirganlar» tanlansa, sayt yoki botga kirgan eski foydalanuvchilar ham oladi. 1 kredit = 1 rezyume to'liq ochiladi.</p>
     </div>
     <div class="save"><button class="btn btn-lg">Saqlash</button></div>
   </form>

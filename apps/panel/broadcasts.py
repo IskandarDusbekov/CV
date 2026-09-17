@@ -1,13 +1,17 @@
 """Panel → «Xabar yuborish»: bot orqali tanlangan yoki barcha foydalanuvchilarga xabar (faqat bosh admin)."""
+import json
+import re
+
 from django.contrib import messages
-from django.db.models import Count, Q
+from django.db.models import Count, F, Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_POST
 
 from apps.users import broadcast as engine
-from apps.users.models import Broadcast, BroadcastRecipient
+from apps.users.models import Broadcast, BroadcastRecipient, UserProfile
 
 from .forms import BroadcastForm
 from .views import _page, superuser_required
@@ -70,6 +74,8 @@ def broadcasts(request, pk=None):
             obj = form.save(commit=False)
             if obj.created_by_id is None:
                 obj.created_by = request.user
+            if obj.audience != Broadcast.AUDIENCE_SELECTED:
+                obj.selected_users, obj.selected_cvs = "", {}
             obj.save()
             messages.success(request, "Saqlandi. Endi «Menga sinov» bilan tekshirib, keyin yuboring.")
             return redirect("panel:broadcast_detail", pk=obj.pk)
@@ -80,7 +86,50 @@ def broadcasts(request, pk=None):
         "instance": instance,
         "items": _with_stats(Broadcast.objects.all())[:50],
         "presets": PRESETS,
+        "picker_initial": _picker_state(form["selected_users"].value(), form["selected_cvs"].value()),
     })
+
+
+def _picker_state(selected_users, selected_cvs):
+    """Formadagi tanlov (ID/telefon ro'yxati + rezyumelar) → tanlagich uchun boshlang'ich ro'yxat."""
+    if isinstance(selected_cvs, str):
+        try:
+            selected_cvs = json.loads(selected_cvs or "{}")
+        except ValueError:
+            selected_cvs = {}
+    if not (selected_users or "").strip():
+        return []
+    profiles = UserProfile.objects.select_related("user").filter(engine._selected_filter(selected_users)).order_by("pk")[:200]
+    people = engine.people_payload(profiles)
+    for person in people:
+        cv_id = (selected_cvs or {}).get(str(person["id"]))
+        match = next((c for c in person["cvs"] if c["id"] == cv_id), None)
+        person["cv"] = match["id"] if match else None
+        person["cv_label"] = (f"{match['name']} · {match['template']}" if match
+                              else ("Avtomatik — eng oxirgisi" if person["cvs"] else "Rezyumesi yo'q"))
+    return people
+
+
+@superuser_required
+def broadcast_people(request):
+    """Tanlagich qidiruvi: ism, telefon, @username yoki ID bo'yicha — rezyumelari bilan."""
+    q = request.GET.get("q", "").strip()
+    qs = UserProfile.objects.select_related("user")
+    if q:
+        term = q.lstrip("@")
+        cond = (Q(user__first_name__icontains=term) | Q(user__last_name__icontains=term) | Q(user__username__icontains=term)
+                | Q(telegram_username__icontains=term))
+        digits = re.sub(r"\D", "", q)
+        if digits:
+            cond |= Q(phone__contains=digits[-9:])
+            if len(digits) <= 9:
+                cond |= Q(user_id=int(digits))
+        full = q.split()
+        if len(full) >= 2:
+            cond |= Q(user__first_name__icontains=full[0], user__last_name__icontains=full[-1])
+        qs = qs.filter(cond)
+    qs = qs.order_by(F("telegram_id").desc(nulls_last=True), "-last_seen", "-created_at")[:20]
+    return JsonResponse({"people": engine.people_payload(qs)})
 
 
 @superuser_required
@@ -111,6 +160,7 @@ def broadcast_detail(request, pk):
         "s": flt,
         "statuses": BroadcastRecipient.STATUS_CHOICES,
         "pending": status_counts.get(BroadcastRecipient.STATUS_PENDING, 0),
+        "selected_people": _picker_state(obj.selected_users, obj.selected_cvs) if obj.audience == Broadcast.AUDIENCE_SELECTED else [],
     })
 
 

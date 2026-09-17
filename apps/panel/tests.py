@@ -1,3 +1,4 @@
+import json
 from unittest import mock
 
 from django.contrib.auth import get_user_model
@@ -212,11 +213,40 @@ class BroadcastTests(TestCase):
     def test_form_validation(self):
         url = reverse("panel:broadcasts")
         self.assertContains(self.client.post(url, self._form(text="<div>salom</div>")), "Telegram bu teglarni qo")
-        self.assertContains(self.client.post(url, self._form(audience="selected")), "Kimga yuborilishini yozing")
+        self.assertContains(self.client.post(url, self._form(audience="selected")), "Kimga yuborilishini tanlang")
         self.assertContains(self.client.post(url, self._form(attach_cv="on", text="x" * 1100)), "1000 belgidan")
         self.assertFalse(self.Broadcast.objects.exists())
         self.assertEqual(self.client.get(url).status_code, 200)
-        self.assertContains(self.client.get(url + f"?to={self.fresh.pk}"), f"{self.fresh.pk}</textarea>")
+        prefilled = self.client.get(url + f"?to={self.fresh.pk}")
+        self.assertEqual([p["name"] for p in prefilled.context["picker_initial"]], ["Aziza"])
+
+    def test_picker_search_and_chosen_cv_is_sent(self):
+        from apps.users import broadcast as engine
+
+        older = CV.objects.get(user=self.fresh)
+        CV.objects.create(user=self.fresh, raw_input_text="x", cv_json={**DEMO_CV_JSON, "full_name": "Aziza Yangi"})
+        foreign = CV.objects.get(user=self.loader)
+
+        people = self.client.get(reverse("panel:broadcast_people") + "?q=90 111 00 01").json()["people"]
+        self.assertEqual([(p["name"], len(p["cvs"])) for p in people], [("Aziza", 2)])
+        self.assertEqual(people[0]["cvs"][0]["name"], "Aziza Yangi")  # eng yangisi birinchi
+        self.assertEqual([p["name"] for p in self.client.get(reverse("panel:broadcast_people") + "?q=@dilnoza").json()["people"]], ["Dilnoza"])
+        no_tg = self.client.get(reverse("panel:broadcast_people") + "?q=Eldor").json()["people"][0]
+        self.assertFalse(no_tg["telegram"])
+
+        # boshqa odamning rezyumesini tanlab bo'lmaydi — forma uni tashlab yuboradi
+        self.client.post(reverse("panel:broadcasts"), self._form(
+            audience="selected", selected_users=f"{self.fresh.pk}\n{self.loader.pk}", attach_cv="on",
+            selected_cvs=json.dumps({str(self.fresh.pk): older.pk, str(self.loader.pk): CV.objects.get(user=self.fresh, cv_json__full_name="Aziza Yangi").pk})))
+        b = self.Broadcast.objects.get()
+        self.assertEqual(b.selected_cvs, {str(self.fresh.pk): older.pk})
+        engine.start(b)
+        cvs = dict(b.recipients.values_list("user_id", "cv_id"))
+        self.assertEqual(cvs, {self.fresh.pk: older.pk, self.loader.pk: foreign.pk})  # tanlangani va avtomatik oxirgisi
+
+        detail = self.client.get(reverse("panel:broadcast_detail", args=[b.pk]))
+        self.assertContains(detail, "Aziza Test · ")
+        self.assertContains(detail, "Avtomatik")
 
     @mock.patch("apps.users.bot._post")
     @mock.patch("apps.users.broadcast._render_pdf", return_value=b"%PDF-1.7")

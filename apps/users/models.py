@@ -540,6 +540,8 @@ class Broadcast(models.Model):
     selected_users = models.TextField(
         "Tanlangan foydalanuvchilar", blank=True,
         help_text="Har qatorda bittadan: telefon, @username yoki panel ID si. Vergul bilan ham bo'ladi.")
+    # Tanlangan foydalanuvchilar uchun qaysi rezyume yuborilishi: {"<user_id>": <cv_id>}; yo'q bo'lsa — oxirgisi
+    selected_cvs = models.JSONField("Tanlangan rezyumelar", default=dict, blank=True)
     text = models.TextField(
         "Xabar matni",
         help_text="{ism} — foydalanuvchi ismi, {kredit} — bonus kredit soni. <b>qalin</b>, <i>kursiv</i>, <a href=\"...\">havola</a> ishlaydi.")

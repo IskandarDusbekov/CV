@@ -1,9 +1,9 @@
 {% extends "panel/base.html" %}
-{% load panel_tags %}
+{% load panel_tags ui %}
 {% block title %}Takliflar{% endblock %}
-{% block heading %}🤝 Do'st takliflari{% endblock %}
+{% block heading %}{% icon "users" %} Do'st takliflari{% endblock %}
 {% block subheading %}<p>Havola orqali kelib ro'yxatdan o'tganlar. Bonus: taklif qilganga +{{ site.referral_inviter_credits }}{% if site.referral_invitee_credits %}, kelganga +{{ site.referral_invitee_credits }}{% endif %} kredit{% if not site.referral_enabled %} · <b style="color:var(--red);">hozir o'chirilgan</b>{% endif %}</p>{% endblock %}
-{% block actions %}{% if request.user.is_superuser %}<a href="{% url 'panel:settings' %}#site" class="btn btn-light">⚙️ Sozlash</a>{% endif %}{% endblock %}
+{% block actions %}{% if request.user.is_superuser %}<a href="{% url 'panel:settings' %}#site" class="btn btn-light">{% icon "settings" %} Sozlash</a>{% endif %}{% endblock %}
 
 {% block content %}
 <div class="grid g-3" style="margin-bottom:14px;">
@@ -33,11 +33,11 @@
   </div>
 
   <div class="card" style="align-self:start;">
-    <div class="card-h"><h2>🏆 Eng faol taklifchilar</h2></div>
+    <div class="card-h"><h2>{% icon "trophy" %} Eng faol taklifchilar</h2></div>
     <ul class="list">
       {% for t in top %}<li><a class="link" href="{% url 'panel:user_detail' t.inviter %}">{{ t.inviter__first_name|default:"—" }} {{ t.inviter__last_name }}</a><span><b>{{ t.n }}</b> <span class="muted small">· {{ t.credits|default:0 }} kr</span></span></li>{% empty %}<li class="muted">—</li>{% endfor %}
     </ul>
-    <div class="fs"><p class="note">🛡 Himoya: bonus faqat havola orqali <b>yangi</b> ochilgan akkaunt uchun (2 soat ichida), bir odam faqat bir marta hisoblanadi, o'zini-o'zi taklif qilib bo'lmaydi, bir xil raqam hisobga olinmaydi, kuniga limit bor. Har bir akkaunt Telegram raqami bilan tasdiqlanadi.</p></div>
+    <div class="fs"><p class="note">{% icon "shield" %} Himoya: bonus faqat havola orqali <b>yangi</b> ochilgan akkaunt uchun (2 soat ichida), bir odam faqat bir marta hisoblanadi, o'zini-o'zi taklif qilib bo'lmaydi, bir xil raqam hisobga olinmaydi, kuniga limit bor. Har bir akkaunt Telegram raqami bilan tasdiqlanadi.</p></div>
   </div>
 </div>
 {% endblock %}

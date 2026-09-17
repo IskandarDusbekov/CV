@@ -1,4 +1,5 @@
 {% extends "panel/base.html" %}
+{% load ui %}
 {% block title %}Sozlamalar{% endblock %}
 {% block heading %}Sozlamalar va narxlar{% endblock %}
 {% block subheading %}<p>Bu yerdagi o'zgarishlar darhol saytda va botda ishlaydi — kod yozish shart emas.</p>{% endblock %}
@@ -24,7 +25,7 @@
 {% if form.errors or plans.total_error_count or new_plan.errors %}<div class="toast error" style="margin-bottom:14px;">Formada xatolik bor — qizil yozuvlarni tekshiring.</div>{% endif %}
 
 <div class="card" id="plans" style="margin-bottom:14px;">
-  <div class="card-h"><h2>🏷 Narxlar va paketlar</h2><span class="muted small">Kredit paketi: «Kredit» ustuni · Pro: «Kun», «CV», «Moslash.»</span></div>
+  <div class="card-h"><h2>{% icon "tag" %} Narxlar va paketlar</h2><span class="muted small">Kredit paketi: «Kredit» ustuni · Pro: «Kun», «CV», «Moslash.»</span></div>
   <form method="post">
     {% csrf_token %}
     <input type="hidden" name="section" value="plans">
@@ -70,10 +71,10 @@
 <form method="post" class="card" id="site">
   {% csrf_token %}
   <input type="hidden" name="section" value="site">
-  <div class="card-h"><h2>⚙️ Sayt sozlamalari</h2></div>
+  <div class="card-h"><h2>{% icon "settings" %} Sayt sozlamalari</h2></div>
 
   <div class="fs">
-    <h3>💳 To'lov (bot orqali)</h3>
+    <h3>{% icon "credit-card" %} To'lov (bot orqali)</h3>
     <div class="fs-grid">
       {% include "panel/_field.html" with field=form.card_number %}
       {% include "panel/_field.html" with field=form.card_holder %}
@@ -83,7 +84,7 @@
     </div>
   </div>
   <div class="fs">
-    <h3>🤖 Telegram</h3>
+    <h3>{% icon "bot" %} Telegram</h3>
     <div class="fs-grid">
       {% include "panel/_field.html" with field=form.bot_username %}
       {% include "panel/_field.html" with field=form.admin_chat_ids %}
@@ -91,7 +92,7 @@
     </div>
   </div>
   <div class="fs">
-    <h3>🎯 Bepul limitlar</h3>
+    <h3>{% icon "target" %} Bepul limitlar</h3>
     <div class="fs-grid">
       {% include "panel/_field.html" with field=form.free_cv_limit %}
       {% include "panel/_field.html" with field=form.free_tailor_limit %}
@@ -101,7 +102,7 @@
     </div>
   </div>
   <div class="fs">
-    <h3>🎁 Bepul qism va do'st taklifi</h3>
+    <h3>{% icon "gift" %} Bepul qism va do'st taklifi</h3>
     <div class="fs-grid">
       {% include "panel/_field.html" with field=form.free_pdf_downloads %}
       {% include "panel/_field.html" with field=form.free_pdf_watermark %}
@@ -113,7 +114,7 @@
     <p class="muted small" style="margin-top:10px;">Shablonlarning Bepul/Pro holati — <a class="link" href="{% url 'panel:templates' %}">Shablonlar</a>, aksiyalar — <a class="link" href="{% url 'panel:promos' %}">Aksiyalar</a>, Google sozlamalari — <a class="link" href="{% url 'panel:seo' %}">SEO</a> bo'limida.</p>
   </div>
   <div class="fs">
-    <h3>✨ AI</h3>
+    <h3>{% icon "sparkles" %} AI</h3>
     <div class="fs-grid">
       {% include "panel/_field.html" with field=form.ai_model %}
       {% include "panel/_field.html" with field=form.usd_to_uzs %}
@@ -122,7 +123,7 @@
     </div>
   </div>
   <div class="fs">
-    <h3>📞 Aloqa</h3>
+    <h3>{% icon "phone" %} Aloqa</h3>
     <div class="fs-grid">
       {% include "panel/_field.html" with field=form.contact_phone %}
       {% include "panel/_field.html" with field=form.contact_email %}
@@ -131,7 +132,7 @@
     </div>
   </div>
   <div class="fs">
-    <h3>🌐 Sayt</h3>
+    <h3>{% icon "globe" %} Sayt</h3>
     <div class="fs-grid">
       {% include "panel/_field.html" with field=form.site_name %}
       {% include "panel/_field.html" with field=form.maintenance_message %}

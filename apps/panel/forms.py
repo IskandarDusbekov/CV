@@ -95,12 +95,28 @@ class PromoForm(StyledMixin, forms.ModelForm):
 class BroadcastForm(StyledMixin, forms.ModelForm):
     class Meta:
         model = Broadcast
-        fields = ("title", "audience", "selected_users", "text", "attach_cv", "bonus_credits", "feedback_options", "button_site", "button_share")
+        fields = ("title", "audience", "selected_users", "selected_cvs", "text", "attach_cv", "bonus_credits", "feedback_options",
+                  "button_site", "button_share")
         widgets = {
             "text": forms.Textarea(attrs={"rows": 7}),
-            "selected_users": forms.Textarea(attrs={"rows": 3, "placeholder": "+998901234567\n@username\n15"}),
+            # Ikkalasini ham panel tanlagichi (qidirish → tanlash → rezyume) to'ldiradi
+            "selected_users": forms.HiddenInput(),
+            "selected_cvs": forms.HiddenInput(),
             "feedback_options": forms.Textarea(attrs={"rows": 3, "placeholder": "👍 Foydali bo'ldi\n👎 Kerak emas"}),
         }
+
+    def clean_selected_cvs(self):
+        """{"<user_id>": <cv_id>} — faqat shu foydalanuvchining o'z rezyumesi qoladi."""
+        from apps.cv.models import CV
+
+        raw = self.cleaned_data.get("selected_cvs") or {}
+        pairs = {}
+        if isinstance(raw, dict):
+            for user_id, cv_id in raw.items():
+                if str(user_id).isdigit() and str(cv_id).isdigit():
+                    pairs[str(user_id)] = int(cv_id)
+        owned = set(CV.objects.filter(pk__in=pairs.values()).values_list("pk", "user_id"))
+        return {uid: cv for uid, cv in pairs.items() if (cv, int(uid)) in owned}
 
     def clean(self):
         from apps.users.broadcast import CAPTION_LIMIT, TEXT_LIMIT, validate_text
@@ -108,7 +124,7 @@ class BroadcastForm(StyledMixin, forms.ModelForm):
         data = super().clean()
         text = data.get("text", "")
         if data.get("audience") == Broadcast.AUDIENCE_SELECTED and not data.get("selected_users", "").strip():
-            self.add_error("selected_users", "Kimga yuborilishini yozing.")
+            self.add_error("audience", "Kimga yuborilishini tanlang: pastdagi qidiruvdan foydalanuvchi qo'shing.")
         limit = CAPTION_LIMIT if data.get("attach_cv") else TEXT_LIMIT
         if len(text) > limit:
             self.add_error("text", f"Matn {limit} belgidan oshmasin (hozir {len(text)}). Fayl bilan yuborilganda Telegram izohi qisqa bo'ladi.")

@@ -1,6 +1,7 @@
 {% extends "panel/base.html" %}
+{% load ui %}
 {% block title %}{{ b.title }}{% endblock %}
-{% block heading %}📣 {{ b.title }}{% endblock %}
+{% block heading %}{% icon "megaphone" %} {{ b.title }}{% endblock %}
 {% block subheading %}<p>{{ b.get_audience_display }} · {{ b.created_at|date:"d.m.Y H:i" }}{% if b.created_by %} · {{ b.created_by.get_full_name|default:b.created_by.username }}{% endif %}</p>{% endblock %}
 {% block actions %}<a href="{% url 'panel:broadcasts' %}" class="btn btn-light">← Xabarlar</a>{% endblock %}
 
@@ -82,16 +83,16 @@
         <p class="muted small" style="margin-top:8px;">{ism} sizning ismingiz bilan ko'rsatilgan. Aniq ko'rinish uchun «Menga sinov» yuboring.</p>
       </div>
       <div class="acts">
-        <form method="post" action="{% url 'panel:broadcast_action' b.pk %}">{% csrf_token %}<button class="btn btn-light" name="action" value="test">📲 Menga sinov</button></form>
+        <form method="post" action="{% url 'panel:broadcast_action' b.pk %}">{% csrf_token %}<button class="btn btn-light" name="action" value="test">{% icon "send" %} Menga sinov</button></form>
         {% if b.status == "draft" %}
-        <a class="btn btn-light" href="{% url 'panel:broadcast_edit' b.pk %}">✏️ Tahrirlash</a>
-        <form method="post" action="{% url 'panel:broadcast_action' b.pk %}">{% csrf_token %}<button class="btn btn-green" name="action" value="start" data-confirm="{{ audience_count }} kishiga yuborilsinmi? Buni qaytarib bo'lmaydi.">🚀 Yuborish ({{ audience_count }})</button></form>
+        <a class="btn btn-light" href="{% url 'panel:broadcast_edit' b.pk %}">{% icon "edit" %} Tahrirlash</a>
+        <form method="post" action="{% url 'panel:broadcast_action' b.pk %}">{% csrf_token %}<button class="btn btn-green" name="action" value="start" data-confirm="{{ audience_count }} kishiga yuborilsinmi? Buni qaytarib bo'lmaydi.">{% icon "send" %} Yuborish ({{ audience_count }})</button></form>
         {% elif b.status == "sending" %}
-        <form method="post" action="{% url 'panel:broadcast_action' b.pk %}">{% csrf_token %}<button class="btn btn-red" name="action" value="cancel" data-confirm="Yuborish to'xtatilsinmi?">⏹ To'xtatish</button></form>
+        <form method="post" action="{% url 'panel:broadcast_action' b.pk %}">{% csrf_token %}<button class="btn btn-red" name="action" value="cancel" data-confirm="Yuborish to'xtatilsinmi?">{% icon "stop" %} To'xtatish</button></form>
         {% endif %}
-        <form method="post" action="{% url 'panel:broadcast_action' b.pk %}">{% csrf_token %}<button class="btn btn-light" name="action" value="copy">⧉ Nusxa olish</button></form>
+        <form method="post" action="{% url 'panel:broadcast_action' b.pk %}">{% csrf_token %}<button class="btn btn-light" name="action" value="copy">{% icon "copy" %} Nusxa olish</button></form>
         {% if b.status != "sending" %}
-        <form method="post" action="{% url 'panel:broadcast_action' b.pk %}">{% csrf_token %}<button class="btn btn-light" name="action" value="delete" data-confirm="«{{ b.title }}» o'chirilsinmi? Statistikasi ham o'chadi.">🗑</button></form>
+        <form method="post" action="{% url 'panel:broadcast_action' b.pk %}">{% csrf_token %}<button class="btn btn-light" name="action" value="delete" data-confirm="«{{ b.title }}» o'chirilsinmi? Statistikasi ham o'chadi.">{% icon "trash" %}</button></form>
         {% endif %}
       </div>
       {% if b.status == "sending" %}<p class="note" style="margin:0 16px 16px;">Bot navbat bilan yubormoqda{% if b.attach_cv %} (har biriga PDF yaratiladi — bir necha soniyadan){% endif %}. Sahifa har 5 soniyada yangilanadi. «Navbatda» soni kamaymasa — serverda bot ishlayotganini tekshiring: <code>systemctl status tezrezyume-bot</code></p>{% endif %}
@@ -101,12 +102,26 @@
       <div class="card-h"><h2>Sozlamalar</h2></div>
       <ul class="list">
         <li><span class="muted">Kimga</span><b>{{ b.get_audience_display }}</b></li>
-        {% if b.audience == "selected" %}<li><span class="muted">Tanlanganlar</span><span class="small" style="text-align:right;white-space:pre-line;">{{ b.selected_users|truncatechars:200 }}</span></li>{% endif %}
         <li><span class="muted">O'z rezyumesi PDF</span><b>{% if b.attach_cv %}Ha{% else %}Yo'q{% endif %}</b></li>
         <li><span class="muted">Bonus kredit</span><b>{% if b.bonus_credits %}+{{ b.bonus_credits }}{% else %}—{% endif %}</b></li>
         <li><span class="muted">Tugmalar</span><span style="text-align:right;">{% for o in b.options %}{{ o }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}{% if b.button_site %} · Sayt{% endif %}{% if b.button_share %} · Ulashish{% endif %}</span></li>
       </ul>
     </div>
+
+    {% if b.audience == "selected" %}
+    <div class="card">
+      <div class="card-h"><h2>{% icon "users" %} Tanlanganlar</h2><span class="muted small">{{ selected_people|length }} kishi</span></div>
+      <ul class="list">
+        {% for p in selected_people %}
+        <li>
+          <span style="min-width:0;"><a class="name link" href="{% url 'panel:user_detail' p.id %}">{{ p.name }}</a><br>
+            <span class="muted small">{{ p.phone }}{% if p.tg %} · @{{ p.tg }}{% endif %}{% if not p.telegram %} · <span style="color:var(--red);">Telegram yo'q</span>{% endif %}</span></span>
+          {% if b.attach_cv %}<span class="small" style="text-align:right;">{% icon "file-text" 13 %} {{ p.cv_label }}</span>{% endif %}
+        </li>
+        {% empty %}<li class="muted">Hech kim tanlanmagan</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

@@ -74,6 +74,40 @@ def audience_profiles(broadcast):
     return qs.distinct().order_by("pk")
 
 
+def people_payload(profiles, cvs_per_user=12):
+    """Panel tanlagichi uchun: foydalanuvchilar va ularning rezyumelari (JSON)."""
+    from apps.cv.models import CV
+    from apps.cv.services import TEMPLATE_META, resolve_template_name
+
+    profiles = list(profiles)
+    by_user = {}
+    cvs = CV.objects.filter(user__in=[p.user_id for p in profiles]).order_by(F("parent_id").asc(nulls_first=True), "-updated_at")
+    for cv in cvs.only("id", "public_id", "user_id", "cv_json", "selected_template", "parent_id", "is_unlocked", "created_at", "tailor_report"):
+        items = by_user.setdefault(cv.user_id, [])
+        if len(items) >= cvs_per_user:
+            continue
+        data = cv.cv_json if isinstance(cv.cv_json, dict) else {}
+        items.append({
+            "id": cv.pk,
+            "url": f"/cv/preview/{cv.public_id}/",
+            "name": (data.get("full_name") or "Nomsiz")[:60],
+            "title": (data.get("job_title") or "")[:60],
+            "template": TEMPLATE_META[resolve_template_name(cv.selected_template)]["label"],
+            "date": timezone.localtime(cv.created_at).strftime("%d.%m.%Y"),
+            "tailored": (cv.tailor_report or {}).get("vacancy_title", "") if cv.parent_id else "",
+            "unlocked": cv.is_unlocked,
+        })
+    return [{
+        "id": p.user_id,
+        "name": p.user.get_full_name() or p.user.username,
+        "phone": p.phone,
+        "tg": p.telegram_username,
+        "telegram": bool(p.telegram_id),
+        "blocked": p.is_blocked,
+        "cvs": by_user.get(p.user_id, []),
+    } for p in profiles]
+
+
 def latest_cv(user):
     """Sovg'a uchun rezyume: avval asl (moslashtirilmagan) rezyumelar, eng oxirgi tahrirlangani."""
     from apps.cv.models import CV
@@ -81,11 +115,23 @@ def latest_cv(user):
     return CV.objects.filter(user=user).order_by(F("parent_id").asc(nulls_first=True), "-updated_at").first()
 
 
+def chosen_cv(broadcast, user):
+    """Panelda shu odam uchun tanlangan rezyume (faqat o'ziniki bo'lsa), aks holda eng oxirgisi."""
+    from apps.cv.models import CV
+
+    cv_id = (broadcast.selected_cvs or {}).get(str(user.pk)) if broadcast.audience == Broadcast.AUDIENCE_SELECTED else None
+    if cv_id:
+        cv = CV.objects.filter(pk=cv_id, user=user).first()
+        if cv:
+            return cv
+    return latest_cv(user)
+
+
 def start(broadcast):
     """Qabul qiluvchilar ro'yxatini muzlatib, yuborishni boshlaydi. Nechta odamga ketishini qaytaradi."""
     profiles = list(audience_profiles(broadcast))
     rows = [
-        BroadcastRecipient(broadcast=broadcast, user=p.user, cv=latest_cv(p.user) if broadcast.attach_cv else None)
+        BroadcastRecipient(broadcast=broadcast, user=p.user, cv=chosen_cv(broadcast, p.user) if broadcast.attach_cv else None)
         for p in profiles
     ]
     BroadcastRecipient.objects.bulk_create(rows, ignore_conflicts=True, batch_size=500)
@@ -231,7 +277,7 @@ def send_test(broadcast, admin_user):
     note = ""
     if broadcast.attach_cv:
         sample = audience_profiles(broadcast).first()
-        cv = latest_cv(sample.user) if sample else latest_cv(admin_user)
+        cv = chosen_cv(broadcast, sample.user) if sample else latest_cv(admin_user)
         if cv is None:
             return False, "Namuna uchun rezyume topilmadi."
         try:

@@ -28,6 +28,7 @@ urlpatterns = [
     path("aksiyalar/<int:pk>/ochirish/", marketing.promo_delete, name="promo_delete"),
     path("takliflar/", marketing.referrals, name="referrals"),
     path("xabarlar/", broadcasts.broadcasts, name="broadcasts"),
+    path("xabarlar/odamlar/", broadcasts.broadcast_people, name="broadcast_people"),
     path("xabarlar/<int:pk>/", broadcasts.broadcast_detail, name="broadcast_detail"),
     path("xabarlar/<int:pk>/tahrir/", broadcasts.broadcasts, name="broadcast_edit"),
     path("xabarlar/<int:pk>/amal/", broadcasts.broadcast_action, name="broadcast_action"),

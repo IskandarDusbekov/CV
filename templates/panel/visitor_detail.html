@@ -1,5 +1,5 @@
 {% extends "panel/base.html" %}
-{% load panel_tags %}
+{% load panel_tags ui %}
 {% block title %}Tashrifchi{% endblock %}
 {% block heading %}<span class="badge b-{{ v.kind|kind_color }}" style="font-size:14px;vertical-align:4px;">{{ v.get_kind_display }}</span> {{ v.ip|default:"IP yo'q" }}{% endblock %}
 {% block subheading %}<p>{{ v.first_seen|date:"d.m.Y H:i" }} — {{ v.last_seen|date:"d.m.Y H:i" }} · {{ v.pageviews }} ta sahifa · {{ v.duration|duration_short }}</p>{% endblock %}
@@ -13,7 +13,7 @@
 {% block content %}
 <div class="grid g-main">
   <div class="card">
-    <div class="card-h"><h2>🧭 Yo'l — qaysi sahifalarni ochdi</h2><span class="muted small">yangidan eskiga</span></div>
+    <div class="card-h"><h2>{% icon "compass" %} Yo'l — qaysi sahifalarni ochdi</h2><span class="muted small">yangidan eskiga</span></div>
     <div class="table-wrap">
       <table class="t">
         <tr><th>Vaqt</th><th>Sahifa</th><th class="num">Javob</th></tr>
@@ -30,7 +30,7 @@
 
   <div class="grid" style="align-content:start;">
     <div class="card">
-      <div class="card-h"><h2>🔻 Nima qildi</h2></div>
+      <div class="card-h"><h2>{% icon "filter" %} Nima qildi</h2></div>
       <div class="steps">
         <span class="badge b-green">✓ Saytga keldi</span>
         <span class="badge b-{% if v.did_builder %}green{% else %}gray{% endif %}">{% if v.did_builder %}✓{% else %}✗{% endif %} Yaratishni ochdi</span>
@@ -63,7 +63,7 @@
         <input type="hidden" name="unblock" value="1">
         <button class="btn btn-green btn-sm">IP ni blokdan chiqarish</button>
         {% else %}
-        <button class="btn btn-red btn-sm" data-confirm="{{ v.ip }} bloklansinmi? Bu IP dan hech kim saytni ocha olmaydi.">⛔ IP ni bloklash</button>
+        <button class="btn btn-red btn-sm" data-confirm="{{ v.ip }} bloklansinmi? Bu IP dan hech kim saytni ocha olmaydi.">{% icon "ban" %} IP ni bloklash</button>
         {% endif %}
       </form>
       {% endif %}

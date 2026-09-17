@@ -1,5 +1,5 @@
 {% extends "panel/base.html" %}
-{% load mycv panel_tags %}
+{% load mycv panel_tags ui %}
 {% block title %}To'lovlar{% endblock %}
 {% block heading %}To'lovlar{% endblock %}
 {% block subheading %}<p>Bot orqali yuborilgan cheklar. Tasdiqlasangiz kredit yoki Pro avtomatik qo'shiladi va foydalanuvchiga botda xabar boradi.</p>{% endblock %}
@@ -43,7 +43,7 @@
   <div class="card pay {% if req.status != 'pending' %}done{% endif %}" id="p{{ req.pk }}">
     {% if req.receipt %}
       <a class="rc" href="{% url 'panel:receipt' req.pk %}" target="_blank" title="To'liq ko'rish">
-        {% if ".pdf" in req.receipt.name|lower %}<span class="rc none">📎 PDF chek<br>ochish</span>{% else %}<img src="{% url 'panel:receipt' req.pk %}" alt="chek" loading="lazy">{% endif %}
+        {% if ".pdf" in req.receipt.name|lower %}<span class="rc none">{% icon "paperclip" %} PDF chek<br>ochish</span>{% else %}<img src="{% url 'panel:receipt' req.pk %}" alt="chek" loading="lazy">{% endif %}
       </a>
     {% else %}
       <div class="rc none">Chek hali<br>yuborilmagan</div>
@@ -65,7 +65,7 @@
         {% if req.reviewed_by %}<dt>Ko'rib chiqdi</dt><dd>{{ req.reviewed_by.get_full_name|default:req.reviewed_by.username }} · {{ req.reviewed_at|date:"d.m.Y H:i" }}</dd>{% endif %}
         {% if req.admin_note %}<dt>Izoh</dt><dd>{{ req.admin_note }}</dd>{% endif %}
       </dl>
-      {% if req.receipt_caption %}<div class="caption">💬 {{ req.receipt_caption }}</div>{% endif %}
+      {% if req.receipt_caption %}<div class="caption">{% icon "message" %} {{ req.receipt_caption }}</div>{% endif %}
     </div>
 
     <div class="decide">
@@ -73,13 +73,13 @@
       <form method="post" action="{% url 'panel:payment_decide' req.pk %}">
         {% csrf_token %}
         <input type="hidden" name="action" value="approve">
-        <button class="btn btn-green btn-lg" style="width:100%;" data-confirm="#{{ req.pk }}: {{ req.amount|money }} so'm kelganini tekshirdingizmi? Tasdiqlansinmi?">✅ Tasdiqlash</button>
+        <button class="btn btn-green btn-lg" style="width:100%;" data-confirm="#{{ req.pk }}: {{ req.amount|money }} so'm kelganini tekshirdingizmi? Tasdiqlansinmi?">{% icon "check-circle" %} Tasdiqlash</button>
       </form>
       <form method="post" action="{% url 'panel:payment_decide' req.pk %}" class="decide">
         {% csrf_token %}
         <input type="hidden" name="action" value="reject">
         <textarea class="input" name="note" placeholder="Rad etish sababi (foydalanuvchiga yuboriladi)"></textarea>
-        <button class="btn btn-light" style="width:100%;color:#b91c1c;">❌ Rad etish</button>
+        <button class="btn btn-light" style="width:100%;color:#b91c1c;">{% icon "x-circle" %} Rad etish</button>
       </form>
       {% else %}
       <a href="{% url 'panel:user_detail' req.user_id %}" class="btn btn-light">Foydalanuvchini ochish</a>
@@ -88,7 +88,7 @@
   </div>
   {% endwith %}
   {% empty %}
-  <div class="card empty">{% if status == "pending" %}Tekshiriladigan chek yo'q ✅{% else %}Hech narsa topilmadi{% endif %}</div>
+  <div class="card empty">{% if status == "pending" %}Tekshiriladigan chek yo'q {% icon "check-circle" %}{% else %}Hech narsa topilmadi{% endif %}</div>
   {% endfor %}
 </div>
 {% if page.paginator.num_pages > 1 %}<div class="card" style="margin-top:12px;">{% include "panel/_pager.html" %}</div>{% endif %}

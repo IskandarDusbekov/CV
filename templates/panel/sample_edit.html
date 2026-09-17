@@ -1,6 +1,7 @@
 {% extends "panel/base.html" %}
+{% load ui %}
 {% block title %}Namuna{% endblock %}
-{% block heading %}{% if instance %}✏️ {{ instance.profession }}{% else %}➕ Yangi namuna{% endif %}{% endblock %}
+{% block heading %}{% if instance %}{% icon "edit" %} {{ instance.profession }}{% else %}{% icon "plus" %} Yangi namuna{% endif %}{% endblock %}
 {% block actions %}<a href="{% url 'panel:samples' %}" class="btn btn-light">← Namunalar</a>{% if instance %}<a href="{{ instance.get_absolute_url }}" target="_blank" class="btn btn-light">Saytda ↗</a>{% endif %}{% endblock %}
 
 {% block style %}
@@ -22,7 +23,7 @@ textarea[name=cv_json] { font-family: ui-monospace, Menlo, Consolas, monospace; 
     </div>
   </div>
   <div class="fs">
-    <h3>🔍 Google uchun</h3>
+    <h3>{% icon "search" %} Google uchun</h3>
     <div class="fs-grid">
       {% include "panel/_field.html" with field=form.seo_title %}
       {% include "panel/_field.html" with field=form.seo_description %}
@@ -31,7 +32,7 @@ textarea[name=cv_json] { font-family: ui-monospace, Menlo, Consolas, monospace; 
     <p class="muted small" style="margin-top:8px;">Sarlavha bo'sh bo'lsa: «<i>Kasb</i> rezyume namunasi — tayyor shablon». Matnda shu kasb uchun 2–4 ta maslahat yozing — Google shunday sahifalarni yuqoriroq ko'rsatadi.</p>
   </div>
   <div class="fs">
-    <h3>📄 Rezyume ma'lumotlari</h3>
+    <h3>{% icon "file-text" %} Rezyume ma'lumotlari</h3>
     {% include "panel/_field.html" with field=form.cv_json %}
   </div>
   <div class="save"><button class="btn btn-lg">Saqlash</button></div>
