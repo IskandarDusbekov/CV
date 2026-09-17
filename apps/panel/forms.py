@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.forms import modelformset_factory
 
@@ -17,8 +19,8 @@ class StyledMixin:
                 field.widget.attrs["class"] = (field.widget.attrs.get("class", "") + " input").strip()
 
 
-SEO_FIELDS = ("seo_default_title", "seo_default_description", "google_site_verification", "yandex_verification",
-              "google_analytics_id", "yandex_metrika_id")
+SEO_FIELDS = ("seo_default_title", "seo_default_description", "google_site_verification", "google_verification_file",
+              "yandex_verification", "google_analytics_id", "yandex_metrika_id")
 
 
 class SiteSettingsForm(StyledMixin, forms.ModelForm):
@@ -49,6 +51,22 @@ class SeoSettingsForm(StyledMixin, forms.ModelForm):
         model = SiteSettings
         fields = SEO_FIELDS
         widgets = {"seo_default_description": forms.Textarea(attrs={"rows": 2})}
+
+    def clean_google_site_verification(self):
+        # <meta name="google-site-verification" content="ABC" /> qo'yilsa ham faqat ABC ni olamiz
+        value = self.cleaned_data["google_site_verification"].strip()
+        match = re.search(r'content\s*=\s*["\']([^"\']+)["\']', value)
+        return match.group(1).strip() if match else value
+
+    def clean_google_verification_file(self):
+        # «google-site-verification: google123.html», to'liq havola yoki fayl nomi — hammasidan fayl nomini ajratamiz
+        value = self.cleaned_data["google_verification_file"].strip()
+        if not value:
+            return ""
+        match = re.search(r"(google[0-9a-zA-Z_-]+\.html)", value)
+        if not match:
+            raise forms.ValidationError("Google bergan fayl nomini yozing, masalan: google1a2b3c4d5e6f.html")
+        return match.group(1)
 
 
 class SeoPageForm(StyledMixin, forms.ModelForm):

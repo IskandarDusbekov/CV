@@ -80,8 +80,12 @@ class SiteSettings(models.Model):
         "Standart tavsif (description)", max_length=170, blank=True,
         default="O'zingiz haqingizda oddiy yozing — AI 1 daqiqada professional rezyume tayyorlaydi. Tayyor namunalar, "
                 "12 ta shablon, PDF va Word. O'zbek, rus, ingliz tillarida.")
-    google_site_verification = models.CharField("Google Search Console kodi", max_length=120, blank=True,
-                                                help_text="Faqat content=\"...\" ichidagi qiymat")
+    google_site_verification = models.CharField("Google Search Console kodi (HTML tag)", max_length=120, blank=True,
+                                                help_text="content=\"...\" ichidagi qiymat. Butun <meta ...> tegini qo'ysangiz ham bo'ladi.")
+    google_verification_file = models.CharField(
+        "Google HTML fayl nomi (HTML file)", max_length=120, blank=True,
+        help_text="Masalan: google1a2b3c4d5e6f7g8h.html — Google bergan fayl nomi yoki uning ichidagi matn. "
+                  "Sayt shu manzilda Google kutgan javobni o'zi qaytaradi, faylni serverga yuklash shart emas.")
     yandex_verification = models.CharField("Yandex Webmaster kodi", max_length=120, blank=True)
     google_analytics_id = models.CharField("Google Analytics ID", max_length=30, blank=True, help_text="Masalan: G-XXXXXXX")
     yandex_metrika_id = models.CharField("Yandex Metrika ID", max_length=20, blank=True, help_text="Faqat raqam")

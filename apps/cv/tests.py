@@ -533,6 +533,30 @@ class SeoTests(TestCase):
         self.assertIn('content="Maxsus tavsif"', page)
         self.assertIn('content="noindex, follow"', page)
 
+    def test_google_html_file_and_meta_verification_from_panel(self):
+        from apps.core.models import SiteSettings
+
+        self.assertEqual(self.client.get("/google1a2b3c4d5e6f7a8b.html").status_code, 404)  # sozlanmagan
+        admin = User.objects.create_user(username="seo", is_staff=True, is_superuser=True)
+        self.client.force_login(admin)
+        form = self.client.get(reverse("panel:seo")).context["settings_form"]
+        data = {"section": "settings", **{k: (v if v is not None else "") for k, v in form.initial.items() if k in form.fields}}
+        data["google_verification_file"] = "google-site-verification: google1a2b3c4d5e6f7a8b.html"
+        data["google_site_verification"] = '<meta name="google-site-verification" content="AbC-123_x" />'
+        self.client.post(reverse("panel:seo"), data)
+        site = SiteSettings.objects.get()
+        self.assertEqual((site.google_verification_file, site.google_site_verification), ("google1a2b3c4d5e6f7a8b.html", "AbC-123_x"))
+
+        self.client.logout()
+        response = self.client.get("/google1a2b3c4d5e6f7a8b.html")
+        self.assertEqual(response.content.decode(), "google-site-verification: google1a2b3c4d5e6f7a8b.html")
+        self.assertEqual(self.client.get("/google0000000000000000.html").status_code, 404)  # boshqa nom
+        self.assertContains(self.client.get("/"), '<meta name="google-site-verification" content="AbC-123_x">')
+
+        data["google_verification_file"] = "noto'g'ri qiymat"
+        self.client.force_login(admin)
+        self.assertContains(self.client.post(reverse("panel:seo"), data), "Google bergan fayl nomini yozing")
+
     def test_private_pages_noindex_and_guide_question_page(self):
         self.assertContains(self.client.get("/users/login/"), 'content="noindex, nofollow"')
         response = self.client.get("/qollanma/diplomsiz-ish-topsa-boladimi/")

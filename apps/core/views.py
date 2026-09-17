@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
 from django.db import connection
-from django.http import HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import cache_control
 
@@ -177,6 +177,14 @@ def robots_txt(request):
         f"Sitemap: {request.scheme}://{request.get_host()}/sitemap.xml",
     ]
     return HttpResponse("\n".join(lines) + "\n", content_type="text/plain")
+
+
+def google_verification(request, name):
+    """Google Search Console «HTML file» usuli: /google….html — panel → SEO da yozilgan fayl nomi bilan mos kelsa."""
+    expected = SiteSettings.load().google_verification_file
+    if not expected or name != expected:
+        raise Http404
+    return HttpResponse(f"google-site-verification: {name}", content_type="text/html; charset=utf-8")
 
 
 def healthz(request):

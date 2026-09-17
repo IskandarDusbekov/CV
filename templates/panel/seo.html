@@ -22,6 +22,8 @@
         <h3>Tasdiqlash va statistika</h3>
         <div class="fs-grid">
           {% include "panel/_field.html" with field=settings_form.google_site_verification %}
+          {% include "panel/_field.html" with field=settings_form.google_verification_file %}
+          {% if site.google_verification_file %}<p class="small" style="grid-column:1/-1;margin:-4px 0 0;">Tekshirish: <a class="link" href="/{{ site.google_verification_file }}" target="_blank">{{ host }}/{{ site.google_verification_file }} ↗</a> — ochilsa, Google'da «Verify» bosing.</p>{% endif %}
           {% include "panel/_field.html" with field=settings_form.yandex_verification %}
           {% include "panel/_field.html" with field=settings_form.google_analytics_id %}
           {% include "panel/_field.html" with field=settings_form.yandex_metrika_id %}
@@ -66,7 +68,10 @@
     <div class="card-h"><h2>✅ Google'da chiqish uchun qadamlar</h2></div>
     <div class="fs">
       <ol style="margin:0;padding-left:18px;display:grid;gap:10px;font-size:13.5px;line-height:1.55;">
-        <li><b>Google Search Console</b> (search.google.com/search-console) → «URL prefix» → <code>{{ host }}</code> → «HTML tag» usuli → <code>content="…"</code> ichidagi kodni chapdagi maydonga qo'ying, saqlang va «Verify» bosing.</li>
+        <li><b>Google Search Console</b> (search.google.com/search-console) → «URL prefix» → <code>{{ host }}</code> → ikki usuldan biri:
+          <br>• <b>HTML file</b> — Google bergan fayl nomini (<code>google….html</code>) «Google HTML fayl nomi» maydoniga yozing. Faylni yuklab, serverga joylash shart emas;
+          <br>• <b>HTML tag</b> — <code>content="…"</code> ichidagi kodni «Google Search Console kodi» maydoniga qo'ying.
+          <br>Saqlang va Google'da «Verify» bosing.</li>
         <li>Search Console → <b>Sitemaps</b> → <code>sitemap.xml</code> yozib yuboring.</li>
         <li><b>Yandex Webmaster</b> (webmaster.yandex.ru) — xuddi shunday: kod + sitemap.</li>
         <li>Search Console → «URL inspection» → bosh sahifa va <code>/namunalar/</code> uchun «Request indexing».</li>

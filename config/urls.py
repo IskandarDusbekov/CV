@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 
 from apps.core import views as core_views
 from apps.core.analytics import human_ping
@@ -16,6 +16,7 @@ urlpatterns = [
 
     path("robots.txt", core_views.robots_txt, name="robots_txt"),
     path("sitemap.xml", core_views.sitemap_xml, name="sitemap"),
+    re_path(r"^(?P<name>google[0-9a-zA-Z_-]+\.html)$", core_views.google_verification, name="google_verification"),
     path("healthz/", core_views.healthz, name="healthz"),
     path("t/p/", human_ping, name="human_ping"),
     path("r/<str:code>/", referral_redirect, name="referral_redirect"),
