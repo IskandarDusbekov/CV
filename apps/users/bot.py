@@ -14,6 +14,10 @@ To'lov (qo'lda, Click/Payme ulangungacha):
   foydalanuvchi chek (rasm/fayl) yuboradi → adminlarga yuboriladi → admin saytda yoki shu yerda
   tasdiqlaydi/rad etadi → foydalanuvchiga xabar boradi, kredit yoki Pro avtomatik qo'shiladi.
 
+Do'st taklifi:
+  "🎁 Do'st taklif qilish" yoki /taklif → t.me/<bot>?start=ref_<kod> havolasi. Do'st shu havola bilan kelib
+  raqamini yuborsa, taklif qilganga kredit beriladi (qoidalar: apps/users/growth.py).
+
 Karta raqami, egasi, admin chat ID lari va boshqalar admin paneldagi "Sayt sozlamalari" dan olinadi.
 """
 import logging
@@ -40,6 +44,7 @@ BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 BTN_BUY = "💳 Kredit sotib olish"
 BTN_BALANCE = "📊 Balansim"
 BTN_SITE = "🌐 Saytni ochish"
+BTN_INVITE = "🎁 Do'st taklif qilish"
 LEGACY_BTN_SITE = "🌐 Saytga o'tish"
 
 
@@ -121,7 +126,10 @@ def _contact_keyboard() -> dict:
 
 
 def _main_keyboard() -> dict:
-    return {"keyboard": [[{"text": BTN_BUY}], [{"text": BTN_BALANCE}, {"text": BTN_SITE}]], "resize_keyboard": True}
+    rows = [[{"text": BTN_BUY}], [{"text": BTN_BALANCE}, {"text": BTN_SITE}]]
+    if SiteSettings.load().referral_enabled:
+        rows.append([{"text": BTN_INVITE}])
+    return {"keyboard": rows, "resize_keyboard": True}
 
 
 def _profile(telegram_id):
@@ -200,10 +208,9 @@ def _handle_contact(chat_id: int, sender: dict, contact: dict) -> None:
 
     from .growth import on_bot_user
 
-    bonus = on_bot_user(user, user_id)
     text = "✅ <b>Raqamingiz tasdiqlandi!</b>"
-    if bonus:
-        text += f"\n🎁 Aksiya: hisobingizga <b>+{bonus} kredit</b> qo'shildi!"
+    for note in on_bot_user(user, user_id):
+        text += f"\n{note}"
     if token:
         text += "\nSaytdagi sahifa o'zi ochiladi. Telegram ichida ochish uchun pastdagi tugmani bosing."
     send_message(chat_id, text, reply_markup=_main_keyboard())
@@ -427,6 +434,41 @@ def _show_balance(chat_id: int, telegram_id: int) -> None:
     send_message(chat_id, "\n".join(lines), reply_markup=_main_keyboard())
 
 
+def _show_invite(chat_id: int, telegram_id: int) -> None:
+    profile = _profile(telegram_id)
+    if not profile:
+        send_message(chat_id, "Avval hisobingizni bog'laymiz. <b>📱 Raqamni yuborish</b> tugmasini bosing.", reply_markup=_contact_keyboard())
+        return
+    site = SiteSettings.load()
+    if not site.referral_enabled:
+        send_message(chat_id, "Do'st taklif qilish hozircha o'chirilgan.", reply_markup=_main_keyboard())
+        return
+
+    from django.db.models import Sum
+
+    from .growth import bot_referral_link
+    from .models import Referral
+
+    link = bot_referral_link(profile.user)
+    if not link:
+        send_message(chat_id, "Taklif havolasi hozircha mavjud emas.", reply_markup=_main_keyboard())
+        return
+    made = Referral.objects.filter(inviter=profile.user)
+    earned = made.aggregate(s=Sum("inviter_credits"))["s"] or 0
+    text = (
+        "🎁 <b>Do'stlaringizni taklif qiling</b>\n\n"
+        f"Havolangiz orqali kelgan har bir do'stingiz raqamini yuborib ro'yxatdan o'tsa — sizga <b>+{site.referral_inviter_credits} kredit</b>"
+        " (1 kredit = 1 rezyume to'liq ochiladi).\n\n"
+        f"🔗 Havolangiz:\n{link}\n\n"
+        f"Taklif qilganlar: <b>{made.count()}</b> · olingan kredit: <b>{earned}</b>"
+    )
+    share = "https://t.me/share/url?" + urlencode({
+        "url": link,
+        "text": "Rezyumeni 2 daqiqada tayyorladim — tayyor namunalar va birinchi PDF bepul. Senga ham foydali bo'ladi 👇",
+    })
+    send_message(chat_id, text, reply_markup={"inline_keyboard": [[{"text": "✈️ Do'stlarga yuborish", "url": share}]]})
+
+
 # ─── Router ───────────────────────────────────────────────────────────────────
 
 def _handle_update(update: dict) -> None:
@@ -460,6 +502,8 @@ def _handle_update(update: dict) -> None:
         _show_packages(chat_id, sender["id"])
     elif text in {BTN_BALANCE, "/balans"}:
         _show_balance(chat_id, sender["id"])
+    elif text in {BTN_INVITE, "/taklif"}:
+        _show_invite(chat_id, sender["id"])
     elif text in {BTN_SITE, LEGACY_BTN_SITE, "/sayt"}:
         markup = _site_markup(f"🌐 {SiteSettings.load().site_name}")
         send_message(chat_id, "Saytni ochish 👇" if markup else _site_url("/"), reply_markup=markup)
@@ -481,6 +525,7 @@ def run_polling() -> None:
         {"command": "start", "description": "Boshlash / kirish"},
         {"command": "tolov", "description": "Kredit yoki Pro sotib olish"},
         {"command": "balans", "description": "Balansim"},
+        {"command": "taklif", "description": "Do'st taklif qilish — bonus kredit"},
         {"command": "sayt", "description": "Saytni ochish"},
     ])
     menu = _site_button("Sayt")

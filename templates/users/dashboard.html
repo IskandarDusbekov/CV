@@ -83,13 +83,14 @@
               <div class="cv-tags">
                 <span class="badge badge-muted">{{ item.template_label }}</span>
                 {% if cv.is_tailored %}<span class="badge badge-accent">🎯 {{ cv.tailor_report.vacancy_title|default:"Vakansiya"|truncatechars:22 }}</span>{% endif %}
-                {% if item.unlocked or is_pro %}<span class="badge badge-free">✓ Ochiq</span>{% endif %}
+                {% if item.unlocked or is_pro %}<span class="badge badge-free">✓ Ochiq</span>{% elif item.pdf_access == "free" %}<span class="badge badge-free">PDF bepul ochilgan</span>{% endif %}
                 <span class="badge badge-muted">{{ cv.created_at|date:"d.m.Y" }}</span>
               </div>
               <div class="cv-actions">
                 <a href="/cv/preview/{{ cv.public_id }}/" class="btn btn-light btn-sm">Ochish</a>
                 <a href="/cv/edit/{{ cv.public_id }}/" class="btn btn-light btn-sm" title="Tahrirlash">✏️</a>
-                {% if item.unlocked or is_pro %}<a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark btn-sm" data-dl="{{ cv.public_id }}:pdf">PDF</a><a href="/cv/download/{{ cv.public_id }}/docx/" class="btn btn-dark btn-sm" data-dl="{{ cv.public_id }}:docx">Word</a>{% endif %}
+                {% if item.pdf_access == "full" %}<a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark btn-sm" data-dl="{{ cv.public_id }}:pdf">PDF</a><a href="/cv/download/{{ cv.public_id }}/docx/" class="btn btn-dark btn-sm" data-dl="{{ cv.public_id }}:docx">Word</a>
+                {% elif item.pdf_access == "free" or item.pdf_access == "free_available" %}<a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark btn-sm" data-dl="{{ cv.public_id }}:pdf">PDF bepul</a>{% endif %}
               </div>
             </div>
           </article>

@@ -338,9 +338,10 @@ def resolve_template_name(selected_template):
 
 # ── Kirish huquqlari ──────────────────────────────────────────────────────────
 #
-# Monetizatsiya modeli (limit raqamlari: settings.FREE_* va PricingPlan.max_*):
-#   Bepul     — 2 ta CV yaratish, 1 ta vakansiyaga moslashtirish, barcha shablonlarda ko'rish. Yuklab olish YO'Q.
-#   Bitta CV  — shu CV (va uning moslashtirilgan nusxalari) ochiladi: PDF + Word, 5 ta moslashtirish, umrbod
+# Monetizatsiya modeli (limit raqamlari: SiteSettings, PricingPlan.max_* va TemplateSetting):
+#   Bepul     — AI bilan 2 ta CV, 1 ta moslashtirish, namunalardan cheksiz CV, barcha shablonlarda ko'rish.
+#               Har bir foydalanuvchiga free_pdf_downloads ta PDF — faqat bepul shablonda, bitta rezyumega. Word yo'q.
+#   Kredit    — shu CV (va uning moslashtirilgan nusxalari) ochiladi: barcha shablonlar, PDF + Word, 5 ta moslashtirish, umrbod
 #   Pro       — davr ichida 30 ta CV, 50 ta moslashtirish, hamma CV ochiq, brending
 
 def user_has_pro(user):
@@ -515,7 +516,7 @@ DEMO_CV_JSON = {
     "projects": [
         {
             "title": "tezrezyume.uz — AI rezyume yaratuvchi",
-            "description": "Matndan professional rezyume yaratuvchi platforma, 9 ta shablon va PDF/Word eksport.",
+            "description": "Matndan professional rezyume yaratuvchi platforma, 12 ta shablon va PDF/Word eksport.",
             "technologies": ["Django", "OpenAI", "Playwright"],
         },
         {

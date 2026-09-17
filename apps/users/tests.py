@@ -396,6 +396,45 @@ class GrowthTests(TestCase):
         self.assertEqual(PromoGrant.objects.filter(user=invitee.user).count(), 1)
         self.assertIn("Aksiya", str(send.call_args_list))
 
+    @mock.patch.object(bot, "send_message")
+    def test_bot_invite_command_gives_working_ref_link(self, send):
+        from .growth import referral_code_for
+        from .models import Referral
+
+        site = SiteSettings.load()
+        site.bot_username = "testbot"
+        site.referral_invitee_credits = 1
+        site.save()
+        inviter = self._new_user("inv2", "998900000041")
+        UserProfile.objects.filter(user=inviter).update(telegram_id=41)
+
+        bot._handle_update({"message": {"chat": {"id": 41}, "from": {"id": 41}, "text": bot.BTN_INVITE}})
+        link = f"https://t.me/testbot?start=ref_{referral_code_for(inviter)}"
+        self.assertIn(link, send.call_args.args[1])
+
+        # do'st shu havola bilan keladi → raqam yuboradi → ikkalasiga kredit, do'stga xabar
+        base = {"chat": {"id": 42}, "from": {"id": 42, "first_name": "Do'st"}}
+        bot._handle_update({"message": {**base, "text": "/start " + link.split("start=")[1]}})
+        bot._handle_update({"message": {**base, "contact": {"phone_number": "998900000042", "user_id": 42}}})
+        self.assertEqual(Referral.objects.get().invitee.profile.telegram_id, 42)
+        self.assertEqual(UserProfile.objects.get(telegram_id=42).credits, 1)
+        self.assertIn("Do'stingiz taklifi uchun", str(send.call_args_list))
+
+    @mock.patch.object(bot, "send_message")
+    def test_bot_invite_needs_linked_account(self, send):
+        bot._handle_update({"message": {"chat": {"id": 43}, "from": {"id": 43}, "text": "/taklif"}})
+        self.assertIn("Raqamni yuborish", send.call_args.args[1])
+
+    def test_dashboard_shows_free_pdf_button(self):
+        user = self._new_user("dash", "998900000051")
+        self.client.force_login(user)
+        free = CV.objects.create(user=user, raw_input_text="x", cv_json=DEMO_CV_JSON, selected_template="ats")
+        pro = CV.objects.create(user=user, raw_input_text="x", cv_json=DEMO_CV_JSON, selected_template="bold")
+        html = self.client.get(reverse("user_dashboard")).content.decode()
+        self.assertIn(f'data-dl="{free.public_id}:pdf">PDF bepul', html)
+        self.assertNotIn(f'data-dl="{pro.public_id}:pdf"', html)
+        self.assertNotIn(":docx", html)
+
     def test_promo_audience_and_dates(self):
         from .growth import apply_promos
         from .models import Promo

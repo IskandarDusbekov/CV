@@ -172,11 +172,25 @@ def on_signed_in(request, user):
 
 
 def on_bot_user(user, telegram_id):
-    """Bot orqali raqam yuborilganda (akkaunt shu yerda yaratilishi mumkin)."""
+    """Bot orqali raqam yuborilganda (akkaunt shu yerda yaratilishi mumkin). Foydalanuvchiga xabar matnini qaytaradi."""
     from .models import PendingReferral
 
+    notes = []
     pending = PendingReferral.objects.filter(telegram_id=telegram_id).first()
     if pending:
-        apply_referral(user, pending.code, via="bot")
+        ref = apply_referral(user, pending.code, via="bot")
         pending.delete()
-    return apply_promos(user)
+        if ref and ref.invitee_credits:
+            notes.append(f"🤝 Do'stingiz taklifi uchun <b>+{ref.invitee_credits} kredit</b>")
+    bonus = apply_promos(user)
+    if bonus:
+        notes.append(f"🎁 Aksiya: hisobingizga <b>+{bonus} kredit</b> qo'shildi!")
+    return notes
+
+
+def bot_referral_link(user):
+    """Botga olib boradigan taklif havolasi: t.me/<bot>?start=ref_<kod>. Bot username bo'lmasa — bo'sh."""
+    from apps.core.models import SiteSettings
+
+    username = SiteSettings.load().effective_bot_username
+    return f"https://t.me/{username}?start=ref_{referral_code_for(user)}" if username else ""

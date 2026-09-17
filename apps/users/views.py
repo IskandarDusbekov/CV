@@ -14,7 +14,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from apps.cv.models import CV, AIUsage
 from apps.cv.quotas import generate_quota
-from apps.cv.services import TEMPLATE_META, normalize_cv_data, resolve_template_name
+from apps.cv.services import TEMPLATE_META, normalize_cv_data, pdf_access, resolve_template_name
 
 from apps.core.models import SiteSettings
 
@@ -217,6 +217,8 @@ def dashboard(request):
             "template_partial": f"cv/partials/cv_template_{code}.html",
             "template_label": TEMPLATE_META[code]["label"],
             "unlocked": cv.is_unlocked or bool(cv.parent_id and cv.parent.is_unlocked),
+            # full | free | free_available | pro_template | no_free — preview sahifasidagi bilan bir xil qoida
+            "pdf_access": pdf_access(request.user, cv),
         })
 
     return render(request, "users/dashboard.html", {
