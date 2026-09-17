@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load mycv %}
+{% load mycv ui %}
 {% block title %}Kredit sotib olish — {{ site.site_name }}{% endblock %}
 {% block robots %}noindex, nofollow{% endblock %}
 
@@ -33,7 +33,7 @@
   <span class="eyebrow">To'lov</span>
   <h1>Kredit yoki <span class="serif">Pro</span> sotib olish</h1>
   <p class="sub">1 kredit = 1 rezyume ochiladi (PDF + Word, muddatsiz). Balansingiz: <b>{% if request.user.is_authenticated %}{{ request.user.profile.credits }}{% else %}—{% endif %} kredit</b></p>
-  {% if site.payment_notice %}<div class="notice">✈️ {{ site.payment_notice }}</div>{% endif %}
+  {% if site.payment_notice %}<div class="notice">{% icon "info" 16 %} {{ site.payment_notice }}</div>{% endif %}
 
   <ol class="how">
     <li>Paketni tanlang — Telegram bot ochiladi</li>
@@ -43,7 +43,7 @@
   </ol>
 
   {% if request.user.is_authenticated and not has_telegram %}
-  <div class="notice" style="background:#fef3c7;color:#92400e;">Botda hisobingizni aniqlashimiz uchun bot so'raganda <b>📱 Raqamni yuborish</b> tugmasini bosing — saytdagi raqamingiz bilan bog'lanadi.</div>
+  <div class="notice" style="background:#fef3c7;color:#92400e;">Botda hisobingizni aniqlashimiz uchun bot so'raganda <b>«Raqamni yuborish»</b> tugmasini bosing — saytdagi raqamingiz bilan bog'lanadi.</div>
   {% endif %}
 
   <div class="grid" style="margin-top:14px;">
@@ -54,7 +54,7 @@
       <div class="price">{{ plan.price|money }} <small>so'm</small></div>
       <p>{% if plan.credits > 1 %}1 rezyume = {{ plan.price_per_credit|money }} so'm · {% endif %}{{ plan.description }}</p>
       {% if request.user.is_authenticated %}
-      <a href="{{ link }}" target="_blank" rel="noopener" class="btn btn-tg btn-block">✈️ Botda to'lash</a>
+      <a href="{{ link }}" target="_blank" rel="noopener" class="btn btn-tg btn-block">{% icon "telegram" 17 %} Botda to'lash</a>
       {% else %}
       <a href="/users/login/?next=/users/payments/" class="btn btn-dark btn-block">Kirish va to'lash</a>
       {% endif %}
@@ -66,7 +66,7 @@
       <div class="price">{{ plan.price|money }} <small>so'm / {{ plan.duration_days }} kun</small></div>
       <p>{{ plan.max_cvs }} ta rezyume, {{ plan.max_tailorings }} ta moslashtirish, barcha rezyumelar ochiq, kompaniya brendingi.</p>
       {% if request.user.is_authenticated %}
-      <a href="{{ link }}" target="_blank" rel="noopener" class="btn btn-block" style="background:#fff;color:var(--ink);">✈️ Botda to'lash</a>
+      <a href="{{ link }}" target="_blank" rel="noopener" class="btn btn-block" style="background:#fff;color:var(--ink);">{% icon "telegram" 17 %} Botda to'lash</a>
       {% else %}
       <a href="/users/login/?next=/users/payments/" class="btn btn-block" style="background:#fff;color:var(--ink);">Kirish va to'lash</a>
       {% endif %}

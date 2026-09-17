@@ -5,6 +5,7 @@ Barcha raqamlar admin paneldan o'zgaradi (Sayt sozlamalari va Tariflar).
   Bepul          : site.free_cv_limit ta rezyume, site.free_tailor_limit ta moslashtirish (umumiy)
   Ochilgan rezyume: shu rezyume uchun site.tailor_per_unlocked_cv ta moslashtirish (kredit bilan ochilgan)
   Pro            : obuna davri ichida plan.max_cvs ta rezyume va plan.max_tailorings ta moslashtirish
+  AI to'ldirish  : bepul site.free_improve_limit ta, ochilgan rezyume uchun site.improve_per_unlocked_cv ta, Pro — plan.max_cvs ta
 
 Anonim foydalanuvchi sessiya va IP bo'yicha hisoblanadi. Faqat muvaffaqiyatli AI so'rovlari sanaladi.
 """
@@ -113,6 +114,30 @@ def tailor_quota(request, cv):
     used = _usage(request, AIUsage.KIND_TAILOR).count()
     return Quota(used < limit, used, limit, "free",
                  "" if used < limit else f"Bepul moslashtirish ishlatildi. Rezyumeni kredit bilan ochsangiz yana {site.tailor_per_unlocked_cv} ta beriladi.")
+
+
+def improve_quota(request, cv):
+    """«AI bilan to'ldirish» (tahrirlash sahifasida): bepul — umumiy limit, ochilgan rezyume — shu rezyume uchun, Pro — davr uchun."""
+    plan, start = _pro_plan_and_start(request.user)
+    if plan:
+        limit = plan.max_cvs or 30
+        used = _usage(request, AIUsage.KIND_IMPROVE).filter(created_at__gte=start).count()
+        return Quota(used < limit, used, limit, "pro",
+                     "" if used < limit else f"Pro davri uchun {limit} ta AI to'ldirish limiti tugadi.")
+
+    site = SiteSettings.load()
+    root = cv.root
+    if root.is_unlocked:
+        limit = site.improve_per_unlocked_cv
+        used = AIUsage.objects.filter(kind=AIUsage.KIND_IMPROVE, success=True).filter(Q(cv=root) | Q(cv__parent=root)).count()
+        return Quota(used < limit, used, limit, "cv",
+                     "" if used < limit else f"Bu rezyume uchun {limit} ta AI to'ldirish ishlatildi. Qo'lda tahrirlash — cheksiz va bepul.")
+
+    limit = site.free_improve_limit
+    used = _usage(request, AIUsage.KIND_IMPROVE).count()
+    return Quota(used < limit, used, limit, "free",
+                 "" if used < limit else "Bepul AI to'ldirish ishlatildi. Qo'lda tahrirlash — cheksiz va bepul; "
+                                         "rezyumeni kredit bilan ochsangiz yana AI to'ldirish beriladi.")
 
 
 def record(request, kind, cv=None, meta=None, error=""):

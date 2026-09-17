@@ -1,59 +1,146 @@
 {% extends "base.html" %}
+{% load ui %}
 {% block title %}Rezyumeni tahrirlash — {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
 {% block robots %}noindex, nofollow{% endblock %}
 
 {% block extra_style %}
-.ed { max-width: 760px; margin: 0 auto; padding: 26px 16px 110px; }
-.ed h1 { font-size: clamp(26px, 4vw, 38px); font-weight: 800; letter-spacing: -.035em; line-height: 1.1; }
-.ed-sub { margin: 6px 0 18px; color: var(--muted); }
-.hint-new { margin-bottom: 16px; padding: 14px 16px; border-radius: 16px; background: #f4fbc9; border: 1px solid #dfe98f; font-size: 14.5px; }
-.card-ed { margin-bottom: 14px; padding: 18px; background: #fff; border: 1px solid var(--line); border-radius: 20px; }
-.card-ed h2 { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 16px; font-weight: 800; }
-.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 12px; }
+.ed { max-width: 780px; margin: 0 auto; padding: 22px 16px 120px; }
+.ed-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 700; color: var(--muted); }
+.ed-back:hover { color: var(--ink); }
+.ed h1 { margin-top: 8px; font-size: clamp(26px, 4vw, 38px); font-weight: 800; letter-spacing: -.035em; line-height: 1.1; }
+.ed-sub { margin: 6px 0 16px; color: var(--muted); }
+
+.note { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; padding: 14px 16px; border-radius: 16px; font-size: 14.5px; line-height: 1.5; }
+.note .ic-tile { width: 30px; height: 30px; }
+.note.lime { background: #f4fbc9; border: 1px solid #dfe98f; }
+.note.green { background: #f0fdf4; border: 1px solid #bbf7d0; color: #14532d; }
+
+/* AI bilan to'ldirish */
+.ai { position: relative; overflow: hidden; margin-bottom: 16px; padding: 20px; border-radius: 22px; background: var(--ink); color: #fff; }
+.ai::after { content: ""; position: absolute; right: -70px; top: -70px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(217,243,106,.32), transparent 70%); pointer-events: none; }
+.ai > * { position: relative; z-index: 1; }
+.ai-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ai-h h2 { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+.ai-h .ic-tile { background: var(--lime); color: var(--ink); }
+.ai-left { flex-shrink: 0; padding: 4px 10px; border-radius: 999px; background: rgba(217,243,106,.16); color: var(--lime); font-size: 12px; font-weight: 800; white-space: nowrap; }
+.ai p { margin: 10px 0 12px; font-size: 14px; line-height: 1.55; color: #c9cad0; }
+.ai textarea { width: 100%; min-height: 110px; padding: 13px 14px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; background: rgba(255,255,255,.06);
+               color: #fff; font: inherit; font-size: 15px; line-height: 1.55; resize: vertical; outline: none; }
+.ai textarea::placeholder { color: #8e9098; }
+.ai textarea:focus { border-color: var(--lime); background: rgba(255,255,255,.09); }
+.ai-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+.ai-btn { min-height: 50px; padding: 0 22px; border-radius: 14px; background: var(--lime); color: var(--ink); font-size: 15px; }
+.ai-btn:hover { background: #e4fa7f; }
+.ai-meta { font-size: 12.5px; color: #8e9098; }
+.ai.off p { margin-bottom: 0; }
+
+/* Bo'limlar navigatsiyasi */
+.sec-nav { position: sticky; top: 68px; z-index: 30; display: flex; gap: 6px; margin: 0 -16px 12px; padding: 8px 16px; overflow-x: auto; scrollbar-width: none;
+           background: rgba(245,243,238,.94); backdrop-filter: blur(10px); }
+.sec-nav::-webkit-scrollbar { display: none; }
+.sec-nav a { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; min-height: 36px; padding: 0 12px; border-radius: 999px; background: #fff; border: 1px solid var(--line);
+             font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.sec-nav a svg.i { color: var(--muted); }
+
+.card-ed { margin-bottom: 14px; padding: 18px; background: #fff; border: 1px solid var(--line); border-radius: 20px; scroll-margin-top: 130px; }
+.card-ed h2 { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; font-size: 16px; font-weight: 800; }
+.card-ed h2 small { margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--muted-2); }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
 .fe label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: 700; }
 .fe .input, .fe textarea { width: 100%; }
-.fe textarea { min-height: 96px; resize: vertical; line-height: 1.55; }
+.fe textarea { min-height: 100px; resize: vertical; line-height: 1.55; }
 .fe .tip { margin-top: 4px; font-size: 12px; color: var(--muted-2); }
 .fe.wide { grid-column: 1 / -1; }
-.item { position: relative; margin-bottom: 10px; padding: 14px; border: 1px dashed var(--line-2); border-radius: 16px; background: var(--bg); }
-.item .rm { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border: 0; border-radius: 9px; background: #fff; color: var(--red); font-size: 16px; cursor: pointer; }
-.item .grid2 { padding-right: 34px; }
-.add { width: 100%; min-height: 44px; border: 1.5px dashed var(--line-2); border-radius: 14px; background: transparent; font: inherit; font-weight: 700; color: var(--muted); cursor: pointer; }
+.item { position: relative; margin-bottom: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: #fbfaf7; }
+.item-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-2); }
+.item .rm { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--muted); cursor: pointer; }
+.item .rm:hover { color: var(--red); border-color: #fecaca; }
+.add { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 46px; border: 1.5px dashed var(--line-2); border-radius: 14px; background: transparent;
+       font: inherit; font-weight: 700; color: var(--muted); cursor: pointer; }
 .add:hover { border-color: var(--ink); color: var(--ink); }
 .save-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; justify-content: center; gap: 8px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
             background: rgba(245,243,238,.95); backdrop-filter: blur(12px); border-top: 1px solid var(--line); }
-.save-bar .btn { min-height: 50px; min-width: 150px; }
-@media (max-width: 600px) { .grid2 { grid-template-columns: minmax(0, 1fr); } .save-bar .btn { flex: 1; min-width: 0; } }
+.save-bar .btn { min-height: 50px; min-width: 160px; font-size: 15px; }
+
+.overlay { position: fixed; inset: 0; z-index: 100; display: none; place-items: center; background: rgba(245,243,238,.95); backdrop-filter: blur(4px); }
+.overlay.show { display: grid; }
+.overlay-in { max-width: 340px; padding: 20px; text-align: center; }
+.overlay .spinner { width: 44px; height: 44px; margin: 0 auto 18px; border-width: 4px; }
+.overlay h3 { font-size: 21px; font-weight: 800; }
+.overlay p { margin-top: 6px; color: var(--muted); min-height: 24px; }
+
+@media (max-width: 860px) { .sec-nav { top: 60px; } }
+@media (max-width: 600px) {
+  .ed { padding-top: 14px; }
+  .ed-sub { font-size: 14px; }
+  .grid2 { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .card-ed { padding: 14px; border-radius: 18px; }
+  .ai { padding: 16px; border-radius: 20px; }
+  .ai-btn { width: 100%; }
+  /* 16px — iPhone input'ga bosganda sahifani kattalashtirib yubormasin */
+  .ed .input, .ai textarea { font-size: 16px; }
+  .save-bar .btn { flex: 1; min-width: 0; }
+}
 {% endblock %}
 
 {% block content %}
 <form method="post" class="ed" id="editor">
   {% csrf_token %}
-  <a href="{% url 'cv_preview' cv.public_id %}" class="muted" style="font-size:13.5px;font-weight:700;">← Rezyumeni ko'rish</a>
-  <h1 style="margin-top:8px;">Rezyumeni tahrirlash</h1>
-  <p class="ed-sub">O'zingizga tegishli bo'lmagan qatorlarni o'chiring, bo'shlarini to'ldiring. AI kerak emas — bepul.</p>
-  {% if is_new %}<div class="hint-new">✨ Namuna nusxalandi. Eng avvalo <b>ismingiz, telefoningiz</b> va <b>ish joylaringizni</b> o'zingiznikiga almashtiring.</div>{% endif %}
+  <a href="{% url 'cv_preview' cv.public_id %}" class="ed-back">{% icon "arrow-left" 15 %} Rezyumeni ko'rish</a>
+  <h1>Rezyumeni tahrirlash</h1>
+  <p class="ed-sub">Bo'sh joylarni to'ldiring, sizga tegishli bo'lmaganini o'chiring. Qo'lda tahrirlash — cheksiz va bepul.</p>
 
-  <div class="card-ed">
-    <h2>👤 Asosiy ma'lumot</h2>
+  {% if ai_done %}
+  <div class="note green"><span class="ic-tile green">{% icon "check" 16 "" "2.6" %}</span><div><b>AI rezyumeni to'ldirdi.</b> Har bir qatorni tekshiring — noto'g'ri joyini tuzating, keyin «Saqlash»ni bosing.</div></div>
+  {% elif is_new %}
+  <div class="note lime"><span class="ic-tile dark">{% icon "info" 16 %}</span><div><b>Namuna nusxalandi.</b> {% if request.user.is_authenticated %}Ismingiz va telefoningiz qo'yildi, lekin ish joylari va yutuqlar hali boshqa odamniki.{% else %}Undagi ism, ish joylari va yutuqlar boshqa odamniki.{% endif %} Pastdagi <b>AI bilan to'ldirish</b>ga o'zingiz haqingizda yozing yoki maydonlarni qo'lda almashtiring.</div></div>
+  {% endif %}
+
+  <section class="ai {% if not improve_quota.allowed %}off{% endif %}" id="ai">
+    <div class="ai-h">
+      <h2><span class="ic-tile">{% icon "sparkles" 17 %}</span>AI bilan to'ldirish</h2>
+      {% if improve_quota.allowed %}<span class="ai-left">{% if improve_quota.tier == "free" %}{{ improve_quota.remaining }} ta bepul{% else %}{{ improve_quota.remaining }} ta qoldi{% endif %}</span>{% endif %}
+    </div>
+    {% if improve_quota.allowed %}
+    <p>{% if from_sample %}O'zingiz haqingizda oddiy qilib yozing: qayerda ishlagansiz, nima qilgansiz, qayerda o'qigansiz, nimalarni bilasiz. AI namunadagi ma'lumotlarni sizniki bilan almashtiradi va professional qilib yozadi.{% else %}AI rezyumeni sayqallaydi: jumlalarni natijaga yo'naltirilgan qiladi, imloni tuzatadi, bo'limlarni tartiblaydi. Qo'shmoqchi bo'lgan ma'lumotingizni yozing — u ham kiritiladi.{% endif %}</p>
+    <textarea name="ai_notes" maxlength="3000" placeholder="{% if from_sample %}Masalan: Ismim Aziza Tursunova. Korzinkada 2 yil kassir bo'lib ishladim, hozir Makro'da sotuvchiman. TDIU sirtqi, 3-kurs. Excel, 1C bilaman, rus tili yaxshi.{% else %}Ixtiyoriy: yangi ish joyi, sertifikat, yutuq yoki «ingliz tilida qilib ber» kabi istak{% endif %}">{{ ai_notes }}</textarea>
+    <div class="ai-row">
+      <button class="btn ai-btn" type="submit" formaction="{% url 'cv_improve' cv.public_id %}" formnovalidate data-ai>{% icon "sparkles" 17 %} AI bilan to'ldirish</button>
+      <span class="ai-meta">~20 soniya · formadagi o'zgarishlaringiz ham hisobga olinadi</span>
+    </div>
+    {% else %}
+    <p>{{ improve_quota.message }}</p>
+    {% endif %}
+  </section>
+
+  <nav class="sec-nav" aria-label="Bo'limlar">
+    <a href="#s-main">{% icon "user" 15 %}Asosiy</a>
+    <a href="#s-exp">{% icon "briefcase" 15 %}Tajriba</a>
+    <a href="#s-edu">{% icon "graduation" 15 %}Ta'lim</a>
+    <a href="#s-skills">{% icon "tool" 15 %}Ko'nikmalar</a>
+    <a href="#s-proj">{% icon "folder" 15 %}Loyihalar</a>
+  </nav>
+
+  <div class="card-ed" id="s-main">
+    <h2><span class="ic-tile">{% icon "user" 16 %}</span>Asosiy ma'lumot</h2>
     <div class="grid2">
       <div class="fe"><label for="f-name">Ism va familiya *</label><input class="input" id="f-name" name="full_name" value="{{ d.full_name }}" required maxlength="150" autocomplete="name"></div>
       <div class="fe"><label for="f-title">Lavozim</label><input class="input" id="f-title" name="job_title" value="{{ d.job_title }}" maxlength="150" placeholder="Masalan: Sotuvchi-konsultant"></div>
-      <div class="fe"><label for="f-phone">Telefon</label><input class="input" id="f-phone" name="phone" type="tel" value="{{ d.phone }}" maxlength="150" autocomplete="tel"></div>
-      <div class="fe"><label for="f-email">Email</label><input class="input" id="f-email" name="email" type="email" value="{{ d.email }}" maxlength="150" autocomplete="email"></div>
-      <div class="fe"><label for="f-loc">Shahar</label><input class="input" id="f-loc" name="location" value="{{ d.location }}" maxlength="150"></div>
-      <div class="fe"><label for="f-li">LinkedIn / portfolio</label><input class="input" id="f-li" name="linkedin" value="{{ d.linkedin }}" maxlength="150"></div>
+      <div class="fe"><label for="f-phone">Telefon</label><input class="input" id="f-phone" name="phone" type="tel" inputmode="tel" value="{{ d.phone }}" maxlength="150" autocomplete="tel"></div>
+      <div class="fe"><label for="f-email">Email</label><input class="input" id="f-email" name="email" type="email" inputmode="email" value="{{ d.email }}" maxlength="150" autocomplete="email"></div>
+      <div class="fe"><label for="f-loc">Shahar</label><input class="input" id="f-loc" name="location" value="{{ d.location }}" maxlength="150" autocomplete="address-level2"></div>
+      <div class="fe"><label for="f-li">LinkedIn / portfolio</label><input class="input" id="f-li" name="linkedin" value="{{ d.linkedin }}" maxlength="150" inputmode="url"></div>
       <input type="hidden" name="github" value="{{ d.github }}">
       <div class="fe wide"><label for="f-sum">O'zingiz haqingizda</label><textarea class="input" id="f-sum" name="summary" maxlength="1500">{{ d.summary }}</textarea><div class="tip">2–3 gap: kimsiz, qancha tajriba, nimada kuchlisiz.</div></div>
     </div>
   </div>
 
-  <div class="card-ed">
-    <h2>💼 Ish tajribasi</h2>
+  <div class="card-ed" id="s-exp">
+    <h2><span class="ic-tile">{% icon "briefcase" 16 %}</span>Ish tajribasi</h2>
     <div id="exp-list">
       {% for e in d.experience %}
       <div class="item">
-        <button type="button" class="rm" aria-label="O'chirish">✕</button>
+        <div class="item-h"><span>Ish joyi</span><button type="button" class="rm" aria-label="O'chirish">{% icon "trash" 16 %}</button></div>
         <div class="grid2">
           <div class="fe"><label>Lavozim</label><input class="input" name="exp-{{ forloop.counter0 }}-position" value="{{ e.position }}" maxlength="150"></div>
           <div class="fe"><label>Kompaniya</label><input class="input" name="exp-{{ forloop.counter0 }}-company" value="{{ e.company }}" maxlength="150"></div>
@@ -64,15 +151,15 @@
       </div>
       {% endfor %}
     </div>
-    <button type="button" class="add" data-add="exp">+ Ish joyi qo'shish</button>
+    <button type="button" class="add" data-add="exp">{% icon "plus" 17 %} Ish joyi qo'shish</button>
   </div>
 
-  <div class="card-ed">
-    <h2>🎓 Ta'lim</h2>
+  <div class="card-ed" id="s-edu">
+    <h2><span class="ic-tile">{% icon "graduation" 16 %}</span>Ta'lim</h2>
     <div id="edu-list">
       {% for e in d.education %}
       <div class="item">
-        <button type="button" class="rm" aria-label="O'chirish">✕</button>
+        <div class="item-h"><span>O'quv joyi</span><button type="button" class="rm" aria-label="O'chirish">{% icon "trash" 16 %}</button></div>
         <div class="grid2">
           <div class="fe"><label>O'quv joyi</label><input class="input" name="edu-{{ forloop.counter0 }}-institution" value="{{ e.institution }}" maxlength="200"></div>
           <div class="fe"><label>Yo'nalish / daraja</label><input class="input" name="edu-{{ forloop.counter0 }}-degree" value="{{ e.degree }}" maxlength="200"></div>
@@ -81,23 +168,23 @@
       </div>
       {% endfor %}
     </div>
-    <button type="button" class="add" data-add="edu">+ O'quv joyi qo'shish</button>
+    <button type="button" class="add" data-add="edu">{% icon "plus" 17 %} O'quv joyi qo'shish</button>
   </div>
 
-  <div class="card-ed">
-    <h2>🛠 Ko'nikmalar va tillar</h2>
+  <div class="card-ed" id="s-skills">
+    <h2><span class="ic-tile">{% icon "tool" 16 %}</span>Ko'nikmalar va tillar</h2>
     <div class="grid2">
       <div class="fe"><label for="f-skills">Ko'nikmalar (har biri yangi qatorda)</label><textarea class="input" id="f-skills" name="skills">{{ skills_text }}</textarea></div>
       <div class="fe"><label for="f-langs">Tillar</label><textarea class="input" id="f-langs" name="languages" placeholder="O'zbek — ona tili&#10;Rus — B2">{{ languages_text }}</textarea></div>
     </div>
   </div>
 
-  <div class="card-ed">
-    <h2>🚀 Loyihalar <span class="muted" style="font-size:13px;font-weight:600;">(bo'lmasa, bo'sh qoldiring)</span></h2>
+  <div class="card-ed" id="s-proj">
+    <h2><span class="ic-tile">{% icon "folder" 16 %}</span>Loyihalar <small>bo'lmasa, bo'sh qoldiring</small></h2>
     <div id="proj-list">
       {% for p in d.projects %}
       <div class="item">
-        <button type="button" class="rm" aria-label="O'chirish">✕</button>
+        <div class="item-h"><span>Loyiha</span><button type="button" class="rm" aria-label="O'chirish">{% icon "trash" 16 %}</button></div>
         <div class="grid2">
           <div class="fe"><label>Nomi</label><input class="input" name="proj-{{ forloop.counter0 }}-title" value="{{ p.title }}" maxlength="150"></div>
           <div class="fe"><label>Vositalar (vergul bilan)</label><input class="input" name="proj-{{ forloop.counter0 }}-technologies" value="{{ p.technologies|join:', ' }}"></div>
@@ -106,18 +193,26 @@
       </div>
       {% endfor %}
     </div>
-    <button type="button" class="add" data-add="proj">+ Loyiha qo'shish</button>
+    <button type="button" class="add" data-add="proj">{% icon "plus" 17 %} Loyiha qo'shish</button>
   </div>
 
   <div class="save-bar">
     <a href="{% url 'cv_preview' cv.public_id %}" class="btn btn-light">Bekor qilish</a>
-    <button class="btn btn-dark">💾 Saqlash va ko'rish</button>
+    <button class="btn btn-dark" type="submit">{% icon "check" 17 "" "2.5" %} Saqlash va ko'rish</button>
   </div>
 </form>
 
+<div class="overlay" id="ai-overlay">
+  <div class="overlay-in">
+    <div class="spinner dark"></div>
+    <h3>AI rezyumeni to'ldirmoqda…</h3>
+    <p id="ai-step">Ma'lumotlaringiz o'qilmoqda</p>
+  </div>
+</div>
+
 <template id="tpl-exp">
   <div class="item">
-    <button type="button" class="rm" aria-label="O'chirish">✕</button>
+    <div class="item-h"><span>Ish joyi</span><button type="button" class="rm" aria-label="O'chirish">{% icon "trash" 16 %}</button></div>
     <div class="grid2">
       <div class="fe"><label>Lavozim</label><input class="input" name="exp-__i__-position" maxlength="150"></div>
       <div class="fe"><label>Kompaniya</label><input class="input" name="exp-__i__-company" maxlength="150"></div>
@@ -128,7 +223,7 @@
 </template>
 <template id="tpl-edu">
   <div class="item">
-    <button type="button" class="rm" aria-label="O'chirish">✕</button>
+    <div class="item-h"><span>O'quv joyi</span><button type="button" class="rm" aria-label="O'chirish">{% icon "trash" 16 %}</button></div>
     <div class="grid2">
       <div class="fe"><label>O'quv joyi</label><input class="input" name="edu-__i__-institution" maxlength="200"></div>
       <div class="fe"><label>Yo'nalish / daraja</label><input class="input" name="edu-__i__-degree" maxlength="200"></div>
@@ -138,7 +233,7 @@
 </template>
 <template id="tpl-proj">
   <div class="item">
-    <button type="button" class="rm" aria-label="O'chirish">✕</button>
+    <div class="item-h"><span>Loyiha</span><button type="button" class="rm" aria-label="O'chirish">{% icon "trash" 16 %}</button></div>
     <div class="grid2">
       <div class="fe"><label>Nomi</label><input class="input" name="proj-__i__-title" maxlength="150"></div>
       <div class="fe"><label>Vositalar (vergul bilan)</label><input class="input" name="proj-__i__-technologies"></div>
@@ -164,13 +259,25 @@
       if (first) first.focus();
     });
   });
-  document.getElementById('editor').addEventListener('click', function (e) {
+  var form = document.getElementById('editor');
+  form.addEventListener('click', function (e) {
     var rm = e.target.closest('.rm');
-    if (rm) rm.closest('.item').remove();
+    if (rm) { rm.closest('.item').remove(); dirty = true; }
   });
-  var dirty = false, form = document.getElementById('editor');
+  var dirty = false;
   form.addEventListener('input', function () { dirty = true; });
-  form.addEventListener('submit', function () { dirty = false; });
+  form.addEventListener('submit', function (e) {
+    dirty = false;
+    if (e.submitter && e.submitter.hasAttribute('data-ai')) {
+      // AI javobi ~20 soniya — foydalanuvchi sahifani yopib qo'ymasligi uchun jarayonni ko'rsatamiz
+      var btn = e.submitter;
+      setTimeout(function () { btn.disabled = true; }, 0);
+      document.getElementById('ai-overlay').classList.add('show');
+      var steps = ["Ma'lumotlaringiz o'qilmoqda", "Tajriba bo'limlarga ajratilmoqda", "Jumlalar professional qilinmoqda", "Oxirgi tekshiruv"];
+      var i = 0, el = document.getElementById('ai-step');
+      setInterval(function () { i = Math.min(i + 1, steps.length - 1); el.textContent = steps[i]; }, 4000);
+    }
+  });
   window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 })();
 </script>

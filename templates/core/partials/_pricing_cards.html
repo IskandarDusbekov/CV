@@ -1,5 +1,5 @@
-{% load mycv %}
-{% if site.payment_notice %}<p class="price-notice">✈️ {{ site.payment_notice }}</p>{% endif %}
+{% load mycv ui %}
+{% if site.payment_notice %}<p class="price-notice">{% icon "info" 16 %} {{ site.payment_notice }}</p>{% endif %}
 <div class="price-grid">
   <article class="price-card">
     <div class="price-head">

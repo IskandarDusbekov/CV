@@ -1,4 +1,4 @@
-"""Tayyor namunalar (SEO sahifalar) va rezyumeni qo'lda tahrirlash — AI'siz, bepul."""
+"""Tayyor namunalar (SEO sahifalar), rezyumeni qo'lda tahrirlash (bepul) va «AI bilan to'ldirish» (limit bilan)."""
 import copy
 import json
 import re
@@ -156,7 +156,33 @@ def parse_editor_post(post, previous):
     return data
 
 
+def _save_cv_data(cv, data):
+    old_name = _clean((cv.cv_json or {}).get("full_name", "") if isinstance(cv.cv_json, dict) else "").lower()
+    fields = ["cv_json", "updated_at"]
+    if cv.free_pdf and not cv.is_unlocked and old_name and _clean(data.get("full_name")).lower() != old_name:
+        # Bepul PDF bitta odamning rezyumesi uchun: ismni almashtirib boshqa rezyume qilib bo'lmaydi
+        cv.free_pdf = False
+        fields.append("free_pdf")
+    cv.cv_json = data
+    cv.save(update_fields=fields)
+
+
+_NOTES_KEY = "ai_notes"
+
+
+def _source_sample(cv):
+    """Namunadan boshlangan va hali AI bilan to'ldirilmagan rezyume uchun asl namuna (aks holda None)."""
+    if not (cv.raw_input_text or "").startswith("[namuna:"):
+        return None
+    from .models import AIUsage
+
+    if AIUsage.objects.filter(cv=cv, kind=AIUsage.KIND_IMPROVE, success=True).exists():
+        return None
+    return ResumeSample.objects.filter(profession=cv.target_job).first()
+
+
 def edit_cv(request, cv_id):
+    from . import quotas
     from .views import _private_cv
 
     cv = _private_cv(request, cv_id, staff_ok=False)
@@ -165,16 +191,9 @@ def edit_cv(request, cv_id):
         if not data["full_name"]:
             messages.error(request, "Ism va familiyani yozing.")
         else:
-            old_name = _clean((cv.cv_json or {}).get("full_name", "") if isinstance(cv.cv_json, dict) else "").lower()
-            fields = ["cv_json", "updated_at"]
-            if cv.free_pdf and not cv.is_unlocked and old_name and data["full_name"].lower() != old_name:
-                # Bepul PDF bitta odamning rezyumesi uchun: ismni almashtirib boshqa rezyume qilib bo'lmaydi
-                cv.free_pdf = False
-                fields.append("free_pdf")
-            cv.cv_json = data
-            cv.save(update_fields=fields)
+            _save_cv_data(cv, data)
             log_activity(request, "cv_edit", cv=str(cv.public_id))
-            messages.success(request, "Saqlandi ✅")
+            messages.success(request, "Saqlandi")
             return redirect("cv_preview", cv_id=cv.public_id)
 
     raw = cv.cv_json if isinstance(cv.cv_json, dict) else {}
@@ -185,4 +204,58 @@ def edit_cv(request, cv_id):
         "skills_text": "\n".join(normalized["skills"]),
         "languages_text": "\n".join(normalized["languages"]),
         "is_new": request.GET.get("new") == "1",
+        "ai_done": request.GET.get("ai") == "1",
+        "ai_notes": request.session.get(_NOTES_KEY, {}).get(str(cv.public_id), ""),
+        "from_sample": _source_sample(cv) is not None,
+        "improve_quota": quotas.improve_quota(request, cv),
     })
+
+
+@require_POST
+def improve_cv(request, cv_id):
+    """«AI bilan to'ldirish»: formadagi joriy (saqlanmagan bo'lsa ham) ma'lumot + foydalanuvchi izohi → AI → saqlash."""
+    from . import quotas
+    from .models import AIUsage
+    from .services import AIError, improve_cv as ai_improve
+    from .views import _private_cv, logger
+
+    cv = _private_cv(request, cv_id, staff_ok=False)
+    previous = cv.cv_json if isinstance(cv.cv_json, dict) else {}
+    data = parse_editor_post(request.POST, previous)
+    if not data["full_name"]:
+        data["full_name"] = _clean(previous.get("full_name"), 150)
+    notes = str(request.POST.get("ai_notes", "")).strip()[:3000]
+    edit_url = f"/cv/edit/{cv.public_id}/"
+    # AI ishlamay qolsa yoki limit tugasa — yozgan matni yo'qolmasin, sahifada qayta chiqadi
+    request.session[_NOTES_KEY] = {str(cv.public_id): notes}
+
+    sample = _source_sample(cv)
+    if sample and len(notes) < 20 and data.get("experience") == normalize_cv_data(sample.cv_json)["experience"]:
+        # Namunadagi boshqa odamning tajribasini sayqallashdan foyda yo'q — avval o'zingiz haqingizda yozing
+        _save_cv_data(cv, data)
+        messages.warning(request, "AI to'ldirishi uchun «O'zingiz haqingizda» maydoniga qayerda ishlaganingiz, "
+                                  "nimalarni bilishingiz va o'qishingizni qisqa yozing.")
+        return redirect(edit_url)
+
+    quota = quotas.improve_quota(request, cv)
+    if not quota.allowed:
+        _save_cv_data(cv, data)
+        log_activity(request, "limit_reached", kind="improve")
+        messages.warning(request, quota.message)
+        return redirect(edit_url)
+
+    try:
+        new_json, meta = ai_improve(data, notes, sample_json=sample.cv_json if sample else None)
+    except AIError as exc:
+        _save_cv_data(cv, data)
+        quotas.record(request, AIUsage.KIND_IMPROVE, cv=cv, meta=exc.meta, error=str(exc))
+        logger.error("AI improve failed: %s", exc, extra={"request": request})
+        messages.error(request, "AI hozir javob bermadi, o'zgarishlaringiz saqlandi. Bir daqiqadan so'ng qayta urinib ko'ring.")
+        return redirect(edit_url)
+
+    _save_cv_data(cv, new_json)
+    request.session.pop(_NOTES_KEY, None)
+    quotas.record(request, AIUsage.KIND_IMPROVE, cv=cv, meta=meta)
+    log_activity(request, "cv_improve", cv=str(cv.public_id), sample=bool(sample))
+    messages.success(request, "AI rezyumeni to'ldirdi. Tekshirib chiqing — kerak bo'lsa tuzating va saqlang.")
+    return redirect(f"{edit_url}?ai=1")

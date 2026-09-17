@@ -418,6 +418,103 @@ class SamplesAndEditorTests(TestCase):
         self.assertContains(response, "/r/")
 
 
+def editor_post(data, **extra):
+    """Rezyume JSON'ini tahrirlash formasi yuboradigan POST ko'rinishiga aylantiradi."""
+    post = {k: data.get(k, "") for k in ("full_name", "job_title", "email", "phone", "location", "github", "linkedin", "summary")}
+    post["skills"] = "\n".join(data.get("skills", []))
+    post["languages"] = "\n".join(data.get("languages", []))
+    for i, e in enumerate(data.get("experience", [])):
+        post.update({f"exp-{i}-position": e.get("position", ""), f"exp-{i}-company": e.get("company", ""),
+                     f"exp-{i}-duration": e.get("duration", ""), f"exp-{i}-responsibilities": "\n".join(e.get("responsibilities", []))})
+    for i, e in enumerate(data.get("education", [])):
+        post.update({f"edu-{i}-institution": e.get("institution", ""), f"edu-{i}-degree": e.get("degree", ""), f"edu-{i}-year": e.get("year", "")})
+    post.update(extra)
+    return post
+
+
+IMPROVED = {**DEMO_CV_JSON, "full_name": "Aziza Tursunova", "job_title": "Kassir"}
+
+
+class ImproveWithAITests(TestCase):
+    def _sample_cv(self):
+        self.client.post("/namunalar/kassir/boshlash/")
+        return CV.objects.get()
+
+    @mock.patch("apps.cv.services.improve_cv", return_value=(IMPROVED, META))
+    def test_sample_needs_notes_then_free_user_gets_one_ai_fill(self, mocked):
+        cv = self._sample_cv()
+        page = self.client.get(f"/cv/edit/{cv.public_id}/?new=1")
+        self.assertContains(page, "AI bilan to'ldirish")
+        self.assertContains(page, "1 ta bepul")
+
+        # namuna o'zgarmagan va izoh yo'q — AI chaqirilmaydi, limit ham ketmaydi
+        url = reverse("cv_improve", args=[cv.public_id])
+        self.client.post(url, editor_post(cv.cv_json))
+        mocked.assert_not_called()
+        self.assertFalse(AIUsage.objects.exists())
+
+        notes = "Korzinkada 2 yil kassir bo'ldim, hozir Makroda sotuvchiman. Excel bilaman."
+        response = self.client.post(url, editor_post(cv.cv_json, ai_notes=notes))
+        self.assertRedirects(response, f"/cv/edit/{cv.public_id}/?ai=1", fetch_redirect_response=False)
+        args, kwargs = mocked.call_args
+        self.assertEqual(args[1], notes)
+        self.assertEqual(kwargs["sample_json"]["full_name"], "Malika Tursunova")  # AI namunadagi faktlarni ajratadi
+        cv.refresh_from_db()
+        self.assertEqual(cv.cv_json["full_name"], "Aziza Tursunova")
+        self.assertEqual(AIUsage.objects.get().kind, AIUsage.KIND_IMPROVE)
+        self.assertContains(self.client.get(f"/cv/edit/{cv.public_id}/?ai=1"), "AI rezyumeni to'ldirdi")
+
+        # bepul limit — 1 marta; qo'lda tahrirlash ishlayveradi
+        self.client.post(url, editor_post(cv.cv_json, ai_notes=notes))
+        self.assertEqual(mocked.call_count, 1)
+        page = self.client.get(f"/cv/edit/{cv.public_id}/")
+        self.assertContains(page, "Bepul AI to&#x27;ldirish ishlatildi")
+        self.assertNotContains(page, f'formaction="{url}"')
+
+    @mock.patch("apps.cv.services.improve_cv")
+    def test_ai_error_is_not_counted_and_keeps_edits_and_notes(self, mocked):
+        from .services import AIError
+
+        mocked.side_effect = AIError("timeout", META)
+        user = User.objects.create_user(username="e")
+        self.client.force_login(user)
+        cv = CV.objects.create(user=user, raw_input_text="x", cv_json=DEMO_CV_JSON, selected_template="ats")
+        url = reverse("cv_improve", args=[cv.public_id])
+        self.client.post(url, editor_post(DEMO_CV_JSON, full_name="Yangi Ism", ai_notes="IELTS 7.0 oldim"))
+        cv.refresh_from_db()
+        self.assertEqual(cv.cv_json["full_name"], "Yangi Ism")  # formadagi o'zgarish yo'qolmadi
+        self.assertEqual(AIUsage.objects.get().success, False)
+        page = self.client.get(f"/cv/edit/{cv.public_id}/")
+        self.assertContains(page, "IELTS 7.0 oldim")
+        self.assertContains(page, "1 ta bepul")
+        self.assertIsNone(mocked.call_args.kwargs["sample_json"])  # oddiy rezyume — namuna emas
+
+    @mock.patch("apps.cv.services.improve_cv", return_value=(IMPROVED, META))
+    def test_unlocked_cv_gets_its_own_limit_and_other_user_is_404(self, mocked):
+        user = User.objects.create_user(username="u")
+        self.client.force_login(user)
+        AIUsage.objects.create(user=user, kind=AIUsage.KIND_IMPROVE)  # bepul limit ishlatilgan
+        cv = CV.objects.create(user=user, raw_input_text="x", cv_json=DEMO_CV_JSON, selected_template="ats", is_unlocked=True)
+        url = reverse("cv_improve", args=[cv.public_id])
+        for _ in range(4):
+            self.client.post(url, editor_post(DEMO_CV_JSON))
+        self.assertEqual(mocked.call_count, SiteSettings.load().improve_per_unlocked_cv)
+
+        self.client.force_login(User.objects.create_user(username="x"))
+        self.assertEqual(self.client.post(url, editor_post(DEMO_CV_JSON)).status_code, 404)
+
+
+class InterfaceTests(TestCase):
+    def test_icon_tag_and_cabinet_button(self):
+        from apps.core.templatetags.ui import icon
+
+        self.assertIn("<svg", icon("edit"))
+        self.assertEqual(icon("no-such-icon"), "")
+        self.assertNotContains(self.client.get("/cv/builder/"), 'aria-label="Kabinet"')
+        self.client.force_login(User.objects.create_user(username="k"))
+        self.assertContains(self.client.get("/cv/builder/"), 'aria-label="Kabinet"')
+
+
 class SeoTests(TestCase):
     def test_sitemap_robots_and_meta(self):
         from apps.core.models import SeoPage

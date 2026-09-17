@@ -83,7 +83,8 @@ class AIUsage(models.Model):
 
     KIND_GENERATE = "generate"
     KIND_TAILOR = "tailor"
-    KIND_CHOICES = [(KIND_GENERATE, "CV yaratish"), (KIND_TAILOR, "Vakansiyaga moslashtirish")]
+    KIND_IMPROVE = "improve"
+    KIND_CHOICES = [(KIND_GENERATE, "CV yaratish"), (KIND_TAILOR, "Vakansiyaga moslashtirish"), (KIND_IMPROVE, "AI bilan to'ldirish")]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="ai_usages")
     session_key = models.CharField(max_length=64, blank=True, db_index=True)

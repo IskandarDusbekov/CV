@@ -47,6 +47,10 @@ class SiteSettings(models.Model):
     free_cv_limit = models.PositiveIntegerField("Bepul CV yaratish soni", default=2)
     free_tailor_limit = models.PositiveIntegerField("Bepul vakansiyaga moslashtirish soni", default=1)
     tailor_per_unlocked_cv = models.PositiveIntegerField("Ochilgan har bir CV uchun moslashtirish", default=5)
+    free_improve_limit = models.PositiveIntegerField(
+        "Bepul «AI bilan to'ldirish» soni", default=1,
+        help_text="Tahrirlash sahifasida (masalan, namunadan boshlaganda) AI rezyumeni to'ldirib, yaxshilab beradi")
+    improve_per_unlocked_cv = models.PositiveIntegerField("Ochilgan har bir CV uchun «AI bilan to'ldirish»", default=3)
 
     # AI
     ai_model = models.CharField("OpenAI modeli", max_length=100, default="gpt-4.1-mini")
@@ -178,6 +182,7 @@ class ActivityLog(models.Model):
         ("cv_create", "CV yaratdi"),
         ("cv_tailor", "Vakansiyaga moslashtirdi"),
         ("cv_edit", "Rezyumeni tahrirladi"),
+        ("cv_improve", "AI bilan to'ldirdi"),
         ("cv_unlock", "CV ni kredit bilan ochdi"),
         ("cv_template", "Shablon almashtirdi"),
         ("download_pdf", "PDF yuklab oldi"),

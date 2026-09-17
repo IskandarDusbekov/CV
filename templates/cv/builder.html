@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load ui %}
 {% block title %}Rezyume yaratish onlayn — bepul, savol-javob bilan | {{ site.site_name|default:'tezrezyume.uz' }}{% endblock %}
 {% block meta_description %}Oddiy savollarga javob bering — AI 1 daqiqada professional rezyume yozadi. Tajribasiz bo'lsangiz ham. O'zbek, rus va ingliz tillarida, PDF va Word.{% endblock %}
 
@@ -8,14 +9,20 @@
 .b-sub { margin: 8px 0 18px; font-size: 16px; color: var(--muted); }
 .box { padding: 22px; background: #fff; border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow-sm); }
 
-.samples-strip { margin-bottom: 14px; padding: 14px 16px; border-radius: 18px; background: #fff; border: 1px dashed var(--line-2); }
-.ss-h { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; font-size: 14px; }
-.ss-h a { font-weight: 700; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.b-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+.b-back { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 700; color: var(--muted); }
+.b-back:hover { color: var(--ink); }
+.samples-strip { margin-bottom: 14px; padding: 14px 16px; border-radius: 18px; background: #fff; border: 1px solid var(--line); }
+.ss-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 14px; }
+.ss-h b { display: flex; align-items: center; gap: 8px; }
+.ss-h b .ic-tile { width: 28px; height: 28px; border-radius: 8px; }
+.ss-h a { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.ss-h a:hover { color: var(--ink); }
 .ss-row { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
 .ss-chip { flex-shrink: 0; padding: 8px 13px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); font-size: 13.5px; font-weight: 700; white-space: nowrap; }
 .ss-chip:hover { border-color: var(--ink); }
 .modes { display: flex; padding: 4px; gap: 4px; margin-bottom: 14px; border-radius: 14px; background: var(--bg-2, #ebe8e1); }
-.modes button { flex: 1; min-height: 42px; border: 0; border-radius: 11px; background: transparent; font: inherit; font-size: 14px; font-weight: 700; color: var(--muted); cursor: pointer; }
+.modes button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: 1; min-height: 44px; border: 0; border-radius: 11px; background: transparent; font: inherit; font-size: 14px; font-weight: 700; color: var(--muted); cursor: pointer; }
 .modes button.sel { background: #fff; color: var(--ink); box-shadow: var(--shadow-sm); }
 
 .prog { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; font-size: 13px; font-weight: 700; color: var(--muted); }
@@ -56,6 +63,12 @@ textarea.free:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff
 .seg button.sel { background: #fff; color: var(--ink); box-shadow: var(--shadow-sm); }
 .check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .check input { width: 18px; height: 18px; accent-color: var(--ink); }
+.opt label.file-pick { margin: 0; }
+.file-pick { display: flex !important; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border: 1px dashed var(--line-2); border-radius: 12px; background: var(--bg);
+             font-size: 13.5px; font-weight: 700; color: var(--muted); cursor: pointer; overflow: hidden; }
+.file-pick:hover { border-color: var(--ink); color: var(--ink); }
+.file-pick span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.file-pick.has { border-style: solid; color: var(--green); background: var(--green-soft); border-color: #bbf7d0; }
 
 .meta { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 14px; font-size: 13.5px; color: var(--muted); }
 .meta b { color: var(--ink); }
@@ -72,26 +85,38 @@ textarea.free:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff
 .overlay .spinner { width: 44px; height: 44px; margin: 0 auto 18px; border-width: 4px; }
 .overlay h3 { font-size: 22px; font-weight: 800; }
 .overlay p { margin-top: 6px; color: var(--muted); min-height: 24px; }
+.limit .btn svg.i, .meta svg.i { vertical-align: -3px; }
 @media (max-width: 640px) {
-  .b { padding-top: 18px; }
+  .b { padding-top: 14px; padding-bottom: 20px; }
+  .b h1 { font-size: 30px; }
   .b-sub { font-size: 15px; margin-bottom: 14px; }
+  .b .eyebrow { font-size: 11px; letter-spacing: .08em; }
   .box { padding: 16px; border-radius: 20px; }
   .q h2 { font-size: 20px; }
+  .q .hint { font-size: 14px; }
   .opts { grid-template-columns: minmax(0, 1fr); }
-  textarea.free { min-height: 220px; font-size: 16px; }
-  .q input.big, .q textarea.big { font-size: 16px; }
+  textarea.free { min-height: 220px; font-size: 16px; padding: 14px; }
+  .q input.big, .q textarea.big, #target-job { font-size: 16px; }
+  .pick { padding: 9px 13px; }
+  /* «Keyingi» tugmasi doim barmoq ostida — klaviatura ochilganda ham */
+  .nav-row { position: sticky; bottom: 0; z-index: 5; margin: 14px -16px 0; padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+             background: rgba(255,255,255,.96); backdrop-filter: blur(8px); border-top: 1px solid var(--line); }
+  .skip { margin-top: 6px; }
 }
 {% endblock %}
 
 {% block content %}
 <div class="b">
-  <span class="eyebrow">~1 daqiqa · bilmaganingizni o'tkazib yuboring</span>
-  <h1 style="margin-top:8px;">Rezyumeni <span class="serif">birga</span> tuzamiz</h1>
-  <p class="b-sub">Oddiy savollarga javob bering — tartib, imlo va chiroyli jumlalarni AI o'zi qiladi.</p>
+  <div class="b-top">
+    <span class="eyebrow">~1 daqiqa · AI yozadi</span>
+    {% if request.user.is_authenticated %}<a href="/users/dashboard/" class="b-back">{% icon "grid" 15 %} Mening rezyumelarim</a>{% endif %}
+  </div>
+  <h1>Rezyumeni <span class="serif">birga</span> tuzamiz</h1>
+  <p class="b-sub">Oddiy savollarga javob bering — tartib, imlo va chiroyli jumlalarni AI o'zi qiladi. Bilmaganingizni o'tkazib yuboring.</p>
 
   {% if samples %}
   <div class="samples-strip">
-    <div class="ss-h"><b>⚡ Tezroq: tayyor namunadan boshlang</b><a href="/namunalar/">Hammasi →</a></div>
+    <div class="ss-h"><b><span class="ic-tile accent">{% icon "zap" 15 %}</span>Tezroq: tayyor namunadan</b><a href="/namunalar/">Hammasi {% icon "arrow-right" 14 %}</a></div>
     <div class="ss-row">
       {% for s in samples %}<a href="{{ s.get_absolute_url }}" class="ss-chip">{{ s.profession }}</a>{% endfor %}
     </div>
@@ -102,8 +127,8 @@ textarea.free:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff
   {% csrf_token %}
   <input type="hidden" id="initial-template" value="{{ initial_template }}">
   <div class="modes" role="tablist">
-    <button type="button" class="sel" data-mode="wizard">🪄 Savol-javob</button>
-    <button type="button" data-mode="free">✍️ O'zim yozaman</button>
+    <button type="button" class="sel" data-mode="wizard">{% icon "wand" 16 %} Savol-javob</button>
+    <button type="button" data-mode="free">{% icon "edit" 16 %} O'zim yozaman</button>
   </div>
 
   <div class="box" id="wizard">
@@ -200,8 +225,8 @@ textarea.free:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff
 
     <div class="status" id="w-status"></div>
     <div class="nav-row">
-      <button type="button" class="btn btn-light back-btn" id="w-back" aria-label="Orqaga">←</button>
-      <button type="button" class="btn btn-dark next" id="w-next">Keyingi →</button>
+      <button type="button" class="btn btn-light back-btn" id="w-back" aria-label="Orqaga">{% icon "arrow-left" 18 %}</button>
+      <button type="button" class="btn btn-dark next" id="w-next">Keyingi</button>
     </div>
     <button type="button" class="skip" id="w-skip">O'tkazib yuborish</button>
   </div>
@@ -219,7 +244,7 @@ textarea.free:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff
     <div class="field" style="margin:14px 0 0;"><label for="target-job" style="font-size:13px;font-weight:700;">Qaysi lavozimga? <span style="color:var(--muted);font-weight:600;">(ixtiyoriy)</span></label><input class="input" type="text" id="target-job" placeholder="Masalan: SMM menejer"></div>
     <div id="opts-free-slot"></div>
     <div class="status" id="f-status"></div>
-    <button class="btn btn-dark go" id="generate-btn" type="button">Rezyumeni tayyorlash →</button>
+    <button class="btn btn-dark go" id="generate-btn" type="button">{% icon "sparkles" 18 %} Rezyumeni tayyorlash</button>
   </div>
 
   <div class="opts" id="opts">
@@ -232,20 +257,22 @@ textarea.free:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff
         <button type="button" data-lang="en">Eng</button>
       </div>
     </div>
-    <div class="opt"><label for="photo-input">Rasm <span style="color:var(--muted);font-weight:600;">(ixtiyoriy)</span></label><input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" style="font-size:13px;max-width:100%;"></div>
+    <div class="opt"><label>Rasm <span style="color:var(--muted);font-weight:600;">(ixtiyoriy)</span></label>
+      <label class="file-pick" id="photo-pick">{% icon "camera" 17 %}<span id="photo-name">Rasm tanlash</span><input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" hidden></label></div>
     <label class="check"><input type="checkbox" id="enrich-chk"> Kam yozdim — AI kengaytirib yozsin</label>
   </div>
 
   <div class="meta">
     <span>{% if quota.tier == "pro" %}Pro: <b>{{ quota.remaining }}</b> ta rezyume qoldi{% else %}Bepul: <b>{{ quota.remaining }} / {{ quota.limit }}</b> ta rezyume qoldi{% endif %}</span>
-    <a href="/cv/namuna/">Natija qanday bo'lishini ko'rish</a>
+    <a href="/cv/namuna/">{% icon "eye" 15 %} Natija qanday bo'ladi</a>
   </div>
   {% else %}
   <div class="limit">
     <h2>Bepul limit tugadi</h2>
     <p>{{ quota.message }}</p>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-      {% if request.user.is_authenticated %}<a href="/users/dashboard/" class="btn btn-light">Mening rezyumelarim</a>{% else %}<a href="/users/login/?next=/users/dashboard/" class="btn btn-light">Kirish</a>{% endif %}
+      {% if request.user.is_authenticated %}<a href="/users/dashboard/" class="btn btn-light">{% icon "grid" 16 %} Mening rezyumelarim</a>{% else %}<a href="/users/login/?next=/users/dashboard/" class="btn btn-light">{% icon "user" 16 %} Kirish</a>{% endif %}
+      <a href="/namunalar/" class="btn btn-light">{% icon "file-text" 16 %} Namunadan bepul</a>
       <a href="/pricing/" class="btn btn-accent">Pro — {{ pro_plan.max_cvs|default:30 }} ta rezyume</a>
     </div>
   </div>
@@ -354,7 +381,7 @@ textarea.free:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff
     var last = step === steps.length - 1;
     document.getElementById('prog-fill').style.width = ((step + 1) / steps.length * 100) + '%';
     document.getElementById('prog-text').textContent = (step + 1) + ' / ' + steps.length;
-    nextBtn.textContent = last ? 'Rezyumeni tayyorlash →' : 'Keyingi →';
+    nextBtn.textContent = last ? 'Rezyumeni tayyorlash' : 'Keyingi';
     backBtn.style.display = step === 0 ? 'none' : '';
     skipBtn.hidden = last;
     opts.hidden = mode === 'wizard' && !last;
@@ -440,7 +467,7 @@ textarea.free:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff
     var status = document.getElementById(id);
     status.className = 'status show error';
     status.innerHTML = '';
-    status.appendChild(document.createTextNode('⚠️ ' + msg));
+    status.appendChild(document.createTextNode(msg));
     if (limit) { var a = document.createElement('a'); a.href = '/pricing/'; a.textContent = 'Narxlar'; a.style.cssText = 'text-decoration:underline;margin-left:6px;'; status.appendChild(a); }
   }
 
@@ -470,6 +497,12 @@ textarea.free:focus { box-shadow: 0 0 0 3px rgba(21,22,26,.12); background: #fff
       })
       .catch(function () { clearInterval(timer); btn.disabled = false; showError(statusId, "Internet yoki server bilan bog'lanishda xatolik. Qayta urinib ko'ring."); });
   }
+
+  document.getElementById('photo-input').addEventListener('change', function () {
+    var file = this.files[0];
+    document.getElementById('photo-name').textContent = file ? file.name : 'Rasm tanlash';
+    document.getElementById('photo-pick').classList.toggle('has', !!file);
+  });
 
   loadDraft();
   render();

@@ -1,4 +1,4 @@
-{% load static %}<!DOCTYPE html>
+{% load static ui %}<!DOCTYPE html>
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
@@ -72,6 +72,11 @@
     img { max-width: 100%; }
     h1, h2, h3, h4, p { margin: 0; }
     .serif { font-family: var(--serif); font-weight: 400; font-style: italic; letter-spacing: -.01em; }
+    svg.i { display: inline-block; flex-shrink: 0; vertical-align: -3px; }
+    .ic-tile { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--bg); color: var(--ink); flex-shrink: 0; }
+    .ic-tile.dark { background: var(--ink); color: var(--lime); }
+    .ic-tile.green { background: var(--green-soft); color: var(--green); }
+    .ic-tile.accent { background: var(--accent-soft); color: #c2410c; }
 
     .wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 24px; }
 
@@ -87,7 +92,8 @@
     .nav-links a:hover, .nav-links a.on { color: var(--ink); background: rgba(21,22,26,.05); }
     .nav-actions { display: flex; align-items: center; gap: 8px; }
     .nav-actions .nav-toggle { display: none; }
-    .nav-links .only-sm { display: none; }
+    .nav-links .only-sm, .nav-links .menu-sep, .nav-links svg.i { display: none; }
+    .nav-cab.on { border-color: var(--ink); }
 
     /* BUTTONS */
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 18px; border-radius: 12px;
@@ -163,11 +169,17 @@
     @media (max-width: 860px) {
       .nav-links, .nav-actions .hide-sm { display: none; }
       .nav-actions .nav-toggle { display: inline-flex; }
-      .nav-links .only-sm { display: block; }
+      .nav-links .only-sm { display: flex; }
+      .nav-links svg.i { display: inline-block; }
+      .nav-links .menu-sep { display: block; }
+      .nav-cab .lbl-long { display: none; }
       .nav-actions { margin-left: auto; }
       .nav-in { gap: 12px; }
-      .nav.open .nav-links { display: flex; position: absolute; top: 68px; left: 0; right: 0; flex-direction: column; padding: 12px 16px 16px;
-                             background: var(--bg); border-bottom: 1px solid var(--line); }
+      .nav.open .nav-links { display: flex; position: absolute; top: 68px; left: 0; right: 0; flex-direction: column; gap: 2px; padding: 10px 12px 14px;
+                             background: var(--bg); border-bottom: 1px solid var(--line); box-shadow: var(--shadow); }
+      .nav.open .nav-links a { display: flex; align-items: center; gap: 12px; padding: 12px; font-size: 15px; color: var(--ink-2); }
+      .nav.open .nav-links a svg.i { color: var(--muted-2); }
+      .nav-links .menu-sep { display: block; height: 1px; margin: 6px 12px; background: var(--line); }
       .footer-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
       .wrap { padding: 0 16px; }
       .nav-in { height: 60px; }
@@ -196,25 +208,30 @@
   <div class="wrap nav-in">
     <a href="/" class="logo"><img class="logo-mark" src="{% static 'brand/logo-mark.svg' %}" alt="" width="30" height="30"><span>{{ site.brand_base }}<small>{{ site.brand_tld }}</small></span></a>
     <div class="nav-links">
-      <a href="/namunalar/" class="{% if '/namunalar/' in path %}on{% endif %}">Namunalar</a>
-      <a href="/cv/templates/" class="{% if '/cv/templ' in path %}on{% endif %}">Shablonlar</a>
-      <a href="/qollanma/" class="{% if '/qollanma/' in path %}on{% endif %}">Qo'llanma</a>
-      <a href="/pricing/" class="{% if path == '/pricing/' %}on{% endif %}">Narxlar</a>
-      <a href="/aloqa/" class="only-sm">Aloqa</a>
-      <a href="/biz-haqimizda/" class="only-sm">Biz haqimizda</a>
       {% if request.user.is_authenticated %}
-        <a href="/users/dashboard/" class="{% if '/dashboard' in path %}on{% endif %}">Kabinet</a>
-        {% if request.user.is_staff %}<a href="/panel/">⚡ Panel</a>{% endif %}
-        <a href="/users/logout/" class="only-sm">Chiqish</a>
+        <a href="/users/dashboard/" class="only-sm">{% icon "grid" %}Mening rezyumelarim</a>
+        <a href="/cv/builder/" class="only-sm">{% icon "plus" %}Yangi rezyume</a>
+        <span class="menu-sep"></span>
+      {% endif %}
+      <a href="/namunalar/" class="{% if '/namunalar/' in path %}on{% endif %}">{% icon "file-text" %}Namunalar</a>
+      <a href="/cv/templates/" class="{% if '/cv/templ' in path %}on{% endif %}">{% icon "layout" %}Shablonlar</a>
+      <a href="/qollanma/" class="{% if '/qollanma/' in path %}on{% endif %}">{% icon "info" %}Qo'llanma</a>
+      <a href="/pricing/" class="{% if path == '/pricing/' %}on{% endif %}">{% icon "credit-card" %}Narxlar</a>
+      <a href="/aloqa/" class="only-sm">{% icon "message" %}Aloqa</a>
+      <span class="menu-sep"></span>
+      {% if request.user.is_authenticated %}
+        {% if request.user.is_staff %}<a href="/panel/">{% icon "shield" %}Panel</a>{% endif %}
+        <a href="/users/logout/" class="only-sm">{% icon "logout" %}Chiqish</a>
       {% else %}
-        <a href="/users/login/" class="only-sm">Kirish</a>
-        <a href="/users/signup/" class="only-sm">Ro'yxatdan o'tish</a>
+        <a href="/users/login/" class="only-sm">{% icon "user" %}Kirish</a>
+        <a href="/users/signup/" class="only-sm">{% icon "plus" %}Ro'yxatdan o'tish</a>
       {% endif %}
     </div>
     <div class="nav-actions">
       {% if request.user.is_authenticated %}
         <a href="/users/logout/" class="btn btn-ghost btn-sm hide-sm">Chiqish</a>
-        <a href="/cv/builder/" class="btn btn-dark btn-sm"><span class="lbl-long">Rezyume yaratish</span><span class="lbl-short">+ Rezyume</span></a>
+        <a href="/users/dashboard/" class="btn btn-light btn-sm nav-cab {% if '/dashboard' in path %}on{% endif %}" aria-label="Kabinet">{% icon "user" 16 %}<span class="lbl-long">Kabinet</span></a>
+        <a href="/cv/builder/" class="btn btn-dark btn-sm">{% icon "plus" 15 "" "2.6" %}<span class="lbl-long">Rezyume yaratish</span><span class="lbl-short">Rezyume</span></a>
       {% else %}
         <a href="/users/login/" class="btn btn-ghost btn-sm hide-sm">Kirish</a>
         <a href="/users/signup/" class="btn btn-light btn-sm hide-sm">Ro'yxatdan o'tish</a>

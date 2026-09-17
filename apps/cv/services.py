@@ -691,6 +691,73 @@ Return ONLY JSON with exactly this structure:
     return result, meta
 
 
+CV_JSON_SHAPE = """{"full_name": "", "job_title": "", "email": "", "phone": "", "location": "", "github": "", "linkedin": "",
+"summary": "", "skills": [], "languages": [], "experience": [{"position": "", "company": "", "duration": "", "responsibilities": []}],
+"education": [{"institution": "", "degree": "", "year": ""}], "projects": [{"title": "", "description": "", "technologies": []}]}"""
+
+
+def improve_cv(cv_json, notes="", sample_json=None):
+    """Tahrirlash sahifasidagi «AI bilan to'ldirish»: joriy rezyumeni foydalanuvchi yozgan ma'lumot bilan to'ldiradi va sayqallaydi.
+
+    sample_json berilsa — rezyume namunadan boshlangan: namunadagi o'zgartirilmagan faktlar (ish joyi, sana, raqamlar)
+    boshqa odamniki hisoblanadi va foydalanuvchi tasdiqlamagan bo'lsa olib tashlanadi. Qaytaradi: (yangi_cv_json, meta).
+    """
+    data = cv_json if isinstance(cv_json, dict) else {}
+    language = data.get("_language") or (sample_json or {}).get("_language") or _detect_language(
+        " ".join([notes, data.get("summary", ""), data.get("job_title", "")]))
+    current = {k: v for k, v in data.items() if not k.startswith("_")}
+    notes = (notes or "").strip()
+
+    if sample_json:
+        sample = {k: v for k, v in sample_json.items() if not k.startswith("_")}
+        source = f"""The CV below was started from a READY-MADE SAMPLE of a fictional person. The user replaces it with their own data.
+- Any value that is IDENTICAL to the ORIGINAL SAMPLE is fictional — keep it only if the user's notes confirm it.
+- Values the user already changed (they differ from the sample) are real — keep them.
+- Employers, dates, education, numbers and certificates must come from the user's notes or the user's changes. If the user
+  gave no such fact, remove that entry instead of keeping the sample's. You may keep generic responsibilities typical
+  for the role, but never with the sample's company names or metrics.
+
+ORIGINAL SAMPLE (fictional, for style only):
+{json.dumps(sample, ensure_ascii=False)}"""
+    else:
+        source = "The CV below belongs to the user. All facts in it are real."
+
+    prompt = f"""You are improving a user's CV. {_language_instruction(language)}
+Company names, tool names and proper nouns keep their original form.
+
+{source}
+
+Rules:
+- The user's notes are the source of truth: add every fact from them (jobs, dates, study, skills, languages, contacts,
+  achievements) into the right section. Notes may be short, messy, chat-style or mixed-language.
+- Rewrite professionally: achievement-style bullets starting with an action verb, fix grammar and typos, remove repetition.
+- summary: 2-3 sentences for the job_title, resume style (no "I/men/я", no third person), based only on real facts.
+- NEVER invent employers, positions, dates, degrees, certificates or numbers that are not in the notes or the real CV.
+- Order experience from newest to oldest. Missing values are "" or [].
+{ATS_RULES}
+
+CURRENT CV:
+{json.dumps(current, ensure_ascii=False)}
+
+USER NOTES:
+\"\"\"{notes or "(no notes — just polish the current CV)"}\"\"\"
+
+Return ONLY JSON with exactly this structure:
+{CV_JSON_SHAPE}"""
+
+    result, meta = _chat_json(
+        "You are an expert multilingual CV writer and recruiter. You never fabricate experience. Always return valid JSON only.",
+        prompt, temperature=0.25,
+    )
+    if not isinstance(result, dict) or not _clean_text(result.get("full_name")):
+        if isinstance(result, dict) and _clean_text(current.get("full_name")):
+            result["full_name"] = current["full_name"]
+        else:
+            raise AIError("AI rezyume qaytarmadi", meta)
+    result["_language"] = language
+    return result, meta
+
+
 def tailor_cv_to_job(cv_json, job_description):
     """CV ni aniq bir vakansiya e'loniga moslab qayta yozadi.
 

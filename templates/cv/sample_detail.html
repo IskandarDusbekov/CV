@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load ui %}
 {% block title %}{{ sample.title }}{% endblock %}
 {% block meta_description %}{{ sample.seo_description|default:sample.profession }}{% endblock %}
 
@@ -19,7 +20,10 @@
 .cta ul { margin: 0 0 16px; padding: 0; list-style: none; display: grid; gap: 6px; }
 .cta li { font-size: 14px; color: #e5e6ea; } .cta li::before { content: "✓ "; color: var(--lime); font-weight: 800; }
 .tips { padding: 20px; border-radius: 20px; background: #fff; border: 1px solid var(--line); }
-.tips h2 { margin-bottom: 10px; font-size: 16px; font-weight: 800; }
+.tips h2 { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 16px; font-weight: 800; line-height: 1.25; }
+.cta li { display: flex; gap: 8px; align-items: flex-start; }
+.cta li::before { content: none !important; }
+.cta li svg.i { margin-top: 3px; color: var(--lime); }
 .tips p { margin-bottom: 10px; font-size: 15px; line-height: 1.65; color: var(--ink-2); }
 .tips p:last-child { margin-bottom: 0; }
 .rel { margin-top: 56px; }
@@ -32,7 +36,12 @@
 @media (max-width: 1000px) {
   .sd-grid { grid-template-columns: minmax(0, 1fr); }
   .side { position: static; }
-  .stage { padding: 10px; border-radius: 16px; }
+  .sd { padding-top: 16px; }
+  .sd-lead { font-size: 15.5px; }
+  .stage { margin-top: 16px; padding: 0; border-radius: 0; background: transparent; }
+  .stage .paper-fit { border-radius: 10px; box-shadow: var(--shadow); }
+  .stage .paper-scaler { box-shadow: none; }
+  .cta, .tips { padding: 18px; }
   .rel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .m-cta { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: block; padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
            background: rgba(245,243,238,.95); backdrop-filter: blur(12px); border-top: 1px solid var(--line); }
@@ -48,7 +57,7 @@
     <div class="sd-grid">
       <div>
         <h1>{{ sample.profession }} rezyume namunasi</h1>
-        <p class="sd-lead">Tayyor namuna — faqat ismingiz, telefon va ish joylaringizni yozasiz. 2 daqiqada PDF tayyor.</p>
+        <p class="sd-lead">Tayyor namuna — o'zingiz haqingizda qisqa yozasiz, AI uni siz uchun to'ldiradi. 2 daqiqada PDF tayyor.</p>
         <div class="stage">
           <div class="paper-fit"><div class="paper-scaler">{% include template_partial %}</div></div>
         </div>
@@ -57,18 +66,23 @@
       <aside class="side">
         <div class="cta">
           <h2>Shu namunadan o'zingiznikini yarating</h2>
-          <p>Namuna nusxalanadi — keyin oddiy formada o'zgartirasiz.</p>
-          <ul><li>AI kerak emas, limitdan ketmaydi</li><li>Birinchi PDF — bepul</li><li>12 ta shablonga bir bosishda almashtirasiz</li></ul>
-          <form method="post" action="{% url 'sample_use' sample.slug %}">{% csrf_token %}<button class="btn btn-accent btn-lg btn-block">✍️ Shu namunadan boshlash</button></form>
+          <p>Namuna nusxalanadi — keyin o'zingizniki bilan almashtirasiz.</p>
+          <ul>
+            <li>{% icon "sparkles" 15 %}<span><b>AI bilan to'ldirish</b> — o'zingiz haqingizda yozing, AI rezyumeni tayyorlaydi ({{ site.free_improve_limit }} marta bepul)</span></li>
+            <li>{% icon "edit" 15 %}<span>Yoki qo'lda tahrirlang — cheksiz va bepul</span></li>
+            <li>{% icon "download" 15 %}<span>Birinchi PDF — bepul</span></li>
+            <li>{% icon "layout" 15 %}<span>12 ta shablonga bir bosishda almashtirasiz</span></li>
+          </ul>
+          <form method="post" action="{% url 'sample_use' sample.slug %}">{% csrf_token %}<button class="btn btn-accent btn-lg btn-block">{% icon "file-text" 18 %} Shu namunadan boshlash</button></form>
         </div>
         {% if paragraphs %}
         <div class="tips">
-          <h2>💡 {{ sample.profession }} rezyumesida nima muhim</h2>
+          <h2><span class="ic-tile accent">{% icon "info" 16 %}</span>{{ sample.profession }} rezyumesida nima muhim</h2>
           {% for p in paragraphs %}<p>{{ p }}</p>{% endfor %}
         </div>
         {% endif %}
         <div class="tips">
-          <h2>🧭 Foydali qo'llanmalar</h2>
+          <h2><span class="ic-tile">{% icon "file-text" 16 %}</span>Foydali qo'llanmalar</h2>
           <p><a class="link" href="/qollanma/#tajribasiz" style="text-decoration:underline;">Tajriba yo'q bo'lsa nima yoziladi?</a></p>
           <p><a class="link" href="/qollanma/#topshirish" style="text-decoration:underline;">HR'ga qanday yuborish kerak — namuna xabar</a></p>
           <p><a class="link" href="/qollanma/#suhbat" style="text-decoration:underline;">Suhbatga qanday tayyorlanish kerak</a></p>
@@ -87,11 +101,11 @@
         </a>
         {% endfor %}
       </div>
-      <p style="margin-top:18px;"><a href="/namunalar/" class="btn btn-light">Barcha namunalar →</a></p>
+      <p style="margin-top:18px;"><a href="/namunalar/" class="btn btn-light">Barcha namunalar {% icon "arrow-right" 16 %}</a></p>
     </section>
     {% endif %}
   </div>
 </div>
-<div class="m-cta"><form method="post" action="{% url 'sample_use' sample.slug %}">{% csrf_token %}<button class="btn btn-accent">✍️ Shu namunadan boshlash</button></form></div>
+<div class="m-cta"><form method="post" action="{% url 'sample_use' sample.slug %}">{% csrf_token %}<button class="btn btn-accent">{% icon "file-text" 18 %} Shu namunadan boshlash</button></form></div>
 <script type="application/ld+json">{{ breadcrumbs_json }}</script>
 {% endblock %}
