@@ -74,6 +74,11 @@ def save_reaction(request, cv, value):
     return gift.thanks_text
 
 
+def mark_shown(request, cv):
+    """Tabrik oynasi ko'rsatildi — ikkinchi marta ochilmaydi."""
+    LuckyGrant.objects.filter(user=request.user, cv=cv, shown=False).update(shown=True)
+
+
 def mark_downloaded(user, cv):
     if getattr(cv, "lucky_pdf", False) and getattr(user, "is_authenticated", False):
         LuckyGrant.objects.filter(user=user, cv=cv, downloaded=False).update(downloaded=True, template_code=cv.selected_template)

@@ -339,13 +339,14 @@ class BroadcastTests(TestCase):
 
         self.client.post(reverse("panel:lucky"), {
             "is_active": "on", "audience": "new", "new_user_days": "5", "daily_limit": "50",
-            "title": "Bugun sizning kuningiz!", "text": "Istalgan shablonda PDF oling.",
-            "reactions": "😊 Zo'r\n🙂 Kerak emas", "thanks_text": "Rahmat!"})
+            "title": "Bugun sizning kuningiz!", "text": "Istalgan shablonda PDF oling.", "button_label": "Olish",
+            "reactions": "😊 Zo'r\n🙂 Kerak emas", "thanks_text": "Rahmat!", "show_popup": "on", "confetti": "on"})
         gift = LuckyGift.load()
         self.assertEqual((gift.is_active, gift.audience, gift.title, gift.options), (True, "new", "Bugun sizning kuningiz!", ["😊 Zo'r", "🙂 Kerak emas"]))
+        self.assertFalse(gift.sound)  # belgilanmagan katakcha — o'chadi
         self.assertContains(self.client.post(reverse("panel:lucky"), {
             "is_active": "on", "audience": "all", "new_user_days": "3", "daily_limit": "0", "title": "T", "text": "x",
-            "reactions": "a\nb\nc\nd\ne", "thanks_text": "ok"}), "Ko&#x27;pi bilan 4 ta tugma")
+            "button_label": "Olish", "reactions": "a\nb\nc\nd\ne", "thanks_text": "ok"}), "Ko&#x27;pi bilan 4 ta tugma")
 
     def test_only_superuser(self):
         helper = User.objects.create_user(username="helper", is_staff=True)

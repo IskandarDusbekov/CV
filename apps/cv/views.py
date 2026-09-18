@@ -93,6 +93,9 @@ def lucky_reaction(request, cv_id):
     cv = _private_cv(request, cv_id, staff_ok=False)
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Avval kiring."}, status=401)
+    if request.POST.get("action") == "shown":
+        lucky.mark_shown(request, cv)
+        return JsonResponse({"ok": True})
     thanks = lucky.save_reaction(request, cv, request.POST.get("value", "").strip())
     return JsonResponse({"ok": bool(thanks), "thanks": thanks})
 

@@ -169,6 +169,11 @@ class LuckyGift(models.Model):
         "Javob tugmalari", default="😊 Men ham xursandman\n🙏 Rahmat\n🙂 Menga kerak emas",
         help_text="Har qatorda bitta tugma. Kim nimani bosgani shu bo'limda ko'rinadi.")
     thanks_text = models.CharField("Javobdan keyingi matn", max_length=200, default="Rahmat! Fikringiz biz uchun muhim 💚")
+    button_label = models.CharField("Tugma matni", max_length=60, default="Sovg'ani olish — PDF")
+    show_popup = models.BooleanField("Ekran o'rtasida chiqsin", default=True,
+                                     help_text="Rezyume tayyor bo'lishi bilan bir marta ochiladi. O'chirilsa — faqat yon tomondagi kartada bo'ladi.")
+    confetti = models.BooleanField("Salyut animatsiyasi", default=True)
+    sound = models.BooleanField("Salyut ovozi", default=True, help_text="Telefon ovozi o'chiq bo'lsa yoki brauzer ruxsat bermasa — jim ochiladi")
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -211,6 +216,7 @@ class LuckyGrant(models.Model):
     cv = models.ForeignKey(CV, on_delete=models.CASCADE, related_name="lucky_grants")
     reaction = models.CharField("Javobi", max_length=60, blank=True)
     downloaded = models.BooleanField("Yuklab oldi", default=False)
+    shown = models.BooleanField("Tabrik ko'rsatilgan", default=False)
     template_code = models.CharField(max_length=50, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     reacted_at = models.DateTimeField(null=True, blank=True)

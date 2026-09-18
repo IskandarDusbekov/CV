@@ -547,6 +547,26 @@ class LuckyGiftTests(TestCase):
         self.assertEqual(LuckyGrant.objects.count(), 1)
         self.assertEqual(self.client.get(reverse("download_pdf", args=[other.public_id])).status_code, 302)
 
+    def test_popup_appears_once_and_can_be_switched_off(self):
+        from .models import LuckyGrant
+
+        cv = self._cv()
+        page = self.client.get(reverse("cv_preview", args=[cv.public_id]))
+        self.assertContains(page, 'id="lk-modal"')
+        self.assertContains(page, 'data-confetti="1"')
+
+        url = reverse("lucky_reaction", args=[cv.public_id])
+        self.client.post(url, {"action": "shown"})
+        self.assertTrue(LuckyGrant.objects.get().shown)
+        self.assertNotContains(self.client.get(reverse("cv_preview", args=[cv.public_id])), 'id="lk-modal"')
+        self.assertContains(self.client.get(reverse("cv_preview", args=[cv.public_id])), self.gift.title)  # yon kartada qoladi
+
+        LuckyGrant.objects.update(shown=False)
+        self.gift.show_popup = False
+        self.gift.sound = False
+        self.gift.save()
+        self.assertNotContains(self.client.get(reverse("cv_preview", args=[cv.public_id])), 'id="lk-modal"')
+
     def test_reaction_is_saved_once(self):
         cv = self._cv()
         self.client.get(reverse("cv_preview", args=[cv.public_id]))

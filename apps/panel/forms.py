@@ -141,7 +141,8 @@ class BroadcastForm(StyledMixin, forms.ModelForm):
 class LuckyGiftForm(StyledMixin, forms.ModelForm):
     class Meta:
         model = LuckyGift
-        fields = ("is_active", "audience", "new_user_days", "daily_limit", "title", "text", "reactions", "thanks_text")
+        fields = ("is_active", "audience", "new_user_days", "daily_limit", "title", "text", "button_label", "reactions",
+                  "thanks_text", "show_popup", "confetti", "sound")
         widgets = {"text": forms.Textarea(attrs={"rows": 5}), "reactions": forms.Textarea(attrs={"rows": 4})}
 
     def clean_reactions(self):

@@ -123,6 +123,32 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
 .lucky-re button:hover { background: rgba(255,255,255,.14); }
 .lucky-re button.on { background: var(--lime); border-color: var(--lime); color: var(--ink); }
 .lucky-thanks { margin-top: 12px; font-size: 13.5px; font-weight: 700; color: var(--lime); }
+
+/* Tabrik oynasi — rezyume tayyor bo'lgach bir marta */
+.lk-modal { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 16px;
+            background: rgba(10,11,13,.72); backdrop-filter: blur(6px); opacity: 0; transition: opacity .25s; }
+.lk-modal.show { opacity: 1; }
+.lk-canvas { position: fixed; inset: 0; pointer-events: none; }
+.lk-card { position: relative; z-index: 2; width: 100%; max-width: 440px; padding: 28px 24px 22px; border-radius: 26px; text-align: center;
+           background: linear-gradient(180deg, #1c1e24, #131418); color: #fff; box-shadow: 0 40px 90px -30px rgba(0,0,0,.8);
+           transform: translateY(18px) scale(.96); transition: transform .35s cubic-bezier(.2,.9,.3,1.2); }
+.lk-modal.show .lk-card { transform: none; }
+.lk-badge { display: grid; place-items: center; width: 62px; height: 62px; margin: 0 auto 14px; border-radius: 20px; background: var(--lime); color: var(--ink);
+            animation: lk-pop .5s .1s both cubic-bezier(.2,.9,.3,1.5); }
+@keyframes lk-pop { from { transform: scale(.4) rotate(-12deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.lk-card h2 { font-size: 23px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; }
+.lk-card p { margin-top: 10px; font-size: 14.5px; line-height: 1.55; color: #c9cad0; }
+.lk-card p b { color: #fff; }
+.lk-card .btn { margin-top: 18px; }
+.lk-re { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.12); }
+.lk-re button { padding: 9px 13px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; background: rgba(255,255,255,.06); color: #fff;
+                font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.lk-re button:hover { background: rgba(255,255,255,.15); }
+.lk-re button.on { background: var(--lime); border-color: var(--lime); color: var(--ink); }
+.lk-close { margin-top: 12px; padding: 6px; border: 0; background: none; color: #8e9098; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.lk-close:hover { color: #fff; }
+@media (max-width: 480px) { .lk-card { padding: 22px 18px 18px; } .lk-card h2 { font-size: 20px; } }
+@media (prefers-reduced-motion: reduce) { .lk-card, .lk-modal, .lk-badge { transition: none; animation: none; } }
 .tg-only { display: none !important; }
 .in-telegram .dl-btn.tg-only { display: flex !important; }
 .rail > *, .stage > [id] { scroll-margin-top: 84px; }
@@ -245,7 +271,7 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
         <div class="lucky r-lucky" id="lucky">
           <h2><span class="ic-tile">{% icon "gift" 17 %}</span>{{ lucky_gift.title }}</h2>
           {% for p in lucky_gift.paragraphs %}<p>{{ p|safe }}</p>{% endfor %}
-          <a href="/cv/download/{{ cv.public_id }}/" class="btn btn-block btn-lg" style="background:var(--lime);color:var(--ink);" data-dl="{{ cv.public_id }}:pdf">{% icon "download" 18 %} Sovg'ani olish — PDF</a>
+          <a href="/cv/download/{{ cv.public_id }}/" class="btn btn-block btn-lg" style="background:var(--lime);color:var(--ink);" data-dl="{{ cv.public_id }}:pdf">{% icon "download" 18 %} {{ lucky_gift.button_label }}</a>
           {% if lucky_gift.options %}
           <div class="lucky-re" id="lucky-re" data-url="{% url 'lucky_reaction' cv.public_id %}">
             {% for option in lucky_gift.options %}
@@ -416,6 +442,26 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
   </div>
 </div>
 
+{% if lucky_grant and lucky_gift.show_popup and not lucky_grant.shown %}
+<div class="lk-modal" id="lk-modal" role="dialog" aria-modal="true" aria-labelledby="lk-title"
+     data-url="{% url 'lucky_reaction' cv.public_id %}" data-confetti="{{ lucky_gift.confetti|yesno:'1,0' }}" data-sound="{{ lucky_gift.sound|yesno:'1,0' }}">
+  <canvas class="lk-canvas" id="lk-canvas"></canvas>
+  <div class="lk-card">
+    <div class="lk-badge">{% icon "gift" 30 "" "1.8" %}</div>
+    <h2 id="lk-title">{{ lucky_gift.title }}</h2>
+    {% for p in lucky_gift.paragraphs %}<p>{{ p|safe }}</p>{% endfor %}
+    <a href="/cv/download/{{ cv.public_id }}/" class="btn btn-block btn-lg" style="background:var(--lime);color:var(--ink);" data-dl="{{ cv.public_id }}:pdf">{% icon "download" 18 %} {{ lucky_gift.button_label }}</a>
+    {% if lucky_gift.options %}
+    <div class="lk-re" id="lk-re">
+      {% for option in lucky_gift.options %}<button type="button" value="{{ option }}">{{ option }}</button>{% endfor %}
+    </div>
+    <div class="lucky-thanks" id="lk-thanks" hidden>{{ lucky_gift.thanks_text }}</div>
+    {% endif %}
+    <button type="button" class="lk-close" id="lk-close">Keyinroq ko'raman</button>
+  </div>
+</div>
+{% endif %}
+
 {# Telefonda pastda doim turadigan qisqa panel — rezyumeni ko'rishga xalal bermaydi #}
 <div class="m-bar">
   {% if not is_staff_view %}<a href="{% url 'cv_edit' cv.public_id %}" class="btn btn-light">{% icon "edit" 17 %} Tahrirlash</a>{% endif %}
@@ -462,6 +508,126 @@ function removePhoto() {
     });
   });
 })();
+// ── Tabrik oynasi: salyut animatsiyasi va ovozi ──────────────────────────────
+(function () {
+  var modal = document.getElementById('lk-modal');
+  if (!modal) return;
+  var canvas = document.getElementById('lk-canvas');
+  var calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function post(data) {
+    var fd = new FormData();
+    Object.keys(data).forEach(function (k) { fd.append(k, data[k]); });
+    fd.append('csrfmiddlewaretoken', csrf());
+    return fetch(modal.dataset.url, { method: 'POST', body: fd, credentials: 'same-origin' })
+      .then(function (r) { return r.json(); }).catch(function () { return {}; });
+  }
+
+  // Salyut: har bir portlash — bir nuqtadan turli tomonga uchadigan rangli parchalar
+  function fireworks() {
+    if (calm || modal.dataset.confetti !== '1') return;
+    var ctx = canvas.getContext('2d'), parts = [], colors = ['#d9f36a', '#ff5b2e', '#ffffff', '#22c55e', '#38bdf8', '#f59e0b'];
+    function size() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    size();
+    window.addEventListener('resize', size);
+
+    function burst(x, y) {
+      for (var i = 0; i < 70; i++) {
+        var angle = Math.random() * Math.PI * 2, speed = 2 + Math.random() * 5.5;
+        parts.push({ x: x, y: y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                     life: 1, size: 2 + Math.random() * 3, color: colors[(Math.random() * colors.length) | 0], spin: Math.random() * 6 });
+      }
+    }
+    function frame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      parts = parts.filter(function (p) { return p.life > 0; });
+      parts.forEach(function (p) {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.09; p.vx *= 0.99; p.life -= 0.012; p.spin += 0.2;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.translate(p.x, p.y); ctx.rotate(p.spin);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.8);
+        ctx.restore();
+      });
+      if (parts.length) requestAnimationFrame(frame); else ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    [[0, .5, .35], [420, .25, .45], [760, .75, .3], [1150, .5, .5]].forEach(function (b) {
+      setTimeout(function () { burst(canvas.width * b[1], canvas.height * b[2]); if (parts.length) frame(); }, b[0]);
+    });
+  }
+
+  // Ovoz fayl emas — brauzerning o'zi chizadi (uchish hushtagi + portlash + chirsillash)
+  var audio = null;
+  function salute() {
+    if (modal.dataset.sound !== '1') return;
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      audio = audio || new Ctx();
+      if (audio.state === 'suspended') { audio.resume(); }
+      if (audio.state !== 'running') return false;
+      var noise = audio.createBuffer(1, audio.sampleRate * 2, audio.sampleRate), data = noise.getChannelData(0);
+      for (var i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+
+      function boom(at, volume) {
+        var src = audio.createBufferSource(); src.buffer = noise;
+        var filter = audio.createBiquadFilter(); filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1800, at); filter.frequency.exponentialRampToValueAtTime(220, at + 0.5);
+        var gain = audio.createGain();
+        gain.gain.setValueAtTime(0.0001, at);
+        gain.gain.exponentialRampToValueAtTime(volume, at + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.75);
+        src.connect(filter); filter.connect(gain); gain.connect(audio.destination);
+        src.start(at); src.stop(at + 0.9);
+      }
+      function whistle(at) {
+        var osc = audio.createOscillator(), gain = audio.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(420, at); osc.frequency.exponentialRampToValueAtTime(1500, at + 0.35);
+        gain.gain.setValueAtTime(0.0001, at);
+        gain.gain.exponentialRampToValueAtTime(0.06, at + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.4);
+        osc.connect(gain); gain.connect(audio.destination);
+        osc.start(at); osc.stop(at + 0.45);
+      }
+      var now = audio.currentTime;
+      whistle(now); boom(now + 0.4, 0.28);
+      whistle(now + 0.45); boom(now + 0.85, 0.2);
+      boom(now + 1.25, 0.16);
+      return true;
+    } catch (e) { return false; }
+  }
+
+  requestAnimationFrame(function () { modal.classList.add('show'); });
+  fireworks();
+  if (salute() === false) {
+    // Brauzer avtomatik ovozga ruxsat bermadi — birinchi bosishda chalamiz
+    document.addEventListener('pointerdown', function once() { salute(); document.removeEventListener('pointerdown', once); }, { once: true });
+  }
+  post({ action: 'shown' });
+
+  function close() {
+    modal.classList.remove('show');
+    setTimeout(function () { modal.remove(); }, 250);
+  }
+  document.getElementById('lk-close').addEventListener('click', close);
+  modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.body.contains(modal)) close(); });
+
+  var re = document.getElementById('lk-re');
+  if (re) re.querySelectorAll('button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      re.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+      btn.classList.add('on');
+      post({ value: btn.value }).then(function (d) {
+        if (d.thanks) { var t = document.getElementById('lk-thanks'); t.textContent = d.thanks; t.hidden = false; }
+        setTimeout(close, 1400);
+      });
+    });
+  });
+})();
+
 (function () {
   var box = document.getElementById('lucky-re');
   if (!box) return;

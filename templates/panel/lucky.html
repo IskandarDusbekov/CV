@@ -50,8 +50,18 @@
       <div class="fs-grid">
         <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.title %}</div>
         <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.text %}</div>
+        {% include "panel/_field.html" with field=form.button_label %}
+        {% include "panel/_field.html" with field=form.thanks_text %}
         <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.reactions %}</div>
-        <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.thanks_text %}</div>
+      </div>
+    </div>
+    <div class="fs">
+      <h3>{% icon "sparkles" %} Ko'rinishi</h3>
+      <div class="fs-grid">
+        {% include "panel/_field.html" with field=form.show_popup %}
+        <div></div>
+        {% include "panel/_field.html" with field=form.confetti %}
+        {% include "panel/_field.html" with field=form.sound %}
       </div>
     </div>
     <div class="save"><button class="btn btn-lg">{% icon "check" %} Saqlash</button></div>
@@ -64,10 +74,11 @@
         <div class="prev">
           <h3>{% icon "gift" 17 %} {{ gift.title }}</h3>
           {% for p in gift.paragraphs %}<p>{{ p|safe }}</p>{% endfor %}
-          <span class="go">{% icon "download" 15 %} Sovg'ani olish — PDF</span>
+          <span class="go">{% icon "download" 15 %} {{ gift.button_label }}</span>
           {% if gift.options %}<div class="re">{% for o in gift.options %}<span>{{ o }}</span>{% endfor %}</div>{% endif %}
         </div>
-        <p class="note" style="margin-top:12px;">{% icon "lightbulb" %} Sovg'a faqat PDF: Word va cheksiz yuklash baribir kredit yoki Pro bilan. Fayl pastidagi sayt nomi <a class="link" href="{% url 'panel:settings' %}#site">Sozlamalar</a> dagi sayt nomidan olinadi.</p>
+        <p class="note" style="margin-top:12px;">{% icon "sparkles" %} {% if gift.show_popup %}Rezyume tayyor bo'lishi bilan shu oyna ekran o'rtasida bir marta ochiladi{% if gift.confetti %}, salyut animatsiyasi bilan{% endif %}{% if gift.sound %} va ovoz chalinadi{% endif %}. Keyin yon tomondagi kartada qoladi.{% else %}Oyna o'chirilgan — sovg'a faqat rezyume yonidagi kartada ko'rinadi.{% endif %}</p>
+        <p class="note" style="margin-top:8px;">{% icon "lightbulb" %} Sovg'a faqat PDF: Word va cheksiz yuklash baribir kredit yoki Pro bilan. Fayl pastidagi sayt nomi <a class="link" href="{% url 'panel:settings' %}#site">Sozlamalar</a> dagi sayt nomidan olinadi.</p>
       </div>
     </div>
 
