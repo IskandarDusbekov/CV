@@ -504,6 +504,89 @@ class ImproveWithAITests(TestCase):
         self.assertEqual(self.client.post(url, editor_post(DEMO_CV_JSON)).status_code, 404)
 
 
+class LuckyGiftTests(TestCase):
+    def setUp(self):
+        from .models import LuckyGift
+
+        self.gift = LuckyGift.load()
+        self.gift.is_active = True
+        self.gift.save()
+        self.user = User.objects.create_user(username="lucky", first_name="Aziza")
+        self.client.force_login(self.user)
+
+    def _cv(self, template="bold", **kw):
+        return CV.objects.create(user=self.user, raw_input_text="x", cv_json=DEMO_CV_JSON, selected_template=template, **kw)
+
+    @mock.patch("apps.cv.views.render_cv_to_pdf", return_value=b"%PDF-1.7")
+    def test_gift_opens_any_template_with_watermark_but_not_word(self, _):
+        from .models import LuckyGrant
+
+        cv = self._cv("bold")  # Pro shablon — sovg'asiz yopiq bo'lardi
+        page = self.client.get(reverse("cv_preview", args=[cv.public_id]))
+        self.assertContains(page, self.gift.title)
+        self.assertContains(page, "Men ham xursandman")
+        grant = LuckyGrant.objects.get()
+        self.assertEqual((grant.user_id, grant.cv_id, grant.downloaded), (self.user.pk, cv.pk, False))
+
+        self.assertEqual(self.client.get(reverse("download_pdf", args=[cv.public_id]))["Content-Type"], "application/pdf")
+        cv.refresh_from_db()
+        self.user.profile.refresh_from_db()
+        grant.refresh_from_db()
+        self.assertTrue(grant.downloaded)
+        self.assertEqual(self.user.profile.free_pdf_used, 0)  # bepul PDF saqlanib qoladi
+        self.assertFalse(cv.free_pdf)
+        self.assertEqual(self.client.get(reverse("download_docx", args=[cv.public_id])).status_code, 302)  # Word baribir yopiq
+
+        from .services import build_cv_context
+
+        self.assertTrue(build_cv_context(cv, self.user)["show_watermark"])  # sovg'ada sayt belgisi doim bor
+
+        # Ikkinchi rezyumega sovg'a berilmaydi
+        other = self._cv("dark")
+        self.client.get(reverse("cv_preview", args=[other.public_id]))
+        self.assertEqual(LuckyGrant.objects.count(), 1)
+        self.assertEqual(self.client.get(reverse("download_pdf", args=[other.public_id])).status_code, 302)
+
+    def test_reaction_is_saved_once(self):
+        cv = self._cv()
+        self.client.get(reverse("cv_preview", args=[cv.public_id]))
+        url = reverse("lucky_reaction", args=[cv.public_id])
+        self.assertEqual(self.client.post(url, {"value": "🙏 Rahmat"}).json()["thanks"], self.gift.thanks_text)
+        self.client.post(url, {"value": "😊 Men ham xursandman"})
+        self.assertEqual(self.client.post(url, {"value": "boshqa"}).json()["ok"], False)
+        from .models import LuckyGrant
+
+        self.assertEqual(LuckyGrant.objects.get().reaction, "🙏 Rahmat")
+
+    def test_switched_off_audience_and_daily_limit(self):
+        from .models import LuckyGift, LuckyGrant
+
+        self.gift.is_active = False
+        self.gift.save()
+        cv = self._cv()
+        self.client.get(reverse("cv_preview", args=[cv.public_id]))
+        self.assertFalse(LuckyGrant.objects.exists())
+
+        self.gift.is_active = True
+        self.gift.audience = LuckyGift.AUDIENCE_NOT_PAID
+        self.gift.save()
+        UserProfile.objects.filter(user=self.user).update(credits=2)
+        self.client.get(reverse("cv_preview", args=[cv.public_id]))
+        self.assertFalse(LuckyGrant.objects.exists())  # to'lagan odamga sovg'a yo'q
+
+        UserProfile.objects.filter(user=self.user).update(credits=0)
+        self.gift.daily_limit = 1
+        self.gift.save()
+        other = User.objects.create_user(username="second")
+        LuckyGrant.objects.create(user=other, cv=CV.objects.create(user=other, raw_input_text="x", cv_json=DEMO_CV_JSON))
+        self.client.get(reverse("cv_preview", args=[cv.public_id]))
+        self.assertEqual(LuckyGrant.objects.filter(user=self.user).count(), 0)  # kunlik chegara to'lgan
+
+        self.gift.daily_limit = 5
+        self.gift.save()
+        self.assertContains(self.client.get(reverse("cv_preview", args=[cv.public_id])), self.gift.title)
+
+
 class InterfaceTests(TestCase):
     def test_icon_tag_and_cabinet_button(self):
         from apps.core.templatetags.ui import icon

@@ -108,6 +108,21 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
 .pro-note { padding: 10px 12px; border-radius: 12px; background: #fff7ed; border: 1px solid #fed7aa; font-size: 13px; line-height: 1.5; color: #9a3412; }
 .pro-note a { text-decoration: underline; font-weight: 700; }
 .invite { background: linear-gradient(135deg, #f0fdf4, #fff); border-color: #bbf7d0; }
+/* «Baxtli foydalanuvchi» sovg'asi */
+.lucky { position: relative; overflow: hidden; padding: 20px; border-radius: 20px; background: var(--ink); color: #fff; }
+.lucky::after { content: ""; position: absolute; right: -70px; top: -70px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(217,243,106,.35), transparent 70%); }
+.lucky > * { position: relative; z-index: 1; }
+.lucky h2 { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; letter-spacing: -.02em; line-height: 1.25; }
+.lucky h2 .ic-tile { background: var(--lime); color: var(--ink); }
+.lucky p { margin-top: 10px; font-size: 14px; line-height: 1.55; color: #c9cad0; }
+.lucky p b { color: #fff; }
+.lucky .btn { margin-top: 14px; }
+.lucky-re { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.12); }
+.lucky-re button { padding: 8px 12px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; background: rgba(255,255,255,.06); color: #fff;
+                   font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.lucky-re button:hover { background: rgba(255,255,255,.14); }
+.lucky-re button.on { background: var(--lime); border-color: var(--lime); color: var(--ink); }
+.lucky-thanks { margin-top: 12px; font-size: 13.5px; font-weight: 700; color: var(--lime); }
 .tg-only { display: none !important; }
 .in-telegram .dl-btn.tg-only { display: flex !important; }
 .rail > *, .stage > [id] { scroll-margin-top: 84px; }
@@ -131,8 +146,9 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
   .pv-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
   .rail { position: static; gap: 12px; }
   /* Telefonda: rezyume → yetishmayotgan ma'lumot → yuklab olish → moslashtirish → ochish → qolganlari */
-  .r-details { order: 1; } .r-download { order: 2; } .r-tailor { order: 3; } .r-unlock { order: 4; }
+  .r-lucky { order: 0; } .r-details { order: 1; } .r-download { order: 2; } .r-tailor { order: 3; } .r-unlock { order: 4; }
   .r-invite { order: 5; } .r-photo { order: 6; } .r-share { order: 7; }
+  .lucky { padding: 16px; border-radius: 18px; }
   .stage { padding: 0; border-radius: 0; background: transparent; }
   .stage .paper-fit { border-radius: 10px; box-shadow: var(--shadow); }
   .stage .paper-scaler { box-shadow: none; }
@@ -167,6 +183,7 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
     </div>
 
     <nav class="quick" aria-label="Bo'limlar">
+      {% if lucky_grant %}<a href="#lucky" class="hot">{% icon "gift" 16 %}Sovg'a</a>{% endif %}
       {% if not is_staff_view %}<a href="#tpl-strip">{% icon "palette" 16 %}Shablon</a>{% endif %}
       <a href="#download" class="hot">{% icon "download" 16 %}Yuklab olish</a>
       <a href="#tailor">{% icon "target" 16 %}Vakansiyaga moslash</a>
@@ -203,11 +220,11 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
         {% endwith %}
         {% endif %}
         {% if not is_unlocked %}
-        <div class="locked-ribbon">{% if pdf_access == "free_available" or pdf_access == "login" %}{% icon "gift" 16 %} Birinchi PDF — <b>bepul</b>. «Bepul» belgili shablonda yuklab oling{% elif pdf_access == "free" %}{% icon "check-circle" 16 %} Bu rezyume uchun PDF bepul ochilgan. Word va Pro shablonlar — <b>1 kredit</b>{% else %}{% icon "eye" 16 %} Bu to'liq ko'rinish. Yuklab olish uchun rezyumeni <b>1 kredit</b> bilan oching{% if credit_packs %} — {{ credit_packs.0.price|money }} so'mdan{% endif %}{% endif %}.</div>
+        <div class="locked-ribbon">{% if pdf_access == "lucky" %}{% icon "gift" 16 %} Sovg'a sizniki: <b>istalgan shablonda</b> PDF yuklab oling — faylda sayt nomi qoladi{% elif pdf_access == "free_available" or pdf_access == "login" %}{% icon "gift" 16 %} Birinchi PDF — <b>bepul</b>. «Bepul» belgili shablonda yuklab oling{% elif pdf_access == "free" %}{% icon "check-circle" 16 %} Bu rezyume uchun PDF bepul ochilgan. Word va Pro shablonlar — <b>1 kredit</b>{% else %}{% icon "eye" 16 %} Bu to'liq ko'rinish. Yuklab olish uchun rezyumeni <b>1 kredit</b> bilan oching{% if credit_packs %} — {{ credit_packs.0.price|money }} so'mdan{% endif %}{% endif %}.</div>
         {% endif %}
         {% if not is_staff_view %}
         <div class="tpl-strip" id="tpl-strip">
-          <div class="tpl-strip-h"><b style="display:flex;align-items:center;gap:7px;">{% icon "palette" 17 %} Shablonni tanlang</b><span><i class="lg-free"></i>Bepul <i class="lg-pro"></i>Pro</span></div>
+          <div class="tpl-strip-h"><b style="display:flex;align-items:center;gap:7px;">{% icon "palette" 17 %} Shablonni tanlang</b>{% if pdf_access == "lucky" %}<span class="badge badge-free">{% icon "gift" 12 "" "2.5" %} Sovg'a bilan Pro shablonlar ham ochiq</span>{% else %}<span><i class="lg-free"></i>Bepul <i class="lg-pro"></i>Pro</span>{% endif %}</div>
           <form method="post" action="/cv/template/{{ cv.public_id }}/change/" class="strip">
             {% csrf_token %}
             {% for t in template_choices %}
@@ -224,6 +241,22 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
       </div>
 
       <aside class="rail">
+        {% if lucky_grant %}
+        <div class="lucky r-lucky" id="lucky">
+          <h2><span class="ic-tile">{% icon "gift" 17 %}</span>{{ lucky_gift.title }}</h2>
+          {% for p in lucky_gift.paragraphs %}<p>{{ p|safe }}</p>{% endfor %}
+          <a href="/cv/download/{{ cv.public_id }}/" class="btn btn-block btn-lg" style="background:var(--lime);color:var(--ink);" data-dl="{{ cv.public_id }}:pdf">{% icon "download" 18 %} Sovg'ani olish — PDF</a>
+          {% if lucky_gift.options %}
+          <div class="lucky-re" id="lucky-re" data-url="{% url 'lucky_reaction' cv.public_id %}">
+            {% for option in lucky_gift.options %}
+            <button type="button" value="{{ option }}" class="{% if lucky_grant.reaction == option %}on{% endif %}" {% if lucky_grant.reaction %}disabled{% endif %}>{{ option }}</button>
+            {% endfor %}
+          </div>
+          <div class="lucky-thanks" id="lucky-thanks" {% if not lucky_grant.reaction %}hidden{% endif %}>{{ lucky_gift.thanks_text }}</div>
+          {% endif %}
+        </div>
+        {% endif %}
+
         {% if missing_details %}
         <div class="box details r-details" id="details">
           <div class="box-h"><h2><span class="ic-tile accent">{% icon "edit" 16 %}</span>{{ missing_details|length }} ta ma'lumot yetishmayapti</h2></div>
@@ -245,10 +278,10 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
         <div class="box r-download" id="download">
           <div class="box-h"><h2><span class="ic-tile dark">{% icon "download" 16 %}</span>Yuklab olish</h2>{% if pdf_access == "free_available" %}<span class="badge badge-free">{% icon "gift" 12 "" "2.5" %} {{ free_pdf_left }} ta bepul</span>{% endif %}</div>
           <div class="dl">
-            {% if pdf_access == "full" or pdf_access == "free" or pdf_access == "free_available" %}
+            {% if pdf_access == "full" or pdf_access == "free" or pdf_access == "free_available" or pdf_access == "lucky" %}
               <a href="/cv/download/{{ cv.public_id }}/" class="dl-btn" data-loading data-dl="{{ cv.public_id }}:pdf">
                 <span class="ic" style="background:#e5484d;">PDF</span>
-                <span><b>PDF yuklab olish{% if pdf_access != "full" %} — bepul{% endif %}</b><small>{% if pdf_access == "full" %}Toza, chop etishga tayyor{% elif pdf_access == "free" %}Bu rezyume uchun bepul ochilgan{% else %}Bosing — bepul PDF shu rezyumega beriladi{% endif %}</small></span>
+                <span><b>PDF yuklab olish{% if pdf_access != "full" %} — bepul{% endif %}</b><small>{% if pdf_access == "full" %}Toza, chop etishga tayyor{% elif pdf_access == "lucky" %}Sovg'a: istalgan shablonda, sayt belgisi bilan{% elif pdf_access == "free" %}Bu rezyume uchun bepul ochilgan{% else %}Bosing — bepul PDF shu rezyumega beriladi{% endif %}</small></span>
                 <span class="end">{% icon "download" 18 %}</span>
               </a>
               <a href="#" class="dl-btn tg-only" data-dl="{{ cv.public_id }}:pdf" data-dl-chat>
@@ -386,7 +419,9 @@ a.pp:hover { border-color: #fff; background: rgba(255,255,255,.1); }
 {# Telefonda pastda doim turadigan qisqa panel — rezyumeni ko'rishga xalal bermaydi #}
 <div class="m-bar">
   {% if not is_staff_view %}<a href="{% url 'cv_edit' cv.public_id %}" class="btn btn-light">{% icon "edit" 17 %} Tahrirlash</a>{% endif %}
-  {% if pdf_access == "full" or pdf_access == "free" or pdf_access == "free_available" %}
+  {% if pdf_access == "lucky" %}
+  <a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark" data-dl="{{ cv.public_id }}:pdf">{% icon "gift" 17 %} Sovg'a — PDF</a>
+  {% elif pdf_access == "full" or pdf_access == "free" or pdf_access == "free_available" %}
   <a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark" data-dl="{{ cv.public_id }}:pdf">{% icon "download" 17 %} PDF{% if pdf_access != "full" %} bepul{% endif %}</a>
   {% elif pdf_access == "login" %}
   <a href="{{ login_url }}" class="btn btn-dark">{% icon "download" 17 %} Bepul PDF</a>
@@ -424,6 +459,23 @@ function removePhoto() {
     b.addEventListener('click', function () {
       var input = document.getElementById(b.dataset.copyTarget);
       navigator.clipboard.writeText(input.value).then(function () { b.textContent = '✓'; setTimeout(function () { b.textContent = 'Nusxa'; }, 1500); });
+    });
+  });
+})();
+(function () {
+  var box = document.getElementById('lucky-re');
+  if (!box) return;
+  box.querySelectorAll('button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var fd = new FormData();
+      fd.append('value', btn.value);
+      fd.append('csrfmiddlewaretoken', csrf());
+      box.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+      btn.classList.add('on');
+      fetch(box.dataset.url, { method: 'POST', body: fd, credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { if (d.thanks) { var t = document.getElementById('lucky-thanks'); t.textContent = d.thanks; t.hidden = false; } })
+        .catch(function () {});
     });
   });
 })();

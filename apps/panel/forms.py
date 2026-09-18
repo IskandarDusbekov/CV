@@ -4,7 +4,7 @@ from django import forms
 from django.forms import modelformset_factory
 
 from apps.core.models import SeoPage, SiteSettings
-from apps.cv.models import ResumeSample, TemplateSetting
+from apps.cv.models import LuckyGift, ResumeSample, TemplateSetting
 from apps.cv.services import TEMPLATE_META
 from apps.users.models import Broadcast, PricingPlan, Promo
 
@@ -136,6 +136,19 @@ class BroadcastForm(StyledMixin, forms.ModelForm):
         if len([line for line in data.get("feedback_options", "").splitlines() if line.strip()]) > Broadcast.MAX_OPTIONS:
             self.add_error("feedback_options", f"Ko'pi bilan {Broadcast.MAX_OPTIONS} ta tugma.")
         return data
+
+
+class LuckyGiftForm(StyledMixin, forms.ModelForm):
+    class Meta:
+        model = LuckyGift
+        fields = ("is_active", "audience", "new_user_days", "daily_limit", "title", "text", "reactions", "thanks_text")
+        widgets = {"text": forms.Textarea(attrs={"rows": 5}), "reactions": forms.Textarea(attrs={"rows": 4})}
+
+    def clean_reactions(self):
+        lines = [line.strip() for line in self.cleaned_data["reactions"].splitlines() if line.strip()]
+        if len(lines) > LuckyGift.MAX_REACTIONS:
+            raise forms.ValidationError(f"Ko'pi bilan {LuckyGift.MAX_REACTIONS} ta tugma.")
+        return "\n".join(lines)
 
 
 class TemplateSettingForm(StyledMixin, forms.ModelForm):

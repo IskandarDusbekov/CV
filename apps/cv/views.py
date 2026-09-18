@@ -17,7 +17,7 @@ from apps.core.activity import log_activity
 from apps.core.analytics import mark_step
 from apps.users.models import CompanyBranding, PricingPlan, UserProfile
 
-from . import quotas
+from . import lucky, quotas
 from .models import CV, AIUsage, ResumeSample
 from .pdf import PdfRenderError, render_cv_to_pdf
 from .services import (
@@ -79,8 +79,22 @@ def preview(request, cv_id):
         "is_staff_view": request.user.is_staff and not _is_owner(request.user, cv),
         "missing_details": _missing_details(request, cv),
         **_referral_context(request),
+        **lucky.context(request, cv),
     })
+    # Sovg'a berilgan bo'lsa, yuklab olish huquqi ham shu yerda o'zgaradi
+    if context.get("lucky_grant"):
+        context.update(build_cv_context(cv, request.user))
     return render(request, "cv/preview.html", context)
+
+
+@require_POST
+def lucky_reaction(request, cv_id):
+    """Sovg'a ostidagi «Men ham xursandman» kabi tugmalar."""
+    cv = _private_cv(request, cv_id, staff_ok=False)
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Avval kiring."}, status=401)
+    thanks = lucky.save_reaction(request, cv, request.POST.get("value", "").strip())
+    return JsonResponse({"ok": bool(thanks), "thanks": thanks})
 
 
 def _referral_context(request):
@@ -250,6 +264,7 @@ def download_pdf(request, cv_id, inline=False):
                             status=500, content_type="text/plain; charset=utf-8")
 
     log_activity(request, "download_pdf", cv=str(cv.public_id), template=cv.selected_template)
+    lucky.mark_downloaded(request.user, cv)
     mark_step(request, "download")
     disposition = "inline" if (inline or request.GET.get("inline")) else "attachment"
     return _file_response(pdf_file, "application/pdf", _filename(cv, "pdf"), disposition)
@@ -290,7 +305,12 @@ _DL_TYPES = {
 
 
 def _pdf_denied_message(user, cv):
+    from .models import LuckyGift
+
     state = pdf_access(user, cv)
+    if state == PDF_PRO_TEMPLATE and LuckyGift.load().is_active:
+        return ("Bu Pro shablon. Sovg'a PDF sizning boshqa rezyumengizga berilgan — «Bepul» belgili shablonni tanlang "
+                "yoki rezyumeni kredit bilan oching.")
     if state == PDF_PRO_TEMPLATE:
         return "Bu Pro shablon. Bepul PDF uchun «Bepul» belgili shablonni tanlang yoki rezyumeni kredit bilan oching."
     if state == PDF_NO_FREE:

@@ -327,6 +327,26 @@ class BroadcastTests(TestCase):
         self.client.post(action, {"action": "copy"})
         self.assertEqual(self.Broadcast.objects.filter(status="draft", title="E'lon (nusxa)").count(), 1)
 
+    def test_lucky_gift_page_saves_text_and_shows_stats(self):
+        from apps.cv.models import LuckyGift, LuckyGrant
+
+        cv = CV.objects.create(user=self.fresh, raw_input_text="x", cv_json=DEMO_CV_JSON, lucky_pdf=True)
+        LuckyGrant.objects.create(user=self.fresh, cv=cv, reaction="🙏 Rahmat", downloaded=True)
+
+        page = self.client.get(reverse("panel:lucky"))
+        self.assertContains(page, "🙏 Rahmat")
+        self.assertContains(page, "Aziza")
+
+        self.client.post(reverse("panel:lucky"), {
+            "is_active": "on", "audience": "new", "new_user_days": "5", "daily_limit": "50",
+            "title": "Bugun sizning kuningiz!", "text": "Istalgan shablonda PDF oling.",
+            "reactions": "😊 Zo'r\n🙂 Kerak emas", "thanks_text": "Rahmat!"})
+        gift = LuckyGift.load()
+        self.assertEqual((gift.is_active, gift.audience, gift.title, gift.options), (True, "new", "Bugun sizning kuningiz!", ["😊 Zo'r", "🙂 Kerak emas"]))
+        self.assertContains(self.client.post(reverse("panel:lucky"), {
+            "is_active": "on", "audience": "all", "new_user_days": "3", "daily_limit": "0", "title": "T", "text": "x",
+            "reactions": "a\nb\nc\nd\ne", "thanks_text": "ok"}), "Ko&#x27;pi bilan 4 ta tugma")
+
     def test_only_superuser(self):
         helper = User.objects.create_user(username="helper", is_staff=True)
         self.client.force_login(helper)

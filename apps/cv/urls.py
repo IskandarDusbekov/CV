@@ -10,6 +10,7 @@ urlpatterns = [
     path('generate/', views.generate_cv, name='generate_cv'),
     path('preview/<uuid:cv_id>/', views.preview, name='cv_preview'),
     path('unlock/<uuid:cv_id>/', views.unlock_with_credit, name='unlock_cv'),
+    path('sovga/<uuid:cv_id>/javob/', views.lucky_reaction, name='lucky_reaction'),
     path('tailor/<uuid:cv_id>/', views.tailor_cv, name='tailor_cv'),
     path('details/<uuid:cv_id>/', views.save_details, name='cv_details'),
     path('edit/<uuid:cv_id>/', editor.edit_cv, name='cv_edit'),

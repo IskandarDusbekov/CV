@@ -36,6 +36,7 @@ urlpatterns = [
     path("namunalar/yangi/", marketing.sample_edit, name="sample_new"),
     path("namunalar/<int:pk>/", marketing.sample_edit, name="sample_edit"),
     path("namunalar/<int:pk>/ochirish/", marketing.sample_delete, name="sample_delete"),
+    path("sovga/", marketing.lucky, name="lucky"),
     path("shablonlar/", marketing.templates_view, name="templates"),
     path("seo/", marketing.seo, name="seo"),
     path("seo/<int:pk>/", marketing.seo, name="seo_page"),

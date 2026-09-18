@@ -118,6 +118,7 @@
                 <a href="/cv/preview/{{ cv.public_id }}/" class="btn btn-light btn-sm">Ochish</a>
                 <a href="/cv/edit/{{ cv.public_id }}/" class="btn btn-light btn-sm" title="Tahrirlash" aria-label="Tahrirlash">{% icon "edit" 15 %}</a>
                 {% if item.pdf_access == "full" %}<a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark btn-sm" data-dl="{{ cv.public_id }}:pdf">PDF</a><a href="/cv/download/{{ cv.public_id }}/docx/" class="btn btn-dark btn-sm" data-dl="{{ cv.public_id }}:docx">Word</a>
+                {% elif item.pdf_access == "lucky" %}<a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark btn-sm" data-dl="{{ cv.public_id }}:pdf">{% icon "gift" 14 %} Sovg'a PDF</a>
                 {% elif item.pdf_access == "free" or item.pdf_access == "free_available" %}<a href="/cv/download/{{ cv.public_id }}/" class="btn btn-dark btn-sm" data-dl="{{ cv.public_id }}:pdf">PDF bepul</a>{% endif %}
               </div>
             </div>

@@ -142,6 +142,42 @@ def templates_view(request):
     return render(request, "panel/templates.html", {"formset": formset, "rows": rows})
 
 
+# ─── «Baxtli foydalanuvchi» sovg'asi ──────────────────────────────────────────
+
+@superuser_required
+def lucky(request):
+    from apps.cv.models import LuckyGift, LuckyGrant
+
+    from .forms import LuckyGiftForm
+
+    gift = LuckyGift.load()
+    form = LuckyGiftForm(instance=LuckyGift.objects.get(pk=gift.pk))
+    if request.method == "POST":
+        form = LuckyGiftForm(request.POST, instance=LuckyGift.objects.get(pk=gift.pk))
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Saqlandi — o'zgarishlar darhol saytda ko'rinadi.")
+            return redirect("panel:lucky")
+        messages.error(request, "Formada xatolik bor.")
+        gift = form.instance
+
+    today = timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+    grants = LuckyGrant.objects.select_related("user__profile", "cv")
+    answered = dict(grants.exclude(reaction="").order_by().values_list("reaction").annotate(c=Count("id")))
+    reactions = [{"label": label, "n": answered.pop(label, 0)} for label in gift.options]
+    reactions += [{"label": label, "n": n} for label, n in answered.items()]
+    return render(request, "panel/lucky.html", {
+        "form": form,
+        "gift": gift,
+        "total": grants.count(),
+        "today": grants.filter(created_at__gte=today).count(),
+        "downloaded": grants.filter(downloaded=True).count(),
+        "reactions": reactions,
+        "reactions_total": sum(r["n"] for r in reactions),
+        "page": _page(request, grants, 30),
+    })
+
+
 # ─── SEO ──────────────────────────────────────────────────────────────────────
 
 @superuser_required

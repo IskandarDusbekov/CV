@@ -1,0 +1,108 @@
+{% extends "panel/base.html" %}
+{% load ui %}
+{% block title %}Sovg'a{% endblock %}
+{% block heading %}{% icon "gift" %} Baxtli foydalanuvchi sovg'asi{% endblock %}
+{% block subheading %}<p>Har bir foydalanuvchiga bir marta: rezyumesini <b>istalgan shablonda</b> (Pro ham) PDF qilib olish. Faylda sayt nomi qoladi — har bir sovg'a bepul reklama.</p>{% endblock %}
+
+{% block style %}
+.state { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 13.5px; }
+.state.on { background: var(--green-bg); color: var(--green); }
+.state.off { background: var(--gray-bg); color: var(--muted); }
+.bar-row { padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.bar-row:last-child { border-bottom: 0; }
+.bar-row .top-line { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; }
+.meter { height: 8px; margin-top: 6px; border-radius: 99px; background: var(--gray-bg); overflow: hidden; }
+.meter i { display: block; height: 100%; border-radius: 99px; background: var(--ink); }
+.prev { max-width: 380px; padding: 16px; border-radius: 16px; background: var(--ink); color: #fff; }
+.prev h3 { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 800; }
+.prev h3 svg.i { color: var(--lime); }
+.prev p { margin-top: 8px; font-size: 13px; line-height: 1.5; color: #c9cad0; }
+.prev .go { display: block; margin-top: 12px; padding: 10px; border-radius: 10px; background: var(--lime); color: var(--ink); font-size: 13px; font-weight: 800; text-align: center; }
+.prev .re { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+.prev .re span { padding: 6px 10px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; font-size: 12px; font-weight: 700; }
+{% endblock %}
+
+{% block content %}
+<div class="grid g-4" style="margin-bottom:14px;">
+  <div class="card kpi"><small>{% icon "gift" %} Berilgan sovg'alar</small><b>{{ total }}</b><span>bugun +{{ today }}</span></div>
+  <div class="card kpi"><small>{% icon "download" %} Yuklab olgan</small><b>{{ downloaded }}</b><span>{% if total %}{% widthratio downloaded total 100 %}%{% else %}—{% endif %} sovg'adan foydalandi</span></div>
+  <div class="card kpi"><small>{% icon "message" %} Javob berdi</small><b>{{ reactions_total }}</b><span>tugma bosganlar</span></div>
+  <div class="card kpi {% if not gift.is_active %}hot{% endif %}"><small>{% icon "zap" %} Holat</small><b>{% if gift.is_active %}Yoqilgan{% else %}O'chiq{% endif %}</b><span>{{ gift.get_audience_display }}</span></div>
+</div>
+
+<div class="grid g-main">
+  <form method="post" class="card" style="align-self:start;">
+    {% csrf_token %}
+    <div class="card-h"><h2>{% icon "settings" %} Sozlamalar</h2><span class="muted small">hammasi shu yerdan, kod yozilmaydi</span></div>
+    <div class="fs">
+      <div class="state {% if gift.is_active %}on{% else %}off{% endif %}" style="margin-bottom:14px;">
+        {% if gift.is_active %}{% icon "check-circle" %} Sovg'a ishlayapti — shartga mos foydalanuvchi rezyumesini ochganda ko'radi{% else %}{% icon "ban" %} Hozir o'chiq — hech kimga berilmaydi{% endif %}
+      </div>
+      <div class="fs-grid">
+        {% include "panel/_field.html" with field=form.is_active %}
+        {% include "panel/_field.html" with field=form.audience %}
+        {% include "panel/_field.html" with field=form.new_user_days %}
+        {% include "panel/_field.html" with field=form.daily_limit %}
+      </div>
+    </div>
+    <div class="fs">
+      <h3>{% icon "message" %} Matn</h3>
+      <div class="fs-grid">
+        <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.title %}</div>
+        <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.text %}</div>
+        <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.reactions %}</div>
+        <div style="grid-column:1/-1;">{% include "panel/_field.html" with field=form.thanks_text %}</div>
+      </div>
+    </div>
+    <div class="save"><button class="btn btn-lg">{% icon "check" %} Saqlash</button></div>
+  </form>
+
+  <div class="grid" style="align-content:start;">
+    <div class="card">
+      <div class="card-h"><h2>{% icon "eye" %} Foydalanuvchi shunday ko'radi</h2></div>
+      <div class="card-b">
+        <div class="prev">
+          <h3>{% icon "gift" 17 %} {{ gift.title }}</h3>
+          {% for p in gift.paragraphs %}<p>{{ p|safe }}</p>{% endfor %}
+          <span class="go">{% icon "download" 15 %} Sovg'ani olish — PDF</span>
+          {% if gift.options %}<div class="re">{% for o in gift.options %}<span>{{ o }}</span>{% endfor %}</div>{% endif %}
+        </div>
+        <p class="note" style="margin-top:12px;">{% icon "lightbulb" %} Sovg'a faqat PDF: Word va cheksiz yuklash baribir kredit yoki Pro bilan. Fayl pastidagi sayt nomi <a class="link" href="{% url 'panel:settings' %}#site">Sozlamalar</a> dagi sayt nomidan olinadi.</p>
+      </div>
+    </div>
+
+    {% if reactions %}
+    <div class="card">
+      <div class="card-h"><h2>{% icon "bar-chart" %} Javoblar</h2><span class="muted small">{{ reactions_total }} ta</span></div>
+      {% for r in reactions %}
+      <div class="bar-row">
+        <div class="top-line"><b>{{ r.label }}</b><span>{{ r.n }}{% if reactions_total %} · {% widthratio r.n reactions_total 100 %}%{% endif %}</span></div>
+        <div class="meter"><i style="width:{% if reactions_total %}{% widthratio r.n reactions_total 100 %}{% else %}0{% endif %}%;"></i></div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="margin-top:14px;">
+  <div class="card-h"><h2>{% icon "users" %} Kimlarga berildi</h2><span class="muted small">oxirgilari birinchi</span></div>
+  <div class="table-wrap">
+    <table class="t">
+      <tr><th>Foydalanuvchi</th><th>Rezyume</th><th>Javobi</th><th>Yuklab oldi</th><th>Sana</th></tr>
+      {% for g in page %}
+      <tr>
+        <td><a class="name link" href="{% url 'panel:user_detail' g.user_id %}">{{ g.user.get_full_name|default:g.user.username }}</a>
+          <span class="muted small">{{ g.user.profile.phone }}</span></td>
+        <td class="small"><a class="link" href="/cv/preview/{{ g.cv.public_id }}/" target="_blank">{{ g.cv.cv_json.full_name|default:"rezyume" }} ↗</a>
+          <span class="muted">{{ g.template_code }}</span></td>
+        <td class="small">{{ g.reaction|default:"—" }}</td>
+        <td>{% if g.downloaded %}<span class="badge b-green">Ha</span>{% else %}<span class="badge b-gray">Hali yo'q</span>{% endif %}</td>
+        <td class="small nowrap">{{ g.created_at|date:"d.m.Y H:i" }}</td>
+      </tr>
+      {% empty %}<tr><td colspan="5" class="empty">Hali sovg'a berilmagan. Yuqorida «Sovg'a yoqilgan» ni belgilab saqlang.</td></tr>{% endfor %}
+    </table>
+  </div>
+  {% include "panel/_pager.html" %}
+</div>
+{% endblock %}

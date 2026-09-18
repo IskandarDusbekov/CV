@@ -343,6 +343,7 @@ def resolve_template_name(selected_template):
 #               Har bir foydalanuvchiga free_pdf_downloads ta PDF — faqat bepul shablonda, bitta rezyumega. Word yo'q.
 #   Kredit    — shu CV (va uning moslashtirilgan nusxalari) ochiladi: barcha shablonlar, PDF + Word, 5 ta moslashtirish, umrbod
 #   Pro       — davr ichida 30 ta CV, 50 ta moslashtirish, hamma CV ochiq, brending
+#   Sovg'a    — «baxtli foydalanuvchi»: bitta rezyume istalgan shablonda PDF, lekin doim sayt belgisi bilan (apps/cv/lucky.py)
 
 def user_has_pro(user):
     if not getattr(user, "is_authenticated", False):
@@ -364,6 +365,7 @@ def cv_is_unlocked(cv, user):
 PDF_FULL = "full"                  # kredit yoki Pro bilan ochilgan
 PDF_FREE = "free"                  # bepul PDF shu rezyumega ishlatilgan
 PDF_FREE_AVAILABLE = "free_available"
+PDF_LUCKY = "lucky"                # «baxtli foydalanuvchi» sovg'asi: istalgan shablon, sayt belgisi bilan
 PDF_PRO_TEMPLATE = "pro_template"  # Pro shablon — bepul PDF unga tegishli emas
 PDF_NO_FREE = "no_free"            # bepul PDF boshqa rezyumega ishlatilgan
 PDF_LOGIN = "login"
@@ -383,6 +385,8 @@ def pdf_access(user, cv):
         return PDF_LOGIN
     if cv_is_unlocked(cv, user) or getattr(user, "is_staff", False):  # adminlar tekshirish uchun hammasini yuklaydi
         return PDF_FULL
+    if getattr(cv, "lucky_pdf", False):
+        return PDF_LUCKY
     if template_is_pro(getattr(cv, "selected_template", "")):
         return PDF_PRO_TEMPLATE
     if getattr(cv, "free_pdf", False):
@@ -391,7 +395,7 @@ def pdf_access(user, cv):
 
 
 def user_can_download_pdf(user, cv):
-    return pdf_access(user, cv) in (PDF_FULL, PDF_FREE)
+    return pdf_access(user, cv) in (PDF_FULL, PDF_FREE, PDF_LUCKY)
 
 
 def claim_pdf_access(user, cv):
@@ -402,7 +406,7 @@ def claim_pdf_access(user, cv):
     from apps.users.models import UserProfile
 
     state = pdf_access(user, cv)
-    if state in (PDF_FULL, PDF_FREE):
+    if state in (PDF_FULL, PDF_FREE, PDF_LUCKY):
         return True
     if state != PDF_FREE_AVAILABLE:
         return False
@@ -456,12 +460,14 @@ def build_cv_context(cv, user=None):
     unlocked = cv_is_unlocked(cv, user)
     is_pro = user_has_pro(user)
     free_pdf = bool(getattr(cv, "free_pdf", False))
+    # Sovg'a PDF har doim sayt belgisi bilan — shu belgi orqali do'stlari saytni topadi
+    lucky = bool(getattr(cv, "lucky_pdf", False))
     return {
         "cv": cv,
         "cv_data": normalized,
         "is_pro": is_pro,
         "is_unlocked": unlocked,
-        "show_watermark": not unlocked and (SiteSettings.load().free_pdf_watermark or not free_pdf),
+        "show_watermark": not unlocked and (lucky or SiteSettings.load().free_pdf_watermark or not free_pdf),
         "pdf_access": pdf_access(user, cv),
         "free_pdf_left": free_pdf_left(user),
         "template_is_pro": template_is_pro(template_key),

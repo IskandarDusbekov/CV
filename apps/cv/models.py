@@ -39,6 +39,8 @@ class CV(models.Model):
     unlocked_at = models.DateTimeField(null=True, blank=True)
     # Foydalanuvchining bepul PDF'i shu rezyumega ishlatilgan (faqat bepul shablonlarda, Word yo'q)
     free_pdf = models.BooleanField("Bepul PDF ochilgan", default=False)
+    # «Baxtli foydalanuvchi» sovg'asi: shu rezyume istalgan shablonda PDF bo'lib yuklanadi, lekin sayt belgisi bilan
+    lucky_pdf = models.BooleanField("Sovg'a PDF ochilgan", default=False)
     # Vakansiyaga moslashtirilgan nusxa: asl CV, e'lon matni va AI hisoboti
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="tailored_versions")
     job_description = models.TextField(blank=True)
@@ -131,6 +133,96 @@ class TemplateSetting(models.Model):
 
         super().save(*args, **kwargs)
         cache.delete("template_settings")
+
+
+class LuckyGift(models.Model):
+    """«Siz bugungi baxtli foydalanuvchimizsiz» sovg'asi — bitta yozuv, paneldan boshqariladi.
+
+    Sovg'a: bitta rezyume istalgan shablonda (Pro ham) PDF bo'lib yuklanadi. Faylda sayt belgisi qoladi —
+    shuning uchun har bir sovg'a bepul reklama bo'lib ishlaydi. Word ochilmaydi.
+    """
+
+    CACHE_KEY = "lucky_gift"
+
+    AUDIENCE_ALL = "all"
+    AUDIENCE_NEW = "new"
+    AUDIENCE_NOT_PAID = "not_paid"
+    AUDIENCE_CHOICES = [
+        (AUDIENCE_ALL, "Har bir foydalanuvchiga (bir martadan)"),
+        (AUDIENCE_NEW, "Faqat yangi ro'yxatdan o'tganlarga"),
+        (AUDIENCE_NOT_PAID, "Hali hech narsa to'lamaganlarga"),
+    ]
+
+    MAX_REACTIONS = 4
+
+    is_active = models.BooleanField("Sovg'a yoqilgan", default=False)
+    audience = models.CharField("Kimga", max_length=20, choices=AUDIENCE_CHOICES, default=AUDIENCE_ALL)
+    new_user_days = models.PositiveIntegerField("«Yangi» necha kun hisoblanadi", default=3)
+    daily_limit = models.PositiveIntegerField("Kuniga nechta sovg'a", default=0, help_text="0 — cheksiz")
+    title = models.CharField("Sarlavha", max_length=120, default="Siz bugungi baxtli foydalanuvchimizsiz!")
+    text = models.TextField(
+        "Matn", default="Sizga sovg'a: shu rezyumeni <b>istalgan shablonda</b> — Pro shablonlarda ham — PDF qilib "
+                        "yuklab oling. Butunlay bepul.\nFaylning pastida saytimiz nomi qoladi — do'stlaringizga ko'rsatsangiz, "
+                        "ular ham shunday rezyume yasay oladi.",
+        help_text="Yangi qator — yangi paragraf. <b>qalin</b> va <i>kursiv</i> ishlaydi.")
+    reactions = models.TextField(
+        "Javob tugmalari", default="😊 Men ham xursandman\n🙏 Rahmat\n🙂 Menga kerak emas",
+        help_text="Har qatorda bitta tugma. Kim nimani bosgani shu bo'limda ko'rinadi.")
+    thanks_text = models.CharField("Javobdan keyingi matn", max_length=200, default="Rahmat! Fikringiz biz uchun muhim 💚")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Baxtli foydalanuvchi sovg'asi"
+        verbose_name_plural = "Baxtli foydalanuvchi sovg'asi"
+
+    def __str__(self):
+        return "Sovg'a"
+
+    def save(self, *args, **kwargs):
+        from django.core.cache import cache
+
+        self.pk = 1
+        super().save(*args, **kwargs)
+        cache.delete(self.CACHE_KEY)
+
+    @classmethod
+    def load(cls):
+        from django.core.cache import cache
+
+        obj = cache.get(cls.CACHE_KEY)
+        if obj is None:
+            obj, _ = cls.objects.get_or_create(pk=1)
+            cache.set(cls.CACHE_KEY, obj, 60)
+        return obj
+
+    @property
+    def options(self):
+        return [line.strip()[:40] for line in self.reactions.splitlines() if line.strip()][:self.MAX_REACTIONS]
+
+    @property
+    def paragraphs(self):
+        return [p.strip() for p in self.text.splitlines() if p.strip()]
+
+
+class LuckyGrant(models.Model):
+    """Kimga sovg'a berilgani, u qaysi rezyumega tegishli va foydalanuvchi qanday javob bergani."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="lucky_grants")
+    cv = models.ForeignKey(CV, on_delete=models.CASCADE, related_name="lucky_grants")
+    reaction = models.CharField("Javobi", max_length=60, blank=True)
+    downloaded = models.BooleanField("Yuklab oldi", default=False)
+    template_code = models.CharField(max_length=50, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    reacted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        constraints = [models.UniqueConstraint(fields=["user"], name="one_lucky_gift_per_user")]
+        verbose_name = "Berilgan sovg'a"
+        verbose_name_plural = "Berilgan sovg'alar"
+
+    def __str__(self):
+        return f"{self.user} · {self.created_at:%d.%m.%Y}"
 
 
 class ResumeSample(models.Model):
